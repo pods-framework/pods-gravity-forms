@@ -8,14 +8,17 @@
  *
  * Category: Integration
  *
- * Developer Mode: on
- *
  * Plugin Dependency: Gravity Forms|gravityforms/gravityforms.php|http://www.gravityforms.com/
  *
- * @package Pods\Components
- * @subpackage gravityforms
+ * Class: PodsComponent_GravityForms
  */
-class Pods_GravityForms extends PodsComponent {
+class PodsComponent_GravityForms extends PodsComponent {
+
+    static $component_path;
+
+    static $component_file;
+
+    static $options;
 
     /**
      * Gravity Forms Validation array, containing message/error and thank you handling (message/redirect/page)
@@ -65,6 +68,20 @@ class Pods_GravityForms extends PodsComponent {
     public function __construct () {
         // Handle custom success/error message
         add_filter( 'gform_validation_message', array( 'Pods_GravityForms', 'validation_message' ) );
+    }
+
+    /**
+     * Register the component
+     *
+     * @param $components
+     *
+     * @return array
+     * @since 1.0
+     */
+    public static function component_register( $components ) {
+        $components[ ] = array( 'File' => realpath( self::$component_file ) );
+
+        return $components;
     }
 
     /**
