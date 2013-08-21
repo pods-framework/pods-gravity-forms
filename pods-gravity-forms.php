@@ -3,7 +3,7 @@
 Plugin Name: Pods Gravity Forms integration
 Plugin URI: http://pods.io/
 Description: Integration with Gravity Forms (http://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.0 Alpha
+Version: 1.0 Alpha 2
 Author: Pods Framework Team
 Author URI: http://pods.io/about/
 Text Domain: pods-gravity-forms
@@ -55,4 +55,19 @@ function pods_component_gravity_forms_load() {
 function pods_component_gravity_forms_reset() {
     delete_transient( 'pods_components' );
     delete_transient( 'pods_field_types ' );
+}
+
+/**
+ * Setup Pods_GravityFormsUI object
+ *
+ * @param array $options Pods_GravityFormsUI option overrides
+ */
+function pods_gf_ui( $options = null ) {
+	require_once( 'Pods_GravityFormsUI.php' );
+
+	if ( empty( $options ) && !empty( Pods_GravityFormsUI::$obj ) ) {
+		return Pods_GravityFormsUI::$obj;
+	}
+
+	return new Pods_GravityFormsUI( $options );
 }
