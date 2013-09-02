@@ -29,6 +29,25 @@ function pods_gf_ui( $options = array() ) {
 
 }
 
+function pods_gf_ui_shortcode( $args, $content = '' ) {
+
+	/**
+	 * @var $pods_gf_ui Pods_GF_UI
+	 */
+	global $pods_gf_ui;
+
+	if ( is_object( $pods_gf_ui ) ) {
+		ob_start();
+
+		$pods_gf_ui->ui();
+
+		return ob_get_clean();
+	}
+
+	return '';
+
+}
+
 /**
  * Init Pods GF UI if there's a config to run
  */

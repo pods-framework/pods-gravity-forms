@@ -64,5 +64,8 @@ function pods_gf_init() {
 	// Init Pods GF UI
 	add_action( 'wp', 'pods_gf_ui_init', 8 );
 
+	// Pods GF UI shortcode
+	add_shortcode( 'pods-gf-ui', 'pods_gf_ui_shortcode' );
+
 }
 add_action( 'init', 'pods_gf_init' );
