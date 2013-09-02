@@ -956,6 +956,16 @@ class Pods_GF {
 			// Send notifications
 			self::gf_notifications( $entry, $form, $this->options );
 
+			if ( pods_var_raw( 'auto_delete', $this->options, false ) ) {
+				$keep_files = false;
+
+				if ( pods_var_raw( 'keep_files', $this->options, false ) ) {
+					$keep_files = true;
+				}
+
+				self::gf_delete_entry( $entry, $keep_files );
+			}
+
 			if ( pods_var_raw( 'redirect_after', $this->options, true ) ) {
 				$confirmation = GFFormDisplay::handle_confirmation( $form, $entry );
 
@@ -965,16 +975,6 @@ class Pods_GF {
 				else {
 					pods_redirect( $confirmation[ 'redirect' ] );
 				}
-			}
-
-			if ( pods_var_raw( 'auto_delete', $this->options, false ) ) {
-				$keep_files = false;
-
-				if ( pods_var_raw( 'keep_files', $this->options, false ) ) {
-					$keep_files = true;
-				}
-
-				self::gf_delete_entry( $entry, $keep_files );
 			}
 		}
 
