@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: Pods Gravity Forms integration
+Plugin Name: Pods Gravity Forms Add-On
 Plugin URI: http://pods.io/
 Description: Integration with Gravity Forms (http://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.0 Alpha 2
+Version: 1.0 Alpha 3
 Author: Pods Framework Team
 Author URI: http://pods.io/about/
 Text Domain: pods-gravity-forms
@@ -30,59 +30,39 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * @package Pods\Gravity Forms
  */
 
-add_action( 'pods_components_get', 'pods_component_gravity_forms_init' );
-add_action( 'pods_components_load', 'pods_component_gravity_forms_load' );
-
-function pods_component_gravity_forms_init() {
-    register_activation_hook( __FILE__, 'pods_component_gravity_forms_reset' );
-    register_deactivation_hook( __FILE__, 'pods_component_gravity_forms_reset' );
-
-    pods_component_gravity_forms_load();
-
-    add_filter( 'pods_components_register', array( 'PodsComponent_GravityForms', 'component_register' ) );
-}
-
-function pods_component_gravity_forms_load() {
-    $component_path = plugin_dir_path( __FILE__ );
-    $component_file = $component_path . 'PodsComponent_GravityForms.php';
-
-    require_once( $component_file );
-
-    PodsComponent_GravityForms::$component_path = $component_path;
-    PodsComponent_GravityForms::$component_file = $component_file;
-}
-
-function pods_component_gravity_forms_reset() {
-    delete_transient( 'pods_components' );
-    delete_transient( 'pods_field_types ' );
-}
+define( 'PODS_GF_VERSION', '1.0-a-3' );
+define( 'PODS_GF_FILE', __FILE__ );
+define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
+define( 'PODS_GF_ADDON_FILE', basename( PODS_GF_DIR ) . '/' . basename( PODS_GF_FILE ) );
 
 /**
- * Setup Pods_GravityForms object
- *
- * @param array $options Pods_GravityForms option overrides
+ * @global Pods_GF_UI $GLOBALS['pods_gf_ui']
+ * @name $pods_gf_ui
  */
-function pods_gf( $options = null ) {
-	require_once( 'Pods_GravityForms.php' );
-
-	if ( empty( $options ) && !empty( Pods_GravityForms::$obj ) ) {
-		return Pods_GravityForms::$obj;
-	}
-
-	return new Pods_GravityForms( $options );
-}
+global $pods_gf_ui;
 
 /**
- * Setup Pods_GravityFormsUI object
- *
- * @param array $options Pods_GravityFormsUI option overrides
+ * Include the Pods GF Add-On
  */
-function pods_gf_ui( $options = null ) {
-	require_once( 'Pods_GravityFormsUI.php' );
+function pods_gf_init() {
 
-	if ( empty( $options ) && !empty( Pods_GravityFormsUI::$obj ) ) {
-		return Pods_GravityFormsUI::$obj;
+	if ( !function_exists( 'pods' ) || !class_exists( 'GFCommon' ) ) {
+		return false;
 	}
 
-	return new Pods_GravityFormsUI( $options );
+	// Include main functions
+	require_once( PODS_GF_DIR . 'includes/functions.php' );
+
+	// Include GF Feed Addon code
+	if ( !class_exists( 'GFFeedAddOn' ) ) {
+		GFForms::include_feed_addon_framework();
+	}
+
+	// Include GF Add-On
+	require_once( PODS_GF_DIR . 'includes/Pods_GF_Addon.php' );
+
+	// Init Pods GF UI
+	add_action( 'wp', 'pods_gf_ui_init', 8 );
+
 }
+add_action( 'init', 'pods_gf_init' );
