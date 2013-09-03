@@ -72,6 +72,10 @@ class Pods_GF {
 		$this->form_id = $form_id;
 		$this->options = $options;
 
+		if ( !pods_var( 'admin', $this->options, 0 ) && is_admin() ) {
+			return;
+		}
+
 		if ( !has_filter( 'gform_pre_render_' . $form_id, array( $this, '_gf_pre_render' ) ) ) {
 			add_filter( 'gform_pre_render_' . $form_id, array( $this, '_gf_pre_render' ), 10, 2 );
 			add_filter( 'gform_get_form_filter_' . $form_id, array( $this, '_gf_get_form_filter' ), 10, 2 );
@@ -523,7 +527,12 @@ class Pods_GF {
 				$choices = $dynamic_select[ 'options' ];
 			}
 			elseif ( !empty( $dynamic_select[ 'pod' ] ) ) {
-				$pod = pods( $dynamic_select[ 'pod' ], null, false );
+				if ( !is_object( $dynamic_select[ 'pod' ] ) ) {
+					$pod = pods( $dynamic_select[ 'pod' ], null, false );
+				}
+				else {
+					$pod = $dynamic_select[ 'pod' ];
+				}
 
 				if ( empty( $pod ) ) {
 					continue;
@@ -733,12 +742,6 @@ class Pods_GF {
 
 		if ( isset( $this->options[ 'dynamic_select' ] ) && !empty( $this->options[ 'dynamic_select' ] ) ) {
 			$form = self::gf_dynamic_select( $form, $ajax, $this->options[ 'dynamic_select' ] );
-		}
-
-		$field_keys = array();
-
-		foreach ( $form[ 'fields' ] as $k => $field ) {
-			$field_keys[ (string) $field[ 'id' ] ] = $k;
 		}
 
 		// Prepopulate values

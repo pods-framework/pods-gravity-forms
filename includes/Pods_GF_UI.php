@@ -45,22 +45,25 @@ class Pods_GF_UI {
 				'label' => 'Label used in action link',
 				'heading' => 'Title used as action on action page',
 				'header' => 'Title used on action page',
+
 				'fields' => array(
 					'1' => 'pod_field_name' // GF field ID or $_POST name, mapped to a pod field
 					'2' => array(
-						'field' => 'pod_field_name',
-						'callback' => 'gf_pod_field_name', // Filter the value sent to Pods
-						'value_callback' => 'gf_pod_field_name_value' // Filter the value sent to GF
+						'field' => 'pod_field_name'
 					)
 					// All fields processed, even if not found/set in GF/$_POST
-					'faux' => array(
-						'field' => 'pod_field_name',
-						'callback' => 'gf_pod_field_name' // Required if field not found/set
+					'_faux' => array(
+						'field' => 'pod_field_name'
+						'value' => 'Manual value to use'
 					)
 				),
+
 				'save_action' => 'add', // What action to use when saving (add|save)
+				'save_id' => 123, // ID to override what to save to (if save action is save)
+
 				'callback' => null, // Function to callback on action page
 				'access_callback' => null, // Access callback to override access rights
+
 				'disabled' => false // Whether action is disabled
 
 				// GF specific
@@ -80,7 +83,6 @@ class Pods_GF_UI {
 								'value' => 2
 							)
 						),
-						'callback' => null, // Function to callback for choices values
 						'default' => 14, // Default value to select
 						'params' => array(), // Params to use for find()
 					)
@@ -181,24 +183,23 @@ class Pods_GF_UI {
 	 * @param array $options Pods_GF_UI option overrides
 	 */
 	public function __construct( $options ) {
+
 		$this->init_ui();
 
 		if ( is_array( $options ) && !empty( $options ) ) {
 			foreach ( $options as $option => $value ) {
-				if ( isset( $this->{$option} ) ) {
-					if ( is_array( $this->{$option} ) && is_array( $value ) ) {
-						foreach ( $value as $k => $v ) {
-							if ( isset( $this->{$option}[ $k ] ) && 'ui' != $option ) {
-								$this->{$option}[ $k ] = array_merge( $this->{$option}[ $k ], $v );
-							}
-							else {
-								$this->{$option}[ $k ] = $v;
-							}
+				if ( isset( $this->{$option} ) && is_array( $this->{$option} ) && is_array( $value ) ) {
+					foreach ( $value as $k => $v ) {
+						if ( isset( $this->{$option}[ $k ] ) && 'ui' != $option ) {
+							$this->{$option}[ $k ] = array_merge( $this->{$option}[ $k ], $v );
+						}
+						else {
+							$this->{$option}[ $k ] = $v;
 						}
 					}
-					else {
-						$this->{$option} = $value;
-					}
+				}
+				else {
+					$this->{$option} = $value;
 				}
 			}
 		}
@@ -217,12 +218,14 @@ class Pods_GF_UI {
 				pods_gf( $this->pod, $form_id, $this->actions[ $form ] );
 			}
 		}
+
 	}
 
 	/**
 	 * Initialize the default options
 	 */
 	private function init_ui() {
+
 		foreach ( $this->actions as $action => $options ) {
 			if ( !$this->access( $action ) ) {
 				$this->actions[ $action ][ 'disabled' ] = true;
@@ -235,18 +238,22 @@ class Pods_GF_UI {
 		$this->actions[ 'edit' ][ 'callback' ] = array( $this, '_action_edit' );
 
 		$this->action = pods_var_raw( 'action', 'get', $this->action, null, true );
+
 	}
 
 	/**
 	 * Setup UI from options
 	 */
 	private function setup_ui() {
-		foreach ( $this->actions as $action => $options ) {
-			if ( null !== pods_var_raw( 'heading', $options, null, null, true ) )
-				$this->ui[ 'heading' ][ $action ] = $options[ 'heading' ];
 
-			if ( null !== pods_var_raw( 'header', $options, null, null, true ) )
+		foreach ( $this->actions as $action => $options ) {
+			if ( null !== pods_var_raw( 'heading', $options, null, null, true ) ) {
+				$this->ui[ 'heading' ][ $action ] = $options[ 'heading' ];
+			}
+
+			if ( null !== pods_var_raw( 'header', $options, null, null, true ) ) {
 				$this->ui[ 'header' ][ $action ] = $options[ 'header' ];
+			}
 
 			if ( null !== pods_var_raw( 'label', $options, null, null, true ) ) {
 				$this->ui[ 'label' ][ $action ] = $options[ 'label' ];
@@ -259,32 +266,41 @@ class Pods_GF_UI {
 				$this->ui[ 'label' ][ 'add_new' ] = $options[ 'label_alt' ];
 			}
 
-			if ( null !== pods_var_raw( 'callback', $options, null, null, true ) )
+			if ( null !== pods_var_raw( 'callback', $options, null, null, true ) ) {
 				$this->ui[ 'actions_custom' ][ $action ] = $options[ 'callback' ];
+			}
 
-			if ( array() !== pods_var_raw( 'fields', $options, array(), null, true ) )
+			if ( array() !== pods_var_raw( 'fields', $options, array(), null, true ) ) {
 				$this->ui[ 'fields' ][ $action ] = $options[ 'fields' ];
-		}
-
-		if ( !is_object( $this->pod ) )
-			$this->pod = pods( $this->pod, ( 0 < $this->id ? $this->id : null ) );
-
-		if ( 0 < $this->id )
-			$_GET[ 'id' ] = $this->id;
-
-		foreach ( $this->actions as $action => $options ) {
-			if ( true !== pods_var_raw( 'disabled', $this->actions[ $action ], false, null, true ) && in_array( $action, $this->ui[ 'actions_disabled' ] ) ) {
-				$this->actions[ $action ][ 'disabled' ] = false;
-
-				unset( $this->ui[ 'actions_disabled' ][ array_search( $action, $this->ui[ 'actions_disabled' ] ) ] );
 			}
 		}
 
-		if ( !isset( $this->actions[ $this->action ] ) || !$this->access( $this->action ) )
+		if ( !is_object( $this->pod ) ) {
+			$this->pod = pods( $this->pod, ( 0 < $this->id ? $this->id : null ) );
+		}
+
+		if ( 0 < $this->id ) {
+			$_GET[ 'id' ] = $this->id;
+		}
+
+		foreach ( $this->actions as $action => $options ) {
+			if ( false === pods_var_raw( 'disabled', $this->actions[ $action ], false, null, true ) ) {
+				if ( in_array( $action, $this->ui[ 'actions_disabled' ] ) ) {
+					unset( $this->ui[ 'actions_disabled' ][ array_search( $action, $this->ui[ 'actions_disabled' ] ) ] );
+				}
+			}
+			elseif ( !in_array( $action, $this->ui[ 'actions_disabled' ] ) ) {
+				$this->ui[ 'actions_disabled' ][] = $action;
+			}
+		}
+
+		if ( !isset( $this->actions[ $this->action ] ) || !$this->access( $this->action ) ) {
 			$this->action = 'manage';
+		}
 
 		$_GET[ 'action' ] = $this->action;
 		$this->ui[ 'action' ] = $this->action;
+
 	}
 
 	/**
@@ -293,14 +309,20 @@ class Pods_GF_UI {
 	 * @return bool|mixed|PodsUI
 	 */
 	public function action() {
+
 		if ( isset( $GLOBALS[ 'pods-gf-ui-off' ] ) && $GLOBALS[ 'pods-gf-ui-off' ] ) {
 			return false;
 		}
 
+		$GLOBALS[ 'pods-gf-ui-off' ] = true;
+
 		$args = func_get_args();
 
-		if ( empty( $args ) )
-			$args = array( 'action' => $this->action );
+		if ( empty( $args ) ) {
+			$args = array(
+				'action' => $this->action
+			);
+		}
 
 		$action = array_shift( $args );
 
@@ -308,7 +330,10 @@ class Pods_GF_UI {
 			return $this->pod->ui( $this->ui, true );
 		}
 
+		$GLOBALS[ 'pods-gf-ui-off' ] = false;
+
 		return false;
+
 	}
 
 	/**
@@ -318,7 +343,9 @@ class Pods_GF_UI {
 	 * @see action
 	 */
 	public function ui() {
+
 		return $this->action();
+
 	}
 
 	/**
@@ -329,6 +356,7 @@ class Pods_GF_UI {
 	 * @return bool Whether user has access to a specific action
 	 */
 	private function access( $action ) {
+
 		$access = true;
 
 		// Action disabled
@@ -363,19 +391,23 @@ class Pods_GF_UI {
 		// Access Callback
 		$access_callback = pods_var_raw( 'access_callback', $this->actions[ $action ], null, null, true );
 
-		if ( null !== $access_callback && is_callable( $access_callback ) )
+		if ( null !== $access_callback && is_callable( $access_callback ) ) {
 			$access = call_user_func( $access_callback, $access, $this );
+		}
 
 		return (boolean) $access;
+
 	}
 
 	/**
 	 * Handle access constraints
 	 *
 	 * @param array $constraints Constraints arrays
+	 *
 	 * @return bool Whether the constraint rules all passed
 	 */
 	public function access_constraints( $constraints ) {
+
 		$access = true;
 
 		if ( is_array( $constraints ) && !empty( $constraints ) && is_object( $this->pod ) ) {
@@ -420,6 +452,7 @@ class Pods_GF_UI {
 		}
 
 		return $access;
+
 	}
 
 	/**
@@ -428,6 +461,7 @@ class Pods_GF_UI {
 	 * @param PodsUI $obj
 	 */
 	public function _action_add( $obj ) {
+
 ?>
 <div class="wrap">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
@@ -452,6 +486,7 @@ class Pods_GF_UI {
 	?>
 </div>
 <?php
+
 	}
 
 	/**
@@ -461,6 +496,7 @@ class Pods_GF_UI {
 	 * @param PodsUI $obj
 	 */
 	public function _action_edit( $duplicate, $obj ) {
+
 ?>
 <div class="wrap">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
@@ -498,5 +534,7 @@ class Pods_GF_UI {
 	?>
 </div>
 <?php
+
 	}
+
 }

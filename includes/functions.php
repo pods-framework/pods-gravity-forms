@@ -56,7 +56,7 @@ function pods_gf_ui_init() {
 	/**
 	 * @var $pods_gf_ui Pods_GF_UI
 	 */
-	global $pods_gf_ui;
+	global $pods_gf_ui, $post;
 
 	$options = array();
 
@@ -64,11 +64,26 @@ function pods_gf_ui_init() {
 	$path = explode( '#', $path[ 0 ] );
 	$path = trim( $path[ 0 ], '/' );
 
+	$page = null;
+
+	if ( is_singular() ) {
+		if ( is_object( $post ) && ( is_single( $post ) || is_page( $post ) ) ) {
+			$page = $post->post_name;
+		}
+		else {
+			wp_reset_postdata();
+
+			if ( is_object( $post ) ) {
+				$page = $post->post_name;
+			}
+		}
+	}
+
 	// Root
 	if ( strlen( $path ) < 1 ) {
 		$uri = '/';
 
-		$options = apply_filters( 'pods_gf_ui_init=' . $uri, $options, $uri );
+		$options = apply_filters( 'pods_gf_ui_init=' . $uri, $options, $uri, $page );
 	}
 	// Pages and wildcards
 	else {
@@ -87,7 +102,7 @@ function pods_gf_ui_init() {
 
 			$wildcard_uri = '/' . implode( '/', array_reverse( $exploded_w ) ) . '/';
 
-			$options = apply_filters( 'pods_gf_ui_init=' . $wildcard_uri, $options, $uri );
+			$options = apply_filters( 'pods_gf_ui_init=' . $wildcard_uri, $options, $uri, $page );
 
 			if ( !is_array( $options ) ) {
 				break;
@@ -95,12 +110,12 @@ function pods_gf_ui_init() {
 		}
 
 		if ( is_array( $options ) ) {
-			$options = apply_filters( 'pods_gf_ui_init=' . $uri, $options, $uri );
+			$options = apply_filters( 'pods_gf_ui_init=' . $uri, $options, $uri, $page );
 		}
 	}
 
 	if ( is_array( $options ) ) {
-		$options = apply_filters( 'pods_gf_ui_init', $options, $uri );
+		$options = apply_filters( 'pods_gf_ui_init', $options, $uri, $page );
 	}
 
 	// Bail on processing
@@ -125,17 +140,14 @@ function pods_gf_ui_init() {
  */
 function pods_gf_ui_content( $content, $post_id = 0 ) {
 
-	/**
-	 * @var $pods_gf_ui Pods_GF_UI
-	 */
-	global $pods_gf_ui;
+	global $post;
 
-	if ( false === strpos( $content, '[pods-gf-ui' ) && is_object( $pods_gf_ui ) && !empty( $post_id ) && is_single( $post_id ) ) {
-		ob_start();
+	if ( empty( $post_id ) && is_object( $post ) ) {
+		$post_id = $post->ID;
+	}
 
-		$pods_gf_ui->ui();
-
-		$content .= "\n" . ob_get_clean();
+	if ( false === strpos( $content, '[pods-gf-ui' ) && !empty( $post_id ) && ( is_single( $post_id ) || is_page( $post_id ) ) ) {
+		$content .= "\n" . pods_gf_ui_shortcode( array(), '' );
 	}
 
 	return $content;
@@ -147,6 +159,9 @@ function pods_gf_ui_content( $content, $post_id = 0 ) {
  */
 function pods_gf_ui_detect_shortcode() {
 
+	/**
+	 * @var $pods_gf_ui Pods_GF_UI
+	 */
 	global $pods_gf_ui;
 
 	if ( !is_object( $pods_gf_ui ) && is_singular() ) {
