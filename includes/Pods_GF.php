@@ -213,7 +213,9 @@ class Pods_GF {
 			}
 
 			// GF input field
-			$value = pods_var_raw( 'input_' . $field, 'post' );
+			$value = pods_var_raw( $field, 'post' );
+			$value = pods_var_raw( 'input_' . str_replace( '.', '_', $field ), 'post', $value );
+			$value = pods_var_raw( 'input_' . $field, 'post', $value );
 
 			// Manual value override
 			if ( null !== $field_options[ 'value' ] ) {
@@ -221,17 +223,15 @@ class Pods_GF {
 			}
 
 			// Filters
-			if ( has_filter( 'pods_gf_to_pods_value' ) ) {
-				$field_data = array();
+			$field_data = array();
 
-				if ( isset( $field_keys[ $field ] ) ) {
-					$field_data = $form[ 'fields' ][ $field_keys[ $field ] ];
-				}
-
-				$value = apply_filters( 'pods_gf_to_pods_value_' . $form[ 'id' ] . '_' . $field, $value, $field, $field_options, $form, $field_data, $data, $options );
-				$value = apply_filters( 'pods_gf_to_pods_value_' . $form[ 'id' ], $value, $field, $field_options, $form, $field_data, $data, $options );
-				$value = apply_filters( 'pods_gf_to_pods_value', $value, $field, $field_options, $form, $field_data, $data, $options );
+			if ( isset( $field_keys[ $field ] ) ) {
+				$field_data = $form[ 'fields' ][ $field_keys[ $field ] ];
 			}
+
+			$value = apply_filters( 'pods_gf_to_pods_value_' . $form[ 'id' ] . '_' . $field, $value, $field, $field_options, $form, $field_data, $data, $options );
+			$value = apply_filters( 'pods_gf_to_pods_value_' . $form[ 'id' ], $value, $field, $field_options, $form, $field_data, $data, $options );
+			$value = apply_filters( 'pods_gf_to_pods_value', $value, $field, $field_options, $form, $field_data, $data, $options );
 
 			// Set data
 			if ( null !== $value ) {

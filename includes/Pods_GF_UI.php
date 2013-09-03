@@ -463,7 +463,7 @@ class Pods_GF_UI {
 	public function _action_add( $obj ) {
 
 ?>
-<div class="wrap">
+<div class="wrap pods-admin pods-ui">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
 	<h2>
 		<?php
@@ -498,7 +498,7 @@ class Pods_GF_UI {
 	public function _action_edit( $duplicate, $obj ) {
 
 ?>
-<div class="wrap">
+<div class="wrap pods-admin pods-ui">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
 	<h2>
 		<?php
