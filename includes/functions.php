@@ -58,6 +58,8 @@ function pods_gf_ui_init() {
 	 */
 	global $pods_gf_ui, $post;
 
+	do_action( 'pods_gf_init' );
+
 	$options = array();
 
 	$path = explode( '?', $_SERVER[ 'REQUEST_URI' ] );

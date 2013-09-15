@@ -12,6 +12,13 @@ class Pods_GF {
 	public $pod;
 
 	/**
+	 * Item ID
+	 *
+	 * @var int
+	 */
+	public $id;
+
+	/**
 	 * GF Form ID
 	 *
 	 * @var int
@@ -62,11 +69,19 @@ class Pods_GF {
 	 */
 	public function __construct( $pod, $form_id, $options = array() ) {
 
+		// Pod object
 		if ( is_object( $pod ) ) {
 			$this->pod =& $pod;
+			$this->id =& $this->pod->id;
 		}
-		else {
+		// Pod name
+		elseif ( !is_array( $pod ) ) {
 			$this->pod = pods( $pod );
+			$this->id =& $this->pod->id;
+		}
+		// GF entry
+		elseif ( isset( $pod[ 'id' ] ) ) {
+			$this->id = $pod[ 'id' ];
 		}
 
 		$this->form_id = $form_id;
@@ -656,18 +671,36 @@ class Pods_GF {
 			$prepopulate
 		);
 
-		if ( empty( $prepopulate[ 'pod' ] ) || $prepopulate[ 'form' ] != $form[ 'id' ] ) {
+		if ( ( empty( $prepopulate[ 'pod' ] ) && empty( $prepopulate[ 'id' ] ) ) || $prepopulate[ 'form' ] != $form[ 'id' ] ) {
 			return $form;
 		}
 
 		$pod = $prepopulate[ 'pod' ];
 		$id = $prepopulate[ 'id' ];
 
-		if ( !is_object( $pod ) ) {
-			$pod = pods( $pod, $id );
+		if ( !empty( $pod ) ) {
+			if ( !is_object( $pod ) ) {
+				$pod = pods( $pod, $id );
+			}
+			elseif ( $pod->id != $id ) {
+				$pod->fetch( $id );
+			}
 		}
-		elseif ( $pod->id != $id ) {
-			$pod->fetch( $id );
+		else {
+			$pod = RGFormsModel::get_lead( $id );
+
+			if ( empty( $prepopulate[ 'fields' ] ) ) {
+				$fields = array();
+
+				foreach ( $form[ 'fields' ] as $field ) {
+					$fields[ $field[ 'id' ] ] = array(
+						'gf_field' => $field[ 'id' ],
+						'field' => $field[ 'id' ]
+					);
+				}
+
+				$prepopulate[ 'fields' ] = $fields;
+			}
 		}
 
 		// Prepopulate values
@@ -713,12 +746,60 @@ class Pods_GF {
 			$form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] = true;
 			$form[ 'fields' ][ $field_key ][ 'inputName' ] = 'pods_gf_field_' . $field;
 
-			$value_override = apply_filters( 'pods_gf_pre_populate_value_' . $form[ 'id' ] . '_' . $field, $value_override, $field, $field_options, $form, $prepopulate );
-			$value_override = apply_filters( 'pods_gf_pre_populate_value_' . $form[ 'id' ], $value_override, $field, $field_options, $form, $prepopulate );
-			$value_override = apply_filters( 'pods_gf_pre_populate_value', $value_override, $field, $field_options, $form, $prepopulate );
+			$value_override = apply_filters( 'pods_gf_pre_populate_value_' . $form[ 'id' ] . '_' . $field, $value_override, $field, $field_options, $form, $prepopulate, $pod );
+			$value_override = apply_filters( 'pods_gf_pre_populate_value_' . $form[ 'id' ], $value_override, $field, $field_options, $form, $prepopulate, $pod );
+			$value_override = apply_filters( 'pods_gf_pre_populate_value', $value_override, $field, $field_options, $form, $prepopulate, $pod );
 
-			if ( null !== $value_override ) {
-				$_GET[ 'pods_gf_field_' . $field ] = $pod->field( $field_options[ 'field' ] );
+			if ( null === $value_override ) {
+				if ( is_object( $pod ) ) {
+					$value = $pod->field( $field_options[ 'field' ] );
+				}
+				elseif ( !empty( $pod ) ) {
+					if ( isset( $pod[ $field_options[ 'field' ] ] ) ) {
+						$value = maybe_unserialize( $pod[ $field_options[ 'field' ] ] );
+
+						if ( 'list' == $form[ 'fields' ][ $field_key ][ 'type' ] && !empty( $value ) ) {
+							$list = $value;
+
+							$value = array();
+
+							foreach ( $list as $list_row ) {
+								$value = array_merge( $value, array_values( $list_row ) );
+							}
+						}
+					}
+					elseif ( 'checkbox' == $form[ 'fields' ][ $field_key ][ 'type' ] ) {
+						$items = 0;
+						$counter = 1;
+
+						while ( $items < count( $form[ 'fields' ][ $field_key ][ 'choices' ] ) ) {
+							if ( isset( $pod[ $field_options[ 'field' ] . '.' . $counter ] ) ) {
+								foreach ( $form[ 'fields' ][ $field_key ][ 'choices' ] as $k => $choice ) {
+									if ( $choice[ 'value' ] == $pod[ $field_options[ 'field' ] . '.' . $counter ] ) {
+										$form[ 'fields' ][ $field_key ][ 'choices' ][ $k ][ 'isSelected' ] = true;
+
+										break;
+									}
+								}
+							}
+
+							$counter++;
+
+							if ( $counter % 10 ) {
+								$counter++;
+							}
+
+							$items++;
+						}
+					}
+				}
+
+				if ( null !== $value ) {
+					$_GET[ 'pods_gf_field_' . $field ] = $value;
+				}
+			}
+			else {
+				$_GET[ 'pods_gf_field_' . $field ] = $value_override;
 			}
 		}
 
@@ -748,7 +829,7 @@ class Pods_GF {
 		if ( isset( $this->options[ 'prepopulate' ] ) && !empty( $this->options[ 'prepopulate' ] ) ) {
 			$prepopulate = array(
 				'pod' => $this->pod,
-				'id' => pods_var( 'save_id', $this->options, $this->pod->id, null, true ),
+				'id' => pods_var( 'save_id', $this->options, pods_var( 'id', $this->pod, $this->id ), null, true ),
 				'fields' => $this->options[ 'fields' ]
 			);
 
@@ -812,18 +893,22 @@ class Pods_GF {
 			);
 		}
 
-		$field_data = $this->pod->fields( $field_options[ 'field' ] );
+		$validate = true;
 
-		if ( empty( $field_data ) ) {
-			return $validation_result;
+		if ( is_object( $this->pod ) ) {
+			$field_data = $this->pod->fields( $field_options[ 'field' ] );
+
+			if ( empty( $field_data ) ) {
+				return $validation_result;
+			}
+
+			$pods_api = pods_api();
+
+			$validate = $pods_api->handle_field_validation( $value, $field_data, $this->pod->pod_data[ 'object_fields' ], $this->pod->pod_data[ 'fields' ], $this->pod, null );
 		}
 
-		$pods_api = pods_api();
-
-		$validate = $pods_api->handle_field_validation( $value, $field_data, $this->pod->pod_data[ 'object_fields' ], $this->pod->pod_data[ 'fields' ], $this->pod, null );
-
-		$validate = apply_filters( 'pods_gf_field_validation_' . $form[ 'id ' ] . '_' . (string) $field[ 'id ' ], $validate, $field[ 'id' ], $field_options, $value, $form, $field, $this );
-		$validate = apply_filters( 'pods_gf_field_validation_' . $form[ 'id ' ], $validate, $field[ 'id' ], $field_options, $value, $form, $field, $this );
+		$validate = apply_filters( 'pods_gf_field_validation_' . $form[ 'id' ] . '_' . (string) $field[ 'id' ], $validate, $field[ 'id' ], $field_options, $value, $form, $field, $this );
+		$validate = apply_filters( 'pods_gf_field_validation_' . $form[ 'id' ], $validate, $field[ 'id' ], $field_options, $value, $form, $field, $this );
 		$validate = apply_filters( 'pods_gf_field_validation', $validate, $field[ 'id' ], $field_options, $value, $form, $field, $this );
 
 		if ( false === $validate ) {
@@ -877,11 +962,10 @@ class Pods_GF {
 			$field_keys[ (string) $field[ 'id' ] ] = $k;
 		}
 
-		$id = 0;
+		$id = (int) pods_var( 'id', $this->pod, 0 );
 		$save_action = 'add';
 
-		if ( !empty( $this->pod->id ) ) {
-			$id = $this->pod->id;
+		if ( !empty( $id ) ) {
 			$save_action = 'edit';
 		}
 
@@ -908,10 +992,19 @@ class Pods_GF {
 				$args[] = $id;
 			}
 
-			$id = call_user_func_array( array( $this->pod, $save_action ), $args );
+			if ( is_object( $this->pod ) ) {
+				$id = call_user_func_array( array( $this->pod, $save_action ), $args );
 
-			$this->pod->id = $id;
-			$this->pod->fetch( $id );
+				$this->pod->id = $id;
+				$this->pod->fetch( $id );
+
+				do_action( 'pods_gf_to_pods_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
+			}
+			else {
+				$this->id = $id = apply_filters( 'pods_gf_to_pod_' . $save_action, $id, $this->pod, $data, $this );
+			}
+
+			do_action( 'pods_gf_to_pods', $this->pod, $save_action, $data, $id, $this );
 		}
 		catch ( Exception $e ) {
 			$validation_result[ 'is_valid' ] = false;
@@ -973,7 +1066,7 @@ class Pods_GF {
 				$confirmation = GFFormDisplay::handle_confirmation( $form, $entry );
 
 				if ( 'redirect' != $form[ 'confirmation' ][ 'type' ] || !is_array( $confirmation ) || !isset( $confirmation[ 'redirect' ] ) ) {
-					pods_redirect( pods_var_update( array( 'action' => 'edit', 'id' => $this->pod->id ) ) );
+					pods_redirect( pods_var_update( array( 'action' => 'edit', 'id' => $this->id ) ) );
 				}
 				else {
 					pods_redirect( $confirmation[ 'redirect' ] );

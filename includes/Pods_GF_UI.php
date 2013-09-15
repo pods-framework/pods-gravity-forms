@@ -5,7 +5,12 @@
 class Pods_GF_UI {
 
 	/**
-	 * @var Pods
+	 * @var Pods_GF
+	 */
+	public static $pods_gf;
+
+	/**
+	 * @var Pods|array Pods object or an array of GF entries
 	 */
 	public $pod;
 
@@ -94,6 +99,7 @@ class Pods_GF_UI {
 			),
 		 */
 		'manage' => array( // table ui manage
+			'form' => 0,
 			'fields' => array(),
 			'callback' => null,
 			'access_callback' => null,
@@ -126,14 +132,14 @@ class Pods_GF_UI {
 			'dynamic_select' => array(),
 			'callback' => null,
 			'access_callback' => null,
-			'disabled' => false
+			'disabled' => true
 		),
 		'view' => array( // view details
 			'label' => 'View Details',
 			'fields' => array(),
 			'callback' => null,
 			'access_callback' => null,
-			'disabled' => false
+			'disabled' => true
 		)
 	);
 
@@ -215,7 +221,11 @@ class Pods_GF_UI {
 			if ( isset( $this->actions[ $form ] ) && !$this->actions[ $form ][ 'disabled' ] && 0 < (int) pods_var( 'form', $this->actions[ $form ] ) ) {
 				$form_id = (int) pods_var( 'form', $this->actions[ $form ] );
 
-				pods_gf( $this->pod, $form_id, $this->actions[ $form ] );
+				$pods_gf = pods_gf( $this->pod, $form_id, $this->actions[ $form ] );
+
+				if ( $this->action == $form ) {
+					self::$pods_gf = $pods_gf;
+				}
 			}
 		}
 
@@ -275,7 +285,66 @@ class Pods_GF_UI {
 			}
 		}
 
-		if ( !is_object( $this->pod ) ) {
+		if ( 0 < $this->actions[ 'manage' ][ 'form' ] ) {
+			$leads = RGFormsModel::get_leads( $this->actions[ 'manage' ][ 'form' ], 0, 'DESC', '', 0, 999 );
+
+			$this->pod = array();
+
+			foreach ( $leads as $lead ) {
+				$this->pod[ $lead[ 'id' ] ] = RGFormsModel::get_lead( $lead[ 'id' ] );
+			}
+
+			$default_ui = array(
+				'data' => $this->pod,
+				'total' => count( $this->pod ),
+				'total_found' => count( $this->pod ),
+				'search' => false,
+				'searchable' => false,
+				'sortable' => false,
+				'pagination' => false
+			);
+
+			$id = (int) pods_var( 'id' );
+
+			if ( 0 < $id && isset( $this->pod[ $id ] ) ) {
+				$this->pod = $this->pod[ $id ];
+			}
+
+			if ( empty( $this->ui[ 'fields' ][ 'manage' ] ) ) {
+				$this->ui[ 'fields' ][ 'manage' ] = array(
+					'id' => array(
+						'label' => 'ID',
+						'type' => 'number'
+					),
+					'created_by' => array(
+						'label' => 'Submitter',
+						'type' => 'pick',
+						'pick_val' => 'user'
+					),
+					'date_created' => array(
+						'label' => 'Date Created',
+						'type' => 'datetime'
+					)
+				);
+			}
+
+			$this->ui = array_merge( $default_ui, $this->ui );
+		}
+
+		if ( is_array( $this->pod ) ) {
+			$default_ui = array(
+				'data' => $this->pod,
+				'total' => count( $this->pod ),
+				'total_found' => count( $this->pod ),
+				'search' => false,
+				'searchable' => false,
+				'sortable' => false,
+				'pagination' => false
+			);
+
+			$this->ui = array_merge( $default_ui, $this->ui );
+		}
+		elseif ( !is_object( $this->pod ) && !empty( $this->pod ) ) {
 			$this->pod = pods( $this->pod, ( 0 < $this->id ? $this->id : null ) );
 		}
 
@@ -310,8 +379,10 @@ class Pods_GF_UI {
 	 */
 	public function action() {
 
+		$ui = false;
+
 		if ( isset( $GLOBALS[ 'pods-gf-ui-off' ] ) && $GLOBALS[ 'pods-gf-ui-off' ] ) {
-			return false;
+			return $ui;
 		}
 
 		$GLOBALS[ 'pods-gf-ui-off' ] = true;
@@ -327,12 +398,20 @@ class Pods_GF_UI {
 		$action = array_shift( $args );
 
 		if ( isset( $this->actions[ $action ] ) ) {
-			return $this->pod->ui( $this->ui, true );
+			if ( is_object( $this->pod ) ) {
+				$ui = $this->pod->ui( $this->ui, true );
+			}
+			elseif ( is_array( $this->pod ) ) {
+				$ui = pods_ui( $this->ui );
+			}
+			else {
+				do_action( 'pods_gf_ui_action_' . $action, $this );
+			}
 		}
 
 		$GLOBALS[ 'pods-gf-ui-off' ] = false;
 
-		return false;
+		return $ui;
 
 	}
 
@@ -480,8 +559,11 @@ class Pods_GF_UI {
 
 			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
 		}
-		else {
+		elseif ( is_object( $this->pod ) ) {
 			$this->pod->form();
+		}
+		else {
+			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $obj, $this );
 		}
 	?>
 </div>
@@ -528,8 +610,11 @@ class Pods_GF_UI {
 
 			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
 		}
-		else {
+		elseif ( is_object( $this->pod ) ) {
 			$this->pod->form();
+		}
+		else {
+			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $duplicate, $obj, $this );
 		}
 	?>
 </div>
