@@ -95,6 +95,13 @@ class Pods_GF_UI {
 				'field' => 'status', // Pod field name for action to interact with (used with Status action)
 				'data' => array(), // Array of options available for field (used with Status action)
 				'prepopulate' => false, // Disable value prepopulate, defaults to true
+
+				// Add a button to Save for Later the form being submitted, to come back to
+				'save_for_later' => true, // simple
+				'save_for_later' => array(
+					'redirect' => '/custom-url-to-redirect-to-on-save/'
+				),
+
 				'auto_delete => true, // Automatically delete the GF entry created
 			),
 		 */
@@ -217,9 +224,17 @@ class Pods_GF_UI {
 			'edit'
 		);
 
+		$ids = array();
+
 		foreach ( $forms as $form ) {
 			if ( isset( $this->actions[ $form ] ) && !$this->actions[ $form ][ 'disabled' ] && 0 < (int) pods_var( 'form', $this->actions[ $form ] ) ) {
 				$form_id = (int) pods_var( 'form', $this->actions[ $form ] );
+
+				if ( in_array( $form_id, $ids ) ) {
+					continue;
+				}
+
+				$ids[] = $form_id;
 
 				$pods_gf = pods_gf( $this->pod, $form_id, $this->actions[ $form ] );
 
@@ -587,7 +602,7 @@ class Pods_GF_UI {
 			echo ( $duplicate ? $obj->header[ 'duplicate' ] : $obj->header[ 'edit' ] );
 
 			if ( !in_array( 'add', $obj->actions_disabled ) && !in_array( 'add', $obj->actions_hidden ) ) {
-				$link = pods_var_update( array( 'action' . $obj->num => 'add', 'id' . $obj->num => '', 'do' . $obj->num = '' ), PodsUI::$allowed, $obj->exclusion() );
+				$link = pods_var_update( array( 'action' . $obj->num => 'add', 'id' . $obj->num => '', 'do' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
 
 				if ( !empty( $obj->action_links[ 'add' ] ) )
 					$link = $obj->action_links[ 'add' ];

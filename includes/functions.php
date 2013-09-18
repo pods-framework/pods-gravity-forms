@@ -127,6 +127,8 @@ function pods_gf_ui_init() {
 
 	$pods_gf_ui = pods_gf_ui( $options );
 
+	do_action( 'pods_gf_ui_loaded', $pods_gf_ui, $options, $uri, $page );
+
 	// Add content handler
 	add_filter( 'the_content', 'pods_gf_ui_content' );
 
@@ -183,5 +185,16 @@ function pods_gf_ui_detect_shortcode() {
 			}
 		}
 	}
+
+}
+
+/**
+ * Run Admin AJAX for Save for Later
+ */
+function pods_gf_save_for_later_ajax() {
+
+	require_once( PODS_GF_DIR . 'includes/Pods_GF.php' );
+
+	Pods_GF::gf_save_for_later_ajax();
 
 }

@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 define( 'PODS_GF_VERSION', '1.0-a-3' );
 define( 'PODS_GF_FILE', __FILE__ );
 define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
+define( 'PODS_GF_URL', plugin_dir_url( PODS_GF_FILE ) );
 define( 'PODS_GF_ADDON_FILE', basename( PODS_GF_DIR ) . '/' . basename( PODS_GF_FILE ) );
 
 /**
@@ -62,10 +63,15 @@ function pods_gf_init() {
 	require_once( PODS_GF_DIR . 'includes/Pods_GF_Addon.php' );
 
 	// Init Pods GF UI
-	add_action( 'wp', 'pods_gf_ui_init', 8 );
+	add_action( 'wp', 'pods_gf_ui_init', 7 );
 
 	// Pods GF UI shortcode
 	add_shortcode( 'pods-gf-ui', 'pods_gf_ui_shortcode' );
+
+	if ( is_admin() ) {
+		add_action( 'wp_ajax_pods_gf_save_for_later', 'pods_gf_save_for_later_ajax' );
+		add_action( 'wp_ajax_nopriv_pods_gf_save_for_later', 'pods_gf_save_for_later_ajax' );
+	}
 
 }
 add_action( 'init', 'pods_gf_init' );

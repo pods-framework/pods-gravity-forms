@@ -60,6 +60,13 @@ class Pods_GF {
      */
     public static $prepopulate = array();
 
+    /**
+     * Array of options for Save For Later
+     *
+     * @var array
+     */
+	public static $save_for_later = array();
+
 	/**
 	 * Add Pods GF integration for a specific form
 	 *
@@ -87,7 +94,15 @@ class Pods_GF {
 		$this->form_id = $form_id;
 		$this->options = $options;
 
-		if ( !pods_var( 'admin', $this->options, 0 ) && is_admin() ) {
+		if ( !wp_script_is( 'pods-gf', 'registered' ) ) {
+			wp_register_script( 'pods-gf', PODS_GF_URL . 'ui/pods-gf.js', array( 'jquery' ), PODS_GF_VERSION, true );
+		}
+
+		if ( isset( $this->options[ 'save_for_later' ] ) && !empty( $this->options[ 'save_for_later' ] ) ) {
+			self::save_for_later( $form_id, $this->options[ 'save_for_later' ] );
+		}
+
+		if ( !pods_var( 'admin', $this->options, 0 ) && ( !is_admin() || !RGForms::is_gravity_page() ) ) {
 			return;
 		}
 
@@ -169,6 +184,80 @@ class Pods_GF {
 		}
     }
 
+	/**
+	 * Build the GF Choices array for use in field option overrides
+	 *
+	 * @param array $values Value array (value=>label)
+	 * @param string $current_value Current value
+	 * @param string $default Default value
+	 *
+	 * @return array Choices array
+	 */
+	public static function build_choices( $values, $current_value = '', $default = '' ) {
+
+		$choices = array();
+
+		if ( null === $current_value || '' === $current_value ) {
+			$current_value = '';
+
+			if ( null !== $default ) {
+				$current_value = $default;
+			}
+		}
+
+		foreach ( $values as $value => $label ) {
+			$choices[] = array(
+				'text' => $label,
+				'value' => $value,
+				'isSelected' => ( (string) $value === (string) $current_value )
+			);
+		}
+
+		return $choices;
+
+	}
+
+	/**
+	 * Get the currently selected choice value/text from the GF Choices array
+	 *
+	 * @param array $choices GF Choices array
+	 * @param string $current_value Current value
+	 * @param string $default Default value
+	 *
+	 * @return array Selected choice array
+	 */
+	public static function get_selected_choice( $choices, $current_value = '', $default = '' ) {
+
+		if ( null === $current_value || '' === $current_value ) {
+			$current_value = '';
+
+			if ( null !== $default ) {
+				$current_value = $default;
+			}
+		}
+
+		$selected = array();
+
+		foreach ( $choices as $value => $choice ) {
+			if ( !is_array( $choice ) ) {
+				$choice = array(
+					'text' => $choice,
+					'value' => $value
+				);
+			}
+
+			if ( 1 == pods_var( 'isSelected', $choice ) || '' === $current_value || ( !isset( $choice[ 'isSelected' ] ) && (string) $choice[ 'value' ] === (string) $current_value ) ) {
+				$selected = $choice;
+				$selected[ 'isSelected' ] = true;
+
+				break;
+			}
+		}
+
+		return $selected;
+
+	}
+
     /**
      * Prepopulate a form with values from a Pod item
      *
@@ -196,6 +285,235 @@ class Pods_GF {
     }
 
 	/**
+	 * Override a field's value with the prepopulated value, hooks into the pods_gf_field_value filters
+	 *
+	 * @param int|array $form_id
+	 * @param int|array $field_id
+	 */
+	public static function prepopulate_override_value( $form_id, $field_id ) {
+
+		if ( is_array( $form_id ) ) {
+			$form_id = $form_id[ 'id' ];
+		}
+
+		if ( is_array( $field_id ) ) {
+			$field_id = $field_id[ 'id' ];
+		}
+
+		$class = get_class();
+
+		if ( !has_filter( 'pods_gf_field_value_' . $form_id . '_' . $field_id, array( $class, 'gf_prepopulate_value' ) ) ) {
+			add_filter( 'pods_gf_field_value_' . $form_id . '_' . $field_id, array( $class, 'gf_prepopulate_value' ), 10, 2 );
+		}
+
+	}
+
+	/**
+	 * Override a field's value with the prepopulated value (if set), for use with pods_gf_field_value filters
+	 *
+	 * @param mixed $post_value_override
+	 * @param mixed $value_override
+	 *
+	 * @return mixed
+	 */
+	public static function gf_prepopulate_value( $post_value_override, $value_override ) {
+
+		if ( null === $post_value_override ) {
+			$post_value_override = $value_override;
+		}
+
+		return $post_value_override;
+
+	}
+
+	/**
+	 * Setup Save for Later for a form
+	 *
+	 * @param int $form_id GF Form ID
+	 * @param array $options Save for Later options
+	 */
+	public static function save_for_later( $form_id, $options = array() ) {
+
+		self::$save_for_later[ $form_id ] = array(
+			'redirect' => null
+		);
+
+		if ( is_array( $options ) ) {
+			self::$save_for_later[ $form_id ] = array_merge( self::$save_for_later[ $form_id ], $options );
+		}
+
+		if ( !has_filter( 'gform_pre_render_' . $form_id, array( 'Pods_GF', 'gf_save_for_later_load' ), 9, 2 ) ) {
+			add_filter( 'gform_pre_render_' . $form_id, array( 'Pods_GF', 'gf_save_for_later_load' ), 9, 2 );
+			add_filter( 'gform_submit_button', array( 'Pods_GF', 'gf_save_for_later_button' ), 10, 2 );
+			add_action( 'gform_after_submission_' . $form_id, array( 'Pods_GF', 'gf_save_for_later_clear' ), 10, 2 );
+		}
+
+		if ( !wp_script_is( 'pods-gf', 'registered' ) ) {
+			wp_register_script( 'pods-gf', PODS_GF_URL . 'ui/pods-gf.js', array( 'jquery' ), PODS_GF_VERSION, true );
+		}
+
+	}
+
+	/**
+	 * Save for Later handler for Gravity Forms: gform_pre_render_{$form_id}
+	 *
+	 * @param array $form GF Form array
+	 * @param bool $ajax Whether the form was submitted using AJAX
+	 *
+	 * @return array $form GF Form array
+	 */
+	public static function gf_save_for_later_load( $form, $ajax ) {
+
+		$save_for_later = pods_var_raw( $form[ 'id' ], self::$save_for_later, array(), null, true );
+
+		if ( !empty( $save_for_later ) && empty( $_POST ) ) {
+			$save_for_later_data = self::gf_save_for_later_data( $form[ 'id' ] );
+
+			if ( !empty( $save_for_later_data ) ) {
+				$_POST = $save_for_later_data;
+				$_POST[ 'pods_gf_save_for_later_loaded' ] = 1;
+			}
+		}
+
+		return $form;
+
+	}
+
+	/**
+	 * Get Save for Later data
+	 *
+	 * @param int $form_id GF Form ID
+	 *
+	 * @return array|bool
+	 */
+	public static function gf_save_for_later_data( $form_id ) {
+
+		global $user_ID;
+
+		$postdata = array();
+
+		if ( is_user_logged_in() ) {
+			$postdata = get_user_meta( $user_ID, '_pods_gf_saved_form_' . $form_id, true );
+		}
+
+		if ( empty( $postdata ) ) {
+			$postdata = pods_var_raw( '_pods_gf_saved_form_' . $form_id, 'cookie' );
+		}
+
+		if ( !empty( $postdata ) ) {
+			$postdata = @json_decode( $postdata, true );
+
+			if ( !empty( $postdata ) ) {
+				return $postdata;
+			}
+		}
+
+		return false;
+
+	}
+
+	/**
+	 * Add Save for Later buttons
+	 *
+	 * @param string $button_input Button HTML
+	 * @param array $form GF Form array
+	 *
+	 * @return string Button HTML
+	 */
+	public static function gf_save_for_later_button( $button_input, $form ) {
+
+		$save_for_later = pods_var_raw( $form[ 'id' ], self::$save_for_later, array(), null, true );
+
+		if ( !empty( $save_for_later ) ) {
+			wp_enqueue_script( 'pods-gf' );
+
+			$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later" value="' . esc_attr__( 'Save for Later', 'pods-gf-ui' ) . '" />';
+
+			$save_for_later_data = self::gf_save_for_later_data( $form[ 'id' ] );
+
+			if ( !empty( $save_for_later_data ) ) {
+				$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later-reset" value="' . esc_attr__( 'Reset Form', 'pods-gf-ui' ) . '" />';
+			}
+
+			if ( !empty( $save_for_later[ 'redirect' ] ) ) {
+				$button_input .= '<input type="hidden" name="pods_gf_save_for_later_redirect" value="' . esc_attr( $save_for_later[ 'redirect' ] ) . '" />';
+			}
+
+			$button_input .= '<script type="text/javascript">if ( \'undefined\' == typeof ajaxurl ) { var ajaxurl = \'' . get_admin_url( null, 'admin-ajax.php' ) . '\'; }</script>';
+		}
+
+		return $button_input;
+
+	}
+
+	/**
+	 * AJAX Handler for Save for Later
+	 */
+	public static function gf_save_for_later_ajax() {
+
+		global $user_ID;
+
+		// Clear saved form
+		$form_id = str_replace( 'gform_', '', pods_var( 'form_id', 'request' ) );
+
+		if ( 0 < $form_id ) {
+			$redirect = pods_var_raw( 'pods_gf_save_for_later_redirect', 'post', '/?pods_gf_form_saved=' . $form_id, null, true );
+			$redirect = pods_var_raw( 'pods_gf_save_for_later_redirect', 'get', $redirect, null, true );
+
+			if ( isset( $_POST[ 'pods_gf_save_for_later_redirect' ] ) ) {
+				unset( $_POST[ 'pods_gf_save_for_later_redirect' ] );
+			}
+
+			// Clear saved form
+			if ( 1 == pods_var( 'pods_gf_clear_saved_form' ) ) {
+				self::gf_save_for_later_clear( array(), array( 'id' => $form_id ), true );
+			}
+			// Save $_POST for later
+			else {
+				// JSON encode to avoid serialization issues
+				$postdata = json_encode( $_POST );
+
+				if ( is_user_logged_in() ) {
+					update_user_meta( $user_ID, '_pods_gf_saved_form_' . $form_id, $postdata );
+				}
+
+				pods_var_set( $postdata, '_pods_gf_saved_form_' . $form_id, 'cookie' );
+			}
+
+			pods_redirect( $redirect );
+		}
+		else {
+			wp_die( 'Invalid form submission' );
+		}
+
+		die();
+
+	}
+
+
+	/**
+	 * Save for Later handler for Gravity Forms: gform_after_submission_{$form_id}
+	 *
+	 * @param array $entry GF Entry array
+	 * @param array $form GF Form array
+	 */
+	public static function gf_save_for_later_clear( $entry, $form, $force = false ) {
+
+		global $user_ID;
+
+		$save_for_later = pods_var_raw( $form[ 'id' ], self::$save_for_later, array(), null, true );
+
+		if ( !empty( $save_for_later ) || $force ) {
+			if ( is_user_logged_in() ) {
+				delete_user_meta( $user_ID, '_pods_gf_saved_form_' . $form[ 'id' ] );
+			}
+
+			pods_var_set( '', '_pods_gf_saved_form_' . $form[ 'id' ], 'cookie' );
+		}
+
+	}
+
+	/**
 	 * Map GF form fields to Pods fields
 	 *
 	 * @param array $form GF Form array
@@ -209,6 +527,12 @@ class Pods_GF {
 
 		if ( !isset( $options[ 'fields' ] ) || empty( $options[ 'fields' ] ) ) {
 			return $data;
+		}
+
+		$field_keys = array();
+
+		foreach ( $form[ 'fields' ] as $k => $field ) {
+			$field_keys[ (string) $field[ 'id' ] ] = $k;
 		}
 
 		foreach ( $options[ 'fields' ] as $field => $field_options ) {
@@ -671,7 +995,7 @@ class Pods_GF {
 			$prepopulate
 		);
 
-		if ( ( empty( $prepopulate[ 'pod' ] ) && empty( $prepopulate[ 'id' ] ) ) || $prepopulate[ 'form' ] != $form[ 'id' ] ) {
+		if ( $prepopulate[ 'form' ] != $form[ 'id' ] ) {
 			return $form;
 		}
 
@@ -687,8 +1011,6 @@ class Pods_GF {
 			}
 		}
 		else {
-			$pod = RGFormsModel::get_lead( $id );
-
 			if ( empty( $prepopulate[ 'fields' ] ) ) {
 				$fields = array();
 
@@ -700,6 +1022,14 @@ class Pods_GF {
 				}
 
 				$prepopulate[ 'fields' ] = $fields;
+			}
+
+			if ( !empty( $id ) ) {
+				$pod = RGFormsModel::get_lead( $id );
+			}
+			else {
+				$pod = array();
+				$id = 0;
 			}
 		}
 
@@ -751,20 +1081,22 @@ class Pods_GF {
 			$value_override = apply_filters( 'pods_gf_pre_populate_value', $value_override, $field, $field_options, $form, $prepopulate, $pod );
 
 			if ( null === $value_override ) {
+				$value = $value_override;
+
 				if ( is_object( $pod ) ) {
-					$value = $pod->field( $field_options[ 'field' ] );
+					$value_override = $pod->field( $field_options[ 'field' ] );
 				}
 				elseif ( !empty( $pod ) ) {
 					if ( isset( $pod[ $field_options[ 'field' ] ] ) ) {
-						$value = maybe_unserialize( $pod[ $field_options[ 'field' ] ] );
+						$value_override = maybe_unserialize( $pod[ $field_options[ 'field' ] ] );
 
-						if ( 'list' == $form[ 'fields' ][ $field_key ][ 'type' ] && !empty( $value ) ) {
-							$list = $value;
+						if ( 'list' == $form[ 'fields' ][ $field_key ][ 'type' ] && !empty( $value_override ) ) {
+							$list = $value_override;
 
-							$value = array();
+							$value_override = array();
 
 							foreach ( $list as $list_row ) {
-								$value = array_merge( $value, array_values( $list_row ) );
+								$value_override = array_merge( $value_override, array_values( $list_row ) );
 							}
 						}
 					}
@@ -793,13 +1125,19 @@ class Pods_GF {
 						}
 					}
 				}
-
-				if ( null !== $value ) {
-					$_GET[ 'pods_gf_field_' . $field ] = $value;
-				}
 			}
-			else {
+
+			if ( null !== $value_override ) {
 				$_GET[ 'pods_gf_field_' . $field ] = $value_override;
+			}
+
+			$post_value_override = null;
+			$post_value_override = apply_filters( 'pods_gf_field_value_' . $form[ 'id' ] . '_' . $field, $post_value_override, $value_override, $field, $field_options, $form, $prepopulate, $pod );
+			$post_value_override = apply_filters( 'pods_gf_field_value_' . $form[ 'id' ], $post_value_override, $value_override, $field, $field_options, $form, $prepopulate, $pod );
+			$post_value_override = apply_filters( 'pods_gf_field_value', $post_value_override, $value_override, $field, $field_options, $form, $prepopulate, $pod );
+
+			if ( null !== $post_value_override ) {
+				$_POST[ 'input_' . $field ] = $post_value_override;
 			}
 		}
 
