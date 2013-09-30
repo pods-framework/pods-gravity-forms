@@ -99,10 +99,33 @@ class Pods_GF_UI {
 				// Add a button to Save for Later the form being submitted, to come back to
 				'save_for_later' => true, // simple
 				'save_for_later' => array(
-					'redirect' => '/custom-url-to-redirect-to-on-save/'
+					'redirect' => '/custom-url-to-redirect-to-on-save/', // Redirect to URL on Save for Later
+					'exclude_pages' => array( 1 ) // Exclude Pages from showing button
 				),
 
-				'auto_delete => true, // Automatically delete the GF entry created
+				// Remember values when they are submitted and prepopulate on next form load
+				'remember' => true, // simple
+				'remember' => array(
+					'fields' => array(
+						'1',
+						'5'
+					)
+				),
+
+				// Make inputs read only
+				'read_only' => true, // simple
+				'read_only' => array(
+					'fields' => array(
+						'1',
+						'5'
+					)
+				),
+
+				// Automatically delete the GF entry created, defaults to false
+				'auto_delete => true,
+
+				// Enable Markdown syntax for GF HTML fields, defaults to false
+				'markdown' => true,
 			),
 		 */
 		'manage' => array( // table ui manage
@@ -110,7 +133,8 @@ class Pods_GF_UI {
 			'fields' => array(),
 			'callback' => null,
 			'access_callback' => null,
-			'disabled' => false
+			'disabled' => false,
+			'prepopulate' => true
 		),
 		'add' => array( // form
 			'form' => 0,
@@ -119,8 +143,8 @@ class Pods_GF_UI {
 			'callback' => null,
 			'access_callback' => null,
 			'disabled' => false,
-			'prepopulate' => false,
-			'redirect_after' => false
+			'redirect_after' => false,
+			'prepopulate' => true
 		),
 		'edit' => array( // alternate form or original form (pre-populate data)
 			'form' => 0,
@@ -128,7 +152,8 @@ class Pods_GF_UI {
 			'dynamic_select' => array(),
 			'callback' => null,
 			'access_callback' => null,
-			'disabled' => false
+			'disabled' => false,
+			'prepopulate' => true
 		),
 		'status' => array( // switching status, can define field name (default 'status')
 			'label' => 'Change Status',
@@ -146,7 +171,9 @@ class Pods_GF_UI {
 			'fields' => array(),
 			'callback' => null,
 			'access_callback' => null,
-			'disabled' => true
+			'disabled' => true,
+			'read_only' => true,
+			'prepopulate' => true
 		)
 	);
 
@@ -219,28 +246,13 @@ class Pods_GF_UI {
 
 		$this->setup_ui();
 
-		$forms = array(
-			'add',
-			'edit'
-		);
+		foreach ( $this->actions as $action => $action_data ) {
+			$form_id = (int) pods_var( 'form', $action_data );
 
-		$ids = array();
+			if ( !pods_var_raw( 'disabled', $action_data ) && 0 < $form_id && $this->action == $action ) {
+				$pods_gf = pods_gf( $this->pod, $form_id, $action_data );
 
-		foreach ( $forms as $form ) {
-			if ( isset( $this->actions[ $form ] ) && !$this->actions[ $form ][ 'disabled' ] && 0 < (int) pods_var( 'form', $this->actions[ $form ] ) ) {
-				$form_id = (int) pods_var( 'form', $this->actions[ $form ] );
-
-				if ( in_array( $form_id, $ids ) ) {
-					continue;
-				}
-
-				$ids[] = $form_id;
-
-				$pods_gf = pods_gf( $this->pod, $form_id, $this->actions[ $form ] );
-
-				if ( $this->action == $form ) {
-					self::$pods_gf = $pods_gf;
-				}
+				self::$pods_gf = $pods_gf;
 			}
 		}
 
@@ -261,6 +273,7 @@ class Pods_GF_UI {
 
 		$this->actions[ 'add' ][ 'callback' ] = array( $this, '_action_add' );
 		$this->actions[ 'edit' ][ 'callback' ] = array( $this, '_action_edit' );
+		$this->actions[ 'view' ][ 'callback' ] = array( $this, '_action_view' );
 
 		$this->action = pods_var_raw( 'action', 'get', $this->action, null, true );
 
@@ -283,6 +296,13 @@ class Pods_GF_UI {
 			if ( null !== pods_var_raw( 'label', $options, null, null, true ) ) {
 				$this->ui[ 'label' ][ $action ] = $options[ 'label' ];
 
+				if ( !isset( $this->ui[ 'heading' ][ $action ] ) ) {
+					$this->ui[ 'heading' ][ $action ] = $options[ 'label' ];
+				}
+				elseif ( !isset( $this->ui[ 'header' ][ $action ] ) ) {
+					$this->ui[ 'header' ][ $action ] = $options[ 'label' ];
+				}
+
 				if ( 'add' == $action ) {
 					$this->ui[ 'label' ][ 'add_new' ] = $options[ 'label' ];
 				}
@@ -292,7 +312,23 @@ class Pods_GF_UI {
 			}
 
 			if ( null !== pods_var_raw( 'callback', $options, null, null, true ) ) {
-				$this->ui[ 'actions_custom' ][ $action ] = $options[ 'callback' ];
+				if ( in_array( $action, array( 'add', 'edit' ) ) ) {
+					$this->ui[ 'actions_custom' ][ $action ] = $options[ 'callback' ];
+				}
+				else {
+					$this->ui[ 'actions_custom' ][ $action ] = array(
+						'callback' => $options[ 'callback' ]
+					);
+				}
+			}
+			elseif ( null !== pods_var_raw( 'callback_copy', $options, null, null, true ) ) {
+				$this->ui[ 'actions_custom' ][ $action ] = array(
+					'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ]
+				);
+			}
+
+			if ( null !== pods_var_raw( 'action_data', $options, null, null, true ) ) {
+				$this->ui[ 'actions_custom' ][ $action ] = array_merge( $this->ui[ 'actions_custom' ][ $action ], pods_var_raw( 'action_data', $options, null, null, true ) );
 			}
 
 			if ( array() !== pods_var_raw( 'fields', $options, array(), null, true ) ) {
@@ -305,9 +341,29 @@ class Pods_GF_UI {
 
 			$this->pod = array();
 
+			// @todo Replace the below code when GF adds functionality to get all lead data in get_leads
 			foreach ( $leads as $lead ) {
 				$this->pod[ $lead[ 'id' ] ] = RGFormsModel::get_lead( $lead[ 'id' ] );
+
+				// @todo Replace the below code when GF adds functionality to get all lead meta
+				global $wpdb, $_gform_lead_meta;
+
+				$gf_meta_table = RGFormsModel::get_lead_meta_table_name();
+
+				$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE lead_id = %d", $lead[ 'id' ] ) );
+
+				foreach ( $gf_meta as $gf_meta_value ) {
+					$meta_value = maybe_unserialize( $gf_meta_value->meta_value );
+
+    				$cache_key = $lead[ 'id' ] . "_" . $gf_meta_value->meta_key;
+
+					$_gform_lead_meta[ $cache_key ] = $meta_value;
+
+					$this->pod[ $lead[ 'id' ] ][ $gf_meta_value->meta_key ] = $meta_value;
+				}
 			}
+
+			$this->pod = apply_filters( 'pods_gf_ui_leads', $this->pod, $this->action, $this );
 
 			$default_ui = array(
 				'data' => $this->pod,
@@ -323,6 +379,7 @@ class Pods_GF_UI {
 
 			if ( 0 < $id && isset( $this->pod[ $id ] ) ) {
 				$this->pod = $this->pod[ $id ];
+				$this->id = $id;
 			}
 
 			if ( empty( $this->ui[ 'fields' ][ 'manage' ] ) ) {
@@ -361,6 +418,7 @@ class Pods_GF_UI {
 		}
 		elseif ( !is_object( $this->pod ) && !empty( $this->pod ) ) {
 			$this->pod = pods( $this->pod, ( 0 < $this->id ? $this->id : null ) );
+			$this->id = $this->pod->id();
 		}
 
 		if ( 0 < $this->id ) {
@@ -594,12 +652,16 @@ class Pods_GF_UI {
 	 */
 	public function _action_edit( $duplicate, $obj ) {
 
+		if ( is_object( $duplicate ) ) {
+			$obj = $duplicate;
+			$duplicate = false;
+		}
 ?>
 <div class="wrap pods-admin pods-ui">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
 	<h2>
 		<?php
-			echo ( $duplicate ? $obj->header[ 'duplicate' ] : $obj->header[ 'edit' ] );
+			echo ( $duplicate ? $obj->header[ 'duplicate' ] : $obj->header[ $obj->action ] );
 
 			if ( !in_array( 'add', $obj->actions_disabled ) && !in_array( 'add', $obj->actions_hidden ) ) {
 				$link = pods_var_update( array( 'action' . $obj->num => 'add', 'id' . $obj->num => '', 'do' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
@@ -630,6 +692,48 @@ class Pods_GF_UI {
 		}
 		else {
 			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $duplicate, $obj, $this );
+		}
+	?>
+</div>
+<?php
+
+	}
+
+	/**
+	 * Output all fields
+	 *
+	 * @param PodsUI $obj
+	 */
+	public function _action_view( $obj ) {
+
+		$fields = pods_var_raw( 'fields', $this->actions[ $this->action ] );
+?>
+<div class="wrap pods-admin pods-ui">
+	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
+	<h2>
+		<?php
+			echo $obj->header[ $obj->action ];
+
+			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) ) {
+				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
+		?>
+			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods' ), $obj->heading[ 'manage' ] ); ?></a>
+		<?php
+			}
+		?>
+	</h2>
+
+	<?php
+		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
+			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
+
+			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
+		}
+		elseif ( is_object( $this->pod ) ) {
+			echo $this->pod->view( $fields );
+		}
+		else {
+			do_action( 'pods_gf_ui' . __FUNCTION__ . '_view', $this->pod, $obj, $this );
 		}
 	?>
 </div>

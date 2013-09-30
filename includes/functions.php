@@ -56,7 +56,7 @@ function pods_gf_ui_init() {
 	/**
 	 * @var $pods_gf_ui Pods_GF_UI
 	 */
-	global $pods_gf_ui, $post;
+	global $pods_gf_ui, $pods_gf_ui_loaded, $post;
 
 	do_action( 'pods_gf_init' );
 
@@ -127,10 +127,30 @@ function pods_gf_ui_init() {
 
 	$pods_gf_ui = pods_gf_ui( $options );
 
-	do_action( 'pods_gf_ui_loaded', $pods_gf_ui, $options, $uri, $page );
+	$pods_gf_ui_loaded = array(
+		'options' => $options,
+		'uri' => $uri,
+		'page' => $page
+	);
+
+	add_action( 'wp', 'pods_gf_ui_loaded' );
 
 	// Add content handler
 	add_filter( 'the_content', 'pods_gf_ui_content' );
+
+}
+
+function pods_gf_ui_loaded() {
+
+	global $pods_gf_ui, $pods_gf_ui_loaded;
+
+	if ( empty( $pods_gf_ui ) || empty( $pods_gf_ui_loaded ) ) {
+		return;
+	}
+
+	do_action( 'pods_gf_ui_loaded', $pods_gf_ui, $pods_gf_ui_loaded[ 'options' ], $pods_gf_ui_loaded[ 'uri' ], $pods_gf_ui_loaded[ 'page' ] );
+
+	$pods_gf_ui_loaded = null;
 
 }
 

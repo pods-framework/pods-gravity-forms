@@ -5,6 +5,13 @@
 class Pods_GF {
 
 	/**
+	 * GF Actions / Filters that have already run
+	 *
+	 * @var array
+	 */
+	public static $actioned = array();
+
+	/**
 	 * Pods object
 	 *
 	 * @var Pods
@@ -67,6 +74,13 @@ class Pods_GF {
      */
 	public static $save_for_later = array();
 
+    /**
+     * Array of options for Remember for next time
+     *
+     * @var array
+     */
+	public static $remember = array();
+
 	/**
 	 * Add Pods GF integration for a specific form
 	 *
@@ -88,6 +102,7 @@ class Pods_GF {
 		}
 		// GF entry
 		elseif ( isset( $pod[ 'id' ] ) ) {
+			$this->pod = $pod;
 			$this->id = $pod[ 'id' ];
 		}
 
@@ -102,7 +117,7 @@ class Pods_GF {
 			self::save_for_later( $form_id, $this->options[ 'save_for_later' ] );
 		}
 
-		if ( !pods_var( 'admin', $this->options, 0 ) && ( !is_admin() || !RGForms::is_gravity_page() ) ) {
+		if ( !pods_var( 'admin', $this->options, 0 ) && ( is_admin() && RGForms::is_gravity_page() ) ) {
 			return;
 		}
 
@@ -116,6 +131,22 @@ class Pods_GF {
 			add_action( 'gform_after_submission_' . $form_id, array( $this, '_gf_after_submission' ), 10, 2 );
 		}
 
+		$form = RGFormsModel::get_form_meta( $form_id );
+
+		$field_keys = array();
+
+		foreach ( $form[ 'fields' ] as $k => $field ) {
+			$field_keys[ (string) $field[ 'id' ] ] = $k;
+		}
+
+		$read_only = pods_var_raw( 'read_only', $this->options, false );
+
+		if ( false !== $read_only ) {
+			if ( !has_filter( 'gform_field_input', array( $this, '_gf_field_input_read_only' ) ) ) {
+				add_filter( 'gform_field_input', array( $this, '_gf_field_input_read_only' ), 20, 5 );
+			}
+		}
+
 		if ( isset( $options[ 'fields' ] ) && !empty( $options[ 'fields' ] ) ) {
 			foreach ( $options[ 'fields' ] as $field => $field_options ) {
 				if ( is_array( $field_options ) && isset( $field_options[ 'gf_field' ] ) ) {
@@ -124,6 +155,41 @@ class Pods_GF {
 
 				if ( !has_filter( 'gform_field_validation_' . $form_id . '_' . $field, array( $this, '_gf_field_validation' ) ) ) {
 					add_filter( 'gform_field_validation_' . $form_id . '_' . $field, array( $this, '_gf_field_validation' ), 11, 4 );
+				}
+
+				if ( true === $read_only || ( is_array( $read_only ) && in_array( $field, $read_only ) ) ) {
+					$gf_field = $form[ 'fields' ][ $field_keys[ $field ] ];
+
+					if ( 'list' == RGFormsModel::get_input_type( $gf_field ) ) {
+						$columns = ( is_array( $gf_field[ 'choices' ] ) ? $gf_field[ 'choices' ] : array( array() ) );
+
+						$col_number = 1;
+
+						foreach ( $columns as $column ) {
+							if ( !has_filter( 'gform_column_input_content_' . $form_id . '_' . $field . '_' . $col_number, array( $this, '_gf_field_column_read_only' ) ) ) {
+								add_filter( 'gform_column_input_content_' . $form_id . '_' . $field . '_' . $col_number, array( $this, '_gf_field_column_read_only' ), 20, 6 );
+							}
+
+							$col_number++;
+						}
+					}
+				}
+			}
+		}
+		elseif ( true === $read_only ) {
+			foreach ( $form[ 'fields' ] as $k => $field ) {
+				if ( 'list' == RGFormsModel::get_input_type( $field ) && ( true === $read_only || ( is_array( $read_only ) && in_array( $field, $read_only ) ) ) ) {
+					$columns = ( is_array( $field[ 'choices' ] ) ? $field[ 'choices' ] : array( array() ) );
+
+					$col_number = 1;
+
+					foreach ( $columns as $column ) {
+						if ( !has_filter( 'gform_column_input_content_' . $form_id . '_' . $field[ 'id' ] . '_' . $col_number, array( $this, '_gf_field_column_read_only' ) ) ) {
+							add_filter( 'gform_column_input_content_' . $form_id . '_' . $field[ 'id' ] . '_' . $col_number, array( $this, '_gf_field_column_read_only' ), 20, 6 );
+						}
+
+						$col_number++;
+					}
 				}
 			}
 		}
@@ -335,7 +401,8 @@ class Pods_GF {
 	public static function save_for_later( $form_id, $options = array() ) {
 
 		self::$save_for_later[ $form_id ] = array(
-			'redirect' => null
+			'redirect' => null,
+			'exclude_pages' => array()
 		);
 
 		if ( is_array( $options ) ) {
@@ -344,7 +411,7 @@ class Pods_GF {
 
 		if ( !has_filter( 'gform_pre_render_' . $form_id, array( 'Pods_GF', 'gf_save_for_later_load' ), 9, 2 ) ) {
 			add_filter( 'gform_pre_render_' . $form_id, array( 'Pods_GF', 'gf_save_for_later_load' ), 9, 2 );
-			add_filter( 'gform_submit_button', array( 'Pods_GF', 'gf_save_for_later_button' ), 10, 2 );
+			add_filter( 'gform_submit_button_' . $form_id, array( 'Pods_GF', 'gf_save_for_later_button' ), 10, 2 );
 			add_action( 'gform_after_submission_' . $form_id, array( 'Pods_GF', 'gf_save_for_later_clear' ), 10, 2 );
 		}
 
@@ -425,6 +492,10 @@ class Pods_GF {
 		$save_for_later = pods_var_raw( $form[ 'id' ], self::$save_for_later, array(), null, true );
 
 		if ( !empty( $save_for_later ) ) {
+			if ( !empty( $save_for_later[ 'exclude_pages' ] ) && in_array( GFFormDisplay::get_current_page( $form[ 'id' ] ), $save_for_later[ 'exclude_pages' ] ) ) {
+				return $button_input;
+			}
+
 			wp_enqueue_script( 'pods-gf' );
 
 			$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later" value="' . esc_attr__( 'Save for Later', 'pods-gf-ui' ) . '" />';
@@ -509,6 +580,133 @@ class Pods_GF {
 			}
 
 			pods_var_set( '', '_pods_gf_saved_form_' . $form[ 'id' ], 'cookie' );
+		}
+
+	}
+
+	/**
+	 * Setup Remember for next time for a form
+	 *
+	 * @param int $form_id GF Form ID
+	 * @param array $options Save for Later options
+	 */
+	public static function remember( $form_id, $options = array() ) {
+
+		self::$remember[ $form_id ] = array(
+			'fields' => null
+		);
+
+		if ( is_array( $options ) ) {
+			self::$remember[ $form_id ] = array_merge( self::$remember[ $form_id ], $options );
+		}
+
+		if ( !has_filter( 'gform_pre_render_' . $form_id, array( 'Pods_GF', 'gf_remember_load' ), 9, 2 ) ) {
+			add_filter( 'gform_pre_render_' . $form_id, array( 'Pods_GF', 'gf_remember_load' ), 9, 2 );
+			add_action( 'gform_after_submission_' . $form_id, array( 'Pods_GF', 'gf_remember_save' ), 10, 2 );
+		}
+
+		if ( !wp_script_is( 'pods-gf', 'registered' ) ) {
+			wp_register_script( 'pods-gf', PODS_GF_URL . 'ui/pods-gf.js', array( 'jquery' ), PODS_GF_VERSION, true );
+		}
+
+	}
+
+	/**
+	 * Remember for next time handler for Gravity Forms: gform_pre_render_{$form_id}
+	 *
+	 * @param array $form GF Form array
+	 * @param bool $ajax Whether the form was submitted using AJAX
+	 *
+	 * @return array $form GF Form array
+	 */
+	public static function gf_remember_load( $form, $ajax ) {
+
+		global $user_ID;
+
+		$remember = pods_var_raw( $form[ 'id' ], self::$remember, array(), null, true );
+
+		if ( !empty( $remember ) && empty( $_POST ) ) {
+			$postdata = array();
+
+			if ( is_user_logged_in() ) {
+				$postdata = get_user_meta( $user_ID, '_pods_gf_remember_' . $form[ 'id' ], true );
+			}
+
+			if ( empty( $postdata ) ) {
+				$postdata = pods_var_raw( '_pods_gf_remember_' . $form[ 'id' ], 'cookie' );
+			}
+
+			if ( !empty( $postdata ) ) {
+				$postdata = @json_decode( $postdata, true );
+
+				if ( !empty( $postdata ) ) {
+					$fields = pods_var_raw( 'fields', $remember );
+
+					if ( !empty( $fields ) ) {
+						foreach ( $fields as $field ) {
+							if ( !isset( $_POST[ 'input_' . $field ] ) && isset( $postdata[ 'input_' . $field ] ) ) {
+								$_POST[ 'input_' . $field ] = $postdata[ 'input_' . $field ];
+							}
+						}
+					}
+					else {
+						$_POST = array_merge( $postdata, $_POST );
+					}
+
+					$_POST[ 'pods_gf_remember_loaded' ] = 1;
+				}
+			}
+		}
+
+		return $form;
+
+	}
+
+
+	/**
+	 * Save for Later handler for Gravity Forms: gform_after_submission_{$form_id}
+	 *
+	 * @param array $entry GF Entry array
+	 * @param array $form GF Form array
+	 */
+	public static function gf_remember_save( $entry, $form ) {
+
+		global $user_ID;
+
+		$remember = pods_var_raw( $form[ 'id' ], self::$remember, array(), null, true );
+
+		if ( !empty( $remember ) ) {
+			$fields = pods_var_raw( 'fields', $remember );
+
+			$postdata = array();
+
+			if ( !empty( $fields ) ) {
+				foreach ( $fields as $field ) {
+					if ( isset( $_POST[ 'input_' . $field ] ) ) {
+						$postdata[ 'input_' . $field ] = $_POST[ 'input_' . $field ];
+					}
+				}
+			}
+			else {
+				$postdata = $_POST;
+
+				foreach ( $postdata as $k => $v ) {
+					if ( 0 !== strpos( $k, 'input_' ) ) {
+						unset( $postdata[ $k ] );
+					}
+				}
+			}
+
+			if ( !empty( $postdata ) ) {
+				// JSON encode to avoid serialization issues
+				$postdata = json_encode( $postdata );
+
+				if ( is_user_logged_in() ) {
+					update_user_meta( $user_ID, '_pods_gf_remember_' . $form[ 'id' ], $postdata );
+				}
+
+				pods_var_set( $postdata, '_pods_gf_remember_' . $form[ 'id' ], 'cookie' );
+			}
 		}
 
 	}
@@ -823,6 +1021,15 @@ class Pods_GF {
 			return $form;
 		}
 
+		if ( isset( self::$actioned[ $form[ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $form[ 'id' ] ] ) ) {
+			return $form;
+		}
+		elseif ( !isset( self::$actioned[ $form[ 'id' ] ] ) ) {
+			self::$actioned[ $form[ 'id' ] ] = array();
+		}
+
+		self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
+
 		$field_keys = array();
 
 		foreach ( $form[ 'fields' ] as $k => $field ) {
@@ -978,6 +1185,15 @@ class Pods_GF {
 			return $form;
 		}
 
+		if ( isset( self::$actioned[ $form[ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $form[ 'id' ] ] ) ) {
+			return $form;
+		}
+		elseif ( !isset( self::$actioned[ $form[ 'id' ] ] ) ) {
+			self::$actioned[ $form[ 'id' ] ] = array();
+		}
+
+		self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
+
 		$field_keys = array();
 
 		foreach ( $form[ 'fields' ] as $k => $field ) {
@@ -1002,7 +1218,7 @@ class Pods_GF {
 		$pod = $prepopulate[ 'pod' ];
 		$id = $prepopulate[ 'id' ];
 
-		if ( !empty( $pod ) ) {
+		if ( !is_array( $pod ) && !empty( $pod ) ) {
 			if ( !is_object( $pod ) ) {
 				$pod = pods( $pod, $id );
 			}
@@ -1073,13 +1289,6 @@ class Pods_GF {
 				}
 			}
 
-			$form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] = true;
-			$form[ 'fields' ][ $field_key ][ 'inputName' ] = 'pods_gf_field_' . $field;
-
-			$value_override = apply_filters( 'pods_gf_pre_populate_value_' . $form[ 'id' ] . '_' . $field, $value_override, $field, $field_options, $form, $prepopulate, $pod );
-			$value_override = apply_filters( 'pods_gf_pre_populate_value_' . $form[ 'id' ], $value_override, $field, $field_options, $form, $prepopulate, $pod );
-			$value_override = apply_filters( 'pods_gf_pre_populate_value', $value_override, $field, $field_options, $form, $prepopulate, $pod );
-
 			if ( null === $value_override ) {
 				$value = $value_override;
 
@@ -1127,6 +1336,13 @@ class Pods_GF {
 				}
 			}
 
+			$form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] = true;
+			$form[ 'fields' ][ $field_key ][ 'inputName' ] = 'pods_gf_field_' . $field;
+
+			$value_override = apply_filters( 'pods_gf_pre_populate_value_' . $form[ 'id' ] . '_' . $field, $value_override, $field, $field_options, $form, $prepopulate, $pod );
+			$value_override = apply_filters( 'pods_gf_pre_populate_value_' . $form[ 'id' ], $value_override, $field, $field_options, $form, $prepopulate, $pod );
+			$value_override = apply_filters( 'pods_gf_pre_populate_value', $value_override, $field, $field_options, $form, $prepopulate, $pod );
+
 			if ( null !== $value_override ) {
 				$_GET[ 'pods_gf_field_' . $field ] = $value_override;
 			}
@@ -1146,6 +1362,267 @@ class Pods_GF {
 	}
 
 	/**
+	 * Enable Markdown Syntax for HTML fields
+	 *
+	 * @param array $form GF Form array
+	 * @param bool $ajax Whether the form was submitted using AJAX
+	 *
+	 * @return array $form GF Form array
+	 */
+	public static function gf_markdown( $form, $ajax ) {
+
+		if ( isset( self::$actioned[ $form[ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $form[ 'id' ] ] ) ) {
+			return $form;
+		}
+		elseif ( !isset( self::$actioned[ $form[ 'id' ] ] ) ) {
+			self::$actioned[ $form[ 'id' ] ] = array();
+		}
+
+		self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
+
+		if ( !function_exists( 'Markdown' ) ) {
+			include_once PODS_GF_DIR . 'includes/Markdown.php';
+		}
+
+		$sanitize_from_markdown = array(
+			'-',
+			'_'
+		);
+
+		$temporary_sanitization = array(
+			'XXXXMERGEDASHXXXX',
+			'XXXXMERGEUNDERSCOREXXXX'
+		);
+
+		foreach ( $form[ 'fields' ] as $k => $field ) {
+			if ( 'html' == $field[ 'type' ] ) {
+				$content = $field[ 'content' ];
+
+				preg_match_all( "/\{([\w\:\.\_\-]*?)\}/", $content, $merge_tags, PREG_SET_ORDER );
+
+				// Sanitize merge tags (from Markdown)
+				foreach ( $merge_tags as $merge_tag_match ) {
+					$merge_tag = $merge_tag_match[ 0 ];
+
+					$merge_tag_sanitized = str_replace( $sanitize_from_markdown, $temporary_sanitization, $merge_tag );
+
+					$content = str_replace( $merge_tag, $merge_tag_sanitized, $content );
+				}
+
+				// Run Markdown
+				$content = Markdown( $content );
+
+				// Unsanitize merge tags
+				foreach ( $merge_tags as $merge_tag_match ) {
+					$merge_tag = $merge_tag_match[ 0 ];
+
+					$merge_tag_sanitized = str_replace( $sanitize_from_markdown, $temporary_sanitization, $merge_tag );
+
+					$content = str_replace( $merge_tag_sanitized, $merge_tag, $content );
+				}
+
+				$form[ 'fields' ][ $k ][ 'content' ] = $content;
+			}
+		}
+
+		return $form;
+
+	}
+
+	/**
+	 * Override GF Field input to make read only
+	 *
+	 * @param string $input_html Input HTML override
+	 * @param array $field GF Field array
+	 * @param mixed $value Field value
+	 * @param int $lead_id GF Lead ID
+	 * @param int $form_id GF Form ID
+	 *
+	 * @return string Input HTML override
+	 */
+	public function _gf_field_input_read_only( $input_html, $field, $value, $lead_id, $form_id ) {
+
+		if ( !isset( self::$actioned[ $form_id ] ) ) {
+			self::$actioned[ $form_id ] = array();
+		}
+
+		if ( !isset( self::$actioned[ $form_id ][ 'form' ] ) ) {
+			$form = RGFormsModel::get_form_meta( $form_id );
+
+			self::$actioned[ $form_id ][ 'form' ] = $form;
+		}
+		else {
+			$form = self::$actioned[ $form_id ][ 'form' ];
+		}
+
+		if ( !isset( self::$actioned[ $form_id ][ __FUNCTION__ ] ) ) {
+			self::$actioned[ $form_id ][ __FUNCTION__ ] = 0;
+		}
+
+		$last_page = self::$actioned[ $form_id ][ __FUNCTION__ ];
+
+		$read_only = pods_var_raw( 'read_only', $this->options, false );
+
+		$non_read_only = array(
+			'hidden',
+			'captcha',
+			'page',
+			'section',
+			'honeypot',
+			'list'
+		);
+
+		$field_type = RGFormsModel::get_input_type( $field );
+
+		$page_header = '';
+
+		if ( $this->form_id != $form_id || in_array( $field_type, $non_read_only ) || ( false === $read_only || ( is_array( $read_only ) && !in_array( $field, $read_only ) ) ) ) {
+			return $input_html;
+		}
+
+		if ( isset( $field[ 'pageNumber' ] ) && 0 < $field[ 'pageNumber' ] && $last_page != $field[ 'pageNumber' ] ) {
+			self::$actioned[ $form_id ][ __FUNCTION__ ] = $field[ 'pageNumber' ];
+
+			$page_header = '<h3 class="gf-page-title">' . $form[ 'pagination' ][ 'pages' ][ ( $field[ 'pageNumber' ] - 1 ) ] . '</h3>';
+		}
+
+		if ( 'html' == $field_type ) {
+			$input_html = IS_ADMIN ? "<img class='gfield_html_block' src='" . GFCommon::get_base_url() . "/images/gf-html-admin-placeholder.jpg' alt='HTML Block'/>" : $field[ 'content' ];
+			$input_html = GFCommon::replace_variables_prepopulate( $input_html ); //adding support for merge tags
+			$input_html = do_shortcode( $input_html ); //adding support for shortcodes
+
+			return $page_header . $input_html;
+		}
+
+		$input_field_name = 'input_' . $field[ 'id' ];
+
+		if ( is_array( $value ) || isset( $field[ 'choices' ] ) ) {
+			$labels = array();
+			$values = array();
+
+			$value = (array) $value;
+
+			if ( isset( $field[ 'choices' ] ) ) {
+            	$choice_number = 1;
+
+				foreach ( $field[ 'choices' ] as $choice ) {
+					if($choice_number % 10 == 0) //hack to skip numbers ending in 0. so that 5.1 doesn't conflict with 5.10
+						$choice_number++;
+
+					if ( in_array( $choice[ 'value' ], $value ) ) {
+						$values[ $choice_number ] = $choice[ 'value' ];
+						$labels[] = $choice[ 'text' ];
+					}
+
+					$choice_number++;
+				}
+			}
+			else {
+            	$choice_number = 1;
+
+				foreach ( $value as $val ) {
+					if($choice_number % 10 == 0) //hack to skip numbers ending in 0. so that 5.1 doesn't conflict with 5.10
+						$choice_number++;
+
+					$values[ $choice_number ] = $val;
+
+					$choice_number++;
+				}
+			}
+
+			$input_html = '<div class="ginput_container">';
+			$input_html .= '<ul>';
+
+			foreach ( $labels as $label ) {
+				$input_html .= '<li>' . esc_html( $label ) . '</li>';
+			}
+
+			$input_html .= '</ul>';
+
+			foreach ( $values as $choice_number => $val ) {
+				$input_field_name_choice = $input_field_name;
+
+				if ( 'checkbox' == $input_field_name_choice ) {
+					$input_field_name_choice .= '_' . $choice_number;
+				}
+
+				$input_html .= '<input type="text" name="' . $input_field_name_choice . '" value="' . esc_attr( $val ) . '" readonly="readonly" style="display:none;" class="hidden" />';
+			}
+
+			$input_html .= '</div>';
+		}
+		else {
+			$label = $value;
+
+			if ( in_array( $field_type, array( 'total', 'donation', 'price' ) ) ) {
+				if ( empty( $value ) ) {
+					$value = 0;
+				}
+
+				$label = GFCommon::to_money( $value );
+				$value = GFCommon::to_number( $value );
+			}
+			elseif ( in_array( $field_type, array( 'number' ) ) ) {
+				if ( empty( $value ) ) {
+					$value = 0;
+				}
+
+				$label = $value = GFCommon::to_number( $value );
+			}
+
+			$input_html = '<div class="ginput_container">';
+			$input_html .= esc_html( $label );
+			$input_html .= '<input type="text" name="' . $input_field_name . '" value="' . esc_attr( $value ) . '" readonly="readonly" style="display:none;" class="hidden" />';
+			$input_html .= '</div>';
+		}
+
+		return $page_header . $input_html;
+
+	}
+
+	/**
+	 * Override GF List Field column input to make read only
+	 *
+	 * @param string $input Input HTML
+	 * @param array $input_info GF List Field info (for select choices)
+	 * @param array $field GF Field array
+	 * @param string $text GF List Field column name
+	 * @param mixed $value Field value
+	 * @param int $form_id GF Form ID
+	 *
+	 * @return string Input HTML override
+	 */
+	public function _gf_field_column_read_only( $input, $input_info, $field, $text, $value, $form_id ) {
+
+		if ( $this->form_id != $form_id ) {
+			return $input;
+		}
+
+		$input_field_name = 'input_' . $field[ 'id' ] . '[]';
+
+		$label = $value;
+
+		if ( isset( $input_info[ 'choices' ] ) ) {
+			foreach ( $input_info[ 'choices' ] as $choice ) {
+				if ( $value == $choice[ 'value' ] ) {
+					$label = $choice[ 'text' ];
+
+					break;
+				}
+			}
+		}
+		elseif ( false !== strpos( $input, 'type="checkbox"' ) || false !== strpos( $input, 'type=\'checkbox\'' ) ) {
+			$label = ( $value ? __( 'Yes', 'pods-gravity-forms' ) : __( 'No', 'pods-gravity-forms' ) );
+		}
+
+		$input = esc_html( $label );
+		$input .= '<input type="text" name="' . $input_field_name . '" value="' . esc_attr( $value ) . '" readonly="readonly" style="display:none;" class="hidden" />';
+
+		return $input;
+
+	}
+
+	/**
 	 * Action handler for Gravity Forms: gform_pre_render_{$form_id}
 	 *
 	 * @param array $form GF Form array
@@ -1154,11 +1631,11 @@ class Pods_GF {
 	 * @return array $form GF Form array
 	 */
 	public function _gf_pre_render( $form, $ajax ) {
-
 		if ( empty( $this->options ) ) {
 			return $form;
 		}
 
+		// Add Dynamic Selects
 		if ( isset( $this->options[ 'dynamic_select' ] ) && !empty( $this->options[ 'dynamic_select' ] ) ) {
 			$form = self::gf_dynamic_select( $form, $ajax, $this->options[ 'dynamic_select' ] );
 		}
@@ -1167,7 +1644,7 @@ class Pods_GF {
 		if ( isset( $this->options[ 'prepopulate' ] ) && !empty( $this->options[ 'prepopulate' ] ) ) {
 			$prepopulate = array(
 				'pod' => $this->pod,
-				'id' => pods_var( 'save_id', $this->options, pods_var( 'id', $this->pod, $this->id ), null, true ),
+				'id' => pods_var( 'save_id', $this->options, pods_var( 'id', $this->pod, $this->id, null, true ), null, true ),
 				'fields' => $this->options[ 'fields' ]
 			);
 
@@ -1176,6 +1653,11 @@ class Pods_GF {
 			}
 
 			$form = self::gf_prepopulate( $form, $ajax, $prepopulate );
+		}
+
+		// Markdown Syntax for HTML
+		if ( isset( $this->options[ 'markdown' ] ) && !empty( $this->options[ 'markdown' ] ) ) {
+			$form = self::gf_markdown( $form, $ajax );
 		}
 
 		return $form;
@@ -1191,6 +1673,15 @@ class Pods_GF {
 	 * @return string Form HTML
 	 */
 	public function _gf_get_form_filter( $form_string, $form ) {
+
+		if ( isset( self::$actioned[ $form[ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $form[ 'id' ] ] ) ) {
+			return $form_string;
+		}
+		elseif ( !isset( self::$actioned[ $form[ 'id' ] ] ) ) {
+			self::$actioned[ $form[ 'id' ] ] = array();
+		}
+
+		self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
 
 		return $form_string;
 
@@ -1211,6 +1702,15 @@ class Pods_GF {
 		if ( !$validation_result[ 'is_valid' ] ) {
 			return $validation_result;
 		}
+
+		if ( isset( self::$actioned[ $form[ 'id' ] ] ) && in_array( __FUNCTION__ . '_' . $field[ 'id' ], self::$actioned[ $form[ 'id' ] ] ) ) {
+			return $validation_result;
+		}
+		elseif ( !isset( self::$actioned[ $form[ 'id' ] ] ) ) {
+			self::$actioned[ $form[ 'id' ] ] = array();
+		}
+
+		self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__ . '_' . $field[ 'id' ];
 
 		if ( empty( $this->options ) ) {
 			return $form;
@@ -1287,6 +1787,15 @@ class Pods_GF {
 		if ( !$validation_result[ 'is_valid' ] ) {
 			return $validation_result;
 		}
+
+		if ( isset( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) && in_array( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ], __FUNCTION__ ) ) {
+			return $validation_result;
+		}
+		elseif ( !isset( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) ) {
+			self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] = array();
+		}
+
+		self::$actioned[ $validation_result[ 'form' ][ 'id' ] ][] = __FUNCTION__;
 
 		$form = $validation_result[ 'form' ];
 
@@ -1366,6 +1875,15 @@ class Pods_GF {
 	 */
 	public function _gf_validation_message( $validation_message, $form ) {
 
+		if ( isset( self::$actioned[ $form[ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $form[ 'id' ] ] ) ) {
+			return $validation_message;
+		}
+		elseif ( !isset( self::$actioned[ $form[ 'id' ] ] ) ) {
+			self::$actioned[ $form[ 'id' ] ] = array();
+		}
+
+		self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
+
 		if ( !empty( $this->gf_validation_message ) ) {
 			$validation_message .= "\n" . '<div class="validation_error">' . $this->gf_validation_message . '</div>';
 		}
@@ -1383,8 +1901,17 @@ class Pods_GF {
 	public function _gf_after_submission( $entry, $form ) {
 
 		if ( empty( $this->gf_validation_message ) ) {
+			if ( isset( self::$actioned[ $form[ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $form[ 'id' ] ] ) ) {
+				return $entry;
+			}
+			elseif ( !isset( self::$actioned[ $form[ 'id' ] ] ) ) {
+				self::$actioned[ $form[ 'id' ] ] = array();
+			}
+
+			self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
+
 			if ( empty( $this->options ) ) {
-				return;
+				return $entry;
 			}
 
 			// Send notifications
