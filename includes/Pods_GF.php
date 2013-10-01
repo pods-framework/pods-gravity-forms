@@ -348,7 +348,7 @@ class Pods_GF {
 		);
 
 		if ( is_array( $options ) ) {
-			self::$save_for_later[ $form_id ] = array_merege( self::$save_for_later[ $form_id ], $options );
+			self::$save_for_later[ $form_id ] = array_merge( self::$save_for_later[ $form_id ], $options );
 		}
 
 		if ( !has_filter( 'gform_pre_render_' . $form_id, array( 'Pods_GF', 'gf_save_for_later_load' ), 9, 2 ) ) {
