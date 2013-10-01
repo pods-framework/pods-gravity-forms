@@ -126,6 +126,27 @@ class Pods_GF_UI {
 
 				// Enable Markdown syntax for GF HTML fields, defaults to false
 				'markdown' => true,
+
+				// Enable editing leads instead of inserting them
+				'edit' => true,
+
+				// Customize the submit text of a form submit button on the fly
+				'submit_button' => 'http://mysite.com/my/site/my-image.png', // simple button image url
+				'submit_button' => 'Time to Submit', // simple button text
+				'submit_button' => array(
+					'imageUrl' => '/my/site/my-image.png', // use image url for button
+
+					'text' => 'Submit!' // use text for button
+				)
+
+				// Customize the submit redirect URL of a form on the fly
+				'confirmation' => 'http://mysite.com/my/site/?id={entry_id}', // simple redirect
+				'confirmation' => 'Totally Awesome, Great Job!', // simple text
+				'confirmation' => array(
+					'url' => '/my/site/?id={entry_id}', // redirect to a url
+
+					'message' => 'Thanks!' // show a message
+				)
 			),
 		 */
 		'manage' => array( // table ui manage
@@ -152,6 +173,7 @@ class Pods_GF_UI {
 			'dynamic_select' => array(),
 			'callback' => null,
 			'access_callback' => null,
+			'edit' => true,
 			'disabled' => false,
 			'prepopulate' => true
 		),
@@ -164,6 +186,7 @@ class Pods_GF_UI {
 			'dynamic_select' => array(),
 			'callback' => null,
 			'access_callback' => null,
+			'edit' => true,
 			'disabled' => true
 		),
 		'view' => array( // view details
@@ -284,22 +307,42 @@ class Pods_GF_UI {
 	 */
 	private function setup_ui() {
 
+		$defaults = array(
+			'heading' => '',
+			'header' => '',
+			'label' => '',
+			'label_alt' => '',
+			'form' => 0,
+			'edit' => false,
+			'fields' => array(),
+			'dynamic_select' => array(),
+			'callback' => null,
+			'callback_copy' => null,
+			'access_callback' => null,
+			'action_data' => array(),
+			'disabled' => false,
+			'prepopulate' => true
+		);
+
 		foreach ( $this->actions as $action => $options ) {
-			if ( null !== pods_var_raw( 'heading', $options, null, null, true ) ) {
+			$this->actions[ $action ] = $options = array_merge( $defaults, $options );
+
+			if ( !empty( $options[ 'heading' ] ) ) {
 				$this->ui[ 'heading' ][ $action ] = $options[ 'heading' ];
 			}
 
-			if ( null !== pods_var_raw( 'header', $options, null, null, true ) ) {
+			if ( !empty( $options[ 'header' ] ) ) {
 				$this->ui[ 'header' ][ $action ] = $options[ 'header' ];
 			}
 
-			if ( null !== pods_var_raw( 'label', $options, null, null, true ) ) {
+			if ( !empty( $options[ 'label' ] ) ) {
 				$this->ui[ 'label' ][ $action ] = $options[ 'label' ];
 
-				if ( !isset( $this->ui[ 'heading' ][ $action ] ) ) {
+				if ( !isset( $this->ui[ 'heading' ][ $action ] ) || empty( $this->ui[ 'heading' ][ $action ] ) ) {
 					$this->ui[ 'heading' ][ $action ] = $options[ 'label' ];
 				}
-				elseif ( !isset( $this->ui[ 'header' ][ $action ] ) ) {
+
+				if ( !isset( $this->ui[ 'header' ][ $action ] ) || empty( $this->ui[ 'header' ][ $action ] ) ) {
 					$this->ui[ 'header' ][ $action ] = $options[ 'label' ];
 				}
 
@@ -307,11 +350,11 @@ class Pods_GF_UI {
 					$this->ui[ 'label' ][ 'add_new' ] = $options[ 'label' ];
 				}
 			}
-			elseif ( 'add' == $action && null !== pods_var_raw( 'label_alt', $options, null, null, true ) ) {
+			elseif ( 'add' == $action && !empty( $options[ 'label_alt' ] ) ) {
 				$this->ui[ 'label' ][ 'add_new' ] = $options[ 'label_alt' ];
 			}
 
-			if ( null !== pods_var_raw( 'callback', $options, null, null, true ) ) {
+			if ( !empty( $options[ 'callback' ] ) ) {
 				if ( in_array( $action, array( 'add', 'edit' ) ) ) {
 					$this->ui[ 'actions_custom' ][ $action ] = $options[ 'callback' ];
 				}
@@ -321,17 +364,24 @@ class Pods_GF_UI {
 					);
 				}
 			}
-			elseif ( null !== pods_var_raw( 'callback_copy', $options, null, null, true ) ) {
-				$this->ui[ 'actions_custom' ][ $action ] = array(
-					'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ]
-				);
+			elseif ( !empty( $options[ 'callback_copy' ] ) ) {
+				if ( is_array( $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ] ) && isset( $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ][ 'callback' ] ) ) {
+					$this->ui[ 'actions_custom' ][ $action ] = array(
+						'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ][ 'callback' ]
+					);
+				}
+				else {
+					$this->ui[ 'actions_custom' ][ $action ] = array(
+						'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ]
+					);
+				}
 			}
 
-			if ( null !== pods_var_raw( 'action_data', $options, null, null, true ) ) {
+			if ( !empty( $options[ 'action_data' ] ) ) {
 				$this->ui[ 'actions_custom' ][ $action ] = array_merge( $this->ui[ 'actions_custom' ][ $action ], pods_var_raw( 'action_data', $options, null, null, true ) );
 			}
 
-			if ( array() !== pods_var_raw( 'fields', $options, array(), null, true ) ) {
+			if ( !empty( $options[ 'fields' ] ) ) {
 				$this->ui[ 'fields' ][ $action ] = $options[ 'fields' ];
 			}
 		}
@@ -661,7 +711,7 @@ class Pods_GF_UI {
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
 	<h2>
 		<?php
-			echo ( $duplicate ? $obj->header[ 'duplicate' ] : $obj->header[ $obj->action ] );
+			echo $obj->do_template( $duplicate ? $obj->header[ 'duplicate' ] : $obj->header[ $obj->action ] );
 
 			if ( !in_array( 'add', $obj->actions_disabled ) && !in_array( 'add', $obj->actions_hidden ) ) {
 				$link = pods_var_update( array( 'action' . $obj->num => 'add', 'id' . $obj->num => '', 'do' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
@@ -704,7 +754,11 @@ class Pods_GF_UI {
 	 *
 	 * @param PodsUI $obj
 	 */
-	public function _action_view( $obj ) {
+	public function _action_view( $obj, $obj2 = null ) {
+
+		if ( is_object( $obj2 ) ) {
+			$obj = $obj2;
+		}
 
 		$fields = pods_var_raw( 'fields', $this->actions[ $this->action ] );
 ?>
@@ -712,7 +766,7 @@ class Pods_GF_UI {
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
 	<h2>
 		<?php
-			echo $obj->header[ $obj->action ];
+			echo $obj->do_template( $obj->header[ $obj->action ] );
 
 			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) ) {
 				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
