@@ -6,11 +6,13 @@
  * @param int $form_id GF Form ID
  * @param array $options Form options for integration
  */
-function pods_gf( $pod, $form_id, $options = array() ) {
+function pods_gf( $pod = null, $form_id = null, $options = array() ) {
 
 	require_once( PODS_GF_DIR . 'includes/Pods_GF.php' );
 
-	return new Pods_GF( $pod, $form_id, $options );
+	if ( null !== $pod || null !== $form_id || array() !== $options ) {
+		return new Pods_GF( $pod, $form_id, $options );
+	}
 
 }
 
@@ -191,7 +193,7 @@ function pods_gf_ui_detect_shortcode() {
 	if ( !is_object( $pods_gf_ui ) && is_singular() ) {
 		global $post;
 
-        $form_id = (int) pods_var( 'gform_submit', 'post' );
+        $form_id = (int) pods_v( 'gform_submit', 'post' );
 
 		if ( 0 < $form_id && preg_match( '/\[pods\-gf\-ui/i', $post->post_content ) ) {
 			$form_info = RGFormsModel::get_form( $form_id );

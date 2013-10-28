@@ -12,6 +12,10 @@ jQuery( function() {
 		} ).on( 'click', '.pods-gf-save-for-later-reset', function( e ) {
 			e.preventDefault();
 
+			if ( !confirm( 'Are you sure you want to reset your saved form?' ) ) {
+				return;
+			}
+
 			var $this = jQuery( this ),
 				$form = $this.closest( 'form' );
 
@@ -40,6 +44,44 @@ jQuery( function() {
 							$new_reset_button.appendTo( $t );
 						}
 					}
+				} );
+			}
+		} );
+	}
+
+	if ( jQuery( '.pods-gf-secondary-submit' )[ 0 ] ) {
+		jQuery( 'div.gform_wrapper' ).each( function() {
+			var $this = jQuery( this ),
+				$pods_secondary_submit = jQuery( '.pods-gf-secondary-submit', $this );
+
+			if ( $pods_secondary_submit[ 0 ] ) {
+				jQuery( '.gform_page_footer', $this ).each( function() {
+					var $t = jQuery( this ),
+						$secondary_submit = jQuery( '.pods-gf-secondary-submit', $t );
+
+					$secondary_submit.each( function() {
+						var $secondary_t = jQuery( this ),
+							$submit = $this.find( 'input[id^="gform_submit_button_"]' ),
+							events = $submit.data( 'events' );
+
+						if ( 'undefined' != typeof events ) {
+							// Iterate through all event types
+							jQuery.each( events, function( eventType, eventArray ) {
+								if ( 'undefined' != typeof eventArray ) {
+									// Iterate through every bound handler
+									jQuery.each( eventArray, function( index, event ) {
+										// Take event namespaces into account
+										var eventToBind = ( '' != event.namespace )
+											? ( event.type + '.' + event.namespace )
+											: ( event.type );
+
+										// Bind event
+										$secondary_t.on( eventToBind, event.data, event.handler );
+									} );
+								}
+							} );
+						}
+					} );
 				} );
 			}
 		} );
