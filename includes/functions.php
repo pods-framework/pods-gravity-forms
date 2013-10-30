@@ -166,6 +166,10 @@ function pods_gf_ui_loaded() {
  */
 function pods_gf_ui_content( $content, $post_id = 0 ) {
 
+	if ( !apply_filters( 'pods_gf_ui_content_filter', true, $post_id ) ) {
+		return $content;
+	}
+
 	global $post;
 
 	if ( empty( $post_id ) && is_object( $post ) ) {
