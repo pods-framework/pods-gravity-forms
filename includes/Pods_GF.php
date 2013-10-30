@@ -107,12 +107,18 @@ class Pods_GF {
 		// Pod object
 		if ( is_object( $pod ) ) {
 			$this->pod =& $pod;
-			$this->id =& $this->pod->id;
+
+			if ( $this->pod->exists() ) {
+				$this->id = $this->pod->id();
+			}
 		}
 		// Pod name
 		elseif ( !is_array( $pod ) ) {
-			$this->pod = pods( $pod );
-			$this->id =& $this->pod->id;
+			$this->pod = pods( $pod, pods_v( 'id', 'get', null, true ) );
+
+			if ( $this->pod->exists() ) {
+				$this->id = $this->pod->id();
+			}
 		}
 		// GF entry
 		elseif ( isset( $pod[ 'id' ] ) ) {
@@ -794,7 +800,8 @@ class Pods_GF {
 			'imageUrl' => null,
 			'text' => 'Alt Submit',
 			'action' => 'alt',
-			'value' => 1
+			'value' => 1,
+			'value_from_ui' => ''
 		);
 
 		if ( is_array( $options ) ) {
@@ -834,11 +841,33 @@ class Pods_GF {
 				'imageUrl' => null,
 				'text' => 'Alt Submit',
 				'action' => 'alt',
-				'value' => 1
+				'value' => 1,
+				'value_from_ui' => ''
 			);
 
 			foreach ( $secondary_submits as $secondary_submit ) {
 				$secondary_submit = array_merge( $defaults, $secondary_submit );
+
+				if ( !empty( $secondary_submit[ 'value_from_ui' ] ) && class_exists( 'Pods_GF_UI' ) && !empty( Pods_GF_UI::$pods_ui ) ) {
+					if ( in_array( $secondary_submit[ 'value_from_ui' ], array( 'next_id', 'prev_id' ) ) ) {
+						// Setup data
+						Pods_GF_UI::$pods_ui->get_data();
+					}
+
+					if ( 'prev_id' == $secondary_submit[ 'value_from_ui' ] ) {
+						$secondary_submit[ 'value' ] = Pods_GF_UI::$pods_ui->pod->prev_id();
+					}
+					elseif ( 'next_id' == $secondary_submit[ 'value_from_ui' ] ) {
+						$secondary_submit[ 'value' ] = Pods_GF_UI::$pods_ui->pod->next_id();
+					}
+
+					if ( in_array( $secondary_submit[ 'value_from_ui' ], array( 'next_id', 'prev_id' ) ) ) {
+						// No ID, hide button
+						if ( empty( $secondary_submit[ 'value' ] ) ) {
+							continue;
+						}
+					}
+				}
 
 				if ( empty( $secondary_submit[ 'imageUrl' ] ) ) {
 					if ( null !== $secondary_submit[ 'value' ] && $secondary_submit[ 'text' ] !== $secondary_submit[ 'value' ] ) {
@@ -1813,7 +1842,7 @@ class Pods_GF {
 			}
 
 			// No GF field set
-			if ( empty( $field ) || !isset( $field_keys[ $field ] ) ) {
+			if ( empty( $field ) ) {
 				continue;
 			}
 
@@ -1822,12 +1851,16 @@ class Pods_GF {
 				continue;
 			}
 
-			$field_key = $field_keys[ $field ];
+			$field_key = null;
+
+			if ( isset( $field_keys[ $field ] ) ) {
+				$field_key = $field_keys[ $field ];
+			}
 
 			// Allow for value to be overridden by existing prepopulation or callback
 			$value_override = $field_options[ 'value' ];
 
-			if ( null === $value_override && isset( $form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] ) && $form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] ) {
+			if ( null !== $field_key && null === $value_override && isset( $form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] ) && $form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] ) {
 				// @todo handling for field types that have different $_POST input names
 
 				if ( 'checkbox' == $form[ 'fields' ][ $field_key ][ 'type' ] ) {
@@ -1862,7 +1895,7 @@ class Pods_GF {
 					if ( isset( $pod[ $field_options[ 'field' ] ] ) ) {
 						$value_override = maybe_unserialize( $pod[ $field_options[ 'field' ] ] );
 
-						if ( !empty( $value_override ) ) {
+						if ( null !== $field_key && !empty( $value_override ) ) {
 							if ( 'list' == $form[ 'fields' ][ $field_key ][ 'type' ] ) {
 								$list = $value_override;
 
@@ -1891,7 +1924,7 @@ class Pods_GF {
 							}
 						}
 					}
-					elseif ( 'checkbox' == $form[ 'fields' ][ $field_key ][ 'type' ] ) {
+					elseif ( null !== $field_key && 'checkbox' == $form[ 'fields' ][ $field_key ][ 'type' ] ) {
 						$value_override = array();
 
 						$items = 0;
@@ -1934,8 +1967,10 @@ class Pods_GF {
 				}
 			}
 
-			$form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] = $autopopulate;
-			$form[ 'fields' ][ $field_key ][ 'inputName' ] = 'pods_gf_field_' . $field;
+			if ( null !== $field_key ) {
+				$form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] = $autopopulate;
+				$form[ 'fields' ][ $field_key ][ 'inputName' ] = 'pods_gf_field_' . $field;
+			}
 
 			$value_override = apply_filters( 'pods_gf_pre_populate_value_' . $form[ 'id' ] . '_' . $field, $value_override, $field, $field_options, $form, $prepopulate, $pod );
 			$value_override = apply_filters( 'pods_gf_pre_populate_value_' . $form[ 'id' ], $value_override, $field, $field_options, $form, $prepopulate, $pod );
@@ -2698,7 +2733,7 @@ class Pods_GF {
 			return $validation_result;
 		}
 
-		if ( isset( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) && in_array( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ], __FUNCTION__ ) ) {
+		if ( isset( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) ) {
 			return $validation_result;
 		}
 		elseif ( !isset( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) ) {
@@ -2719,11 +2754,17 @@ class Pods_GF {
 			$field_keys[ (string) $field[ 'id' ] ] = $k;
 		}
 
-		$id = (int) pods_v( 'id', $this->pod, 0 );
+		if ( is_object( $this->pod ) ) {
+			$id = $this->pod->id();
+		}
+		else {
+			$id = (int) pods_v( 'id', $this->pod, 0 );
+		}
+
 		$save_action = 'add';
 
 		if ( !empty( $id ) ) {
-			$save_action = 'edit';
+			$save_action = 'save';
 		}
 
 		if ( isset( $this->options[ 'save_id' ] ) && !empty( $this->options[ 'save_id' ] ) ) {
@@ -2742,17 +2783,18 @@ class Pods_GF {
 
 		try {
 			$args = array(
-				$data
+				$data // Data
 			);
 
-			if ( 'edit' == $save_action ) {
-				$args[] = $id;
+			if ( 'save' == $save_action ) {
+				$args[] = null; // Value
+				$args[] = $id; // ID
 			}
 
 			if ( is_object( $this->pod ) ) {
 				$id = call_user_func_array( array( $this->pod, $save_action ), $args );
 
-				$this->pod->id = $id;
+				$this->pod->id = $this->id = $id;
 				$this->pod->fetch( $id );
 
 				do_action( 'pods_gf_to_pods_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
@@ -2895,7 +2937,9 @@ class Pods_GF {
 
 			self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
 
-			$this->id = $entry[ 'id' ];
+			if ( !is_object( $this->pod ) ) {
+				$this->id = $entry[ 'id' ];
+			}
 
 			if ( empty( $this->options ) ) {
 				return $entry;
@@ -2919,6 +2963,44 @@ class Pods_GF {
 
 			// Redirect after
 			if ( pods_v( 'redirect_after', $this->options, false ) ) {
+				// Handle secondary submits and redirect to next ID
+				$secondary_submits = (array) pods_v( 'secondary_submits', $this->options, array() );
+
+				if ( !empty( $secondary_submits ) ) {
+					if ( isset( $secondary_submits[ 'action' ] ) ) {
+						$secondary_submits = array( $secondary_submits );
+					}
+
+					$defaults = array(
+						'imageUrl' => null,
+						'text' => 'Alt Submit',
+						'action' => 'alt',
+						'value' => 1,
+						'value_from_ui' => ''
+					);
+
+					foreach ( $secondary_submits as $secondary_submit ) {
+						$secondary_submit = array_merge( $defaults, $secondary_submit );
+
+						// Not set
+						if ( !isset( $_POST[ 'pods_gf_ui_action_' . $secondary_submit[ 'action' ] ] ) ) {
+							continue;
+						}
+						// No value
+						elseif ( empty( $_POST[ 'pods_gf_ui_action_' . $secondary_submit[ 'action' ] ] ) ) {
+							break;
+						}
+						// Not auto handling
+						elseif ( !in_array( $secondary_submit[ 'value_from_ui' ], array( 'next_id', 'prev_id' ) ) ) {
+							break;
+						}
+
+						pods_redirect( add_query_arg( array( 'id' => (int) $_POST[ 'pods_gf_ui_action_' . $secondary_submit[ 'action' ] ] ) ) );
+
+						break;
+					}
+				}
+
 				$confirmation = GFFormDisplay::handle_confirmation( $form, $entry );
 
 				if ( 'redirect' != $form[ 'confirmation' ][ 'type' ] || !is_array( $confirmation ) || !isset( $confirmation[ 'redirect' ] ) ) {
