@@ -10,6 +10,11 @@ class Pods_GF_UI {
 	public static $pods_gf;
 
 	/**
+	 * @var Pods_UI
+	 */
+	public static $pods_ui;
+
+	/**
 	 * @var Pods|array Pods object or an array of GF entries
 	 */
 	public $pod;
@@ -124,7 +129,7 @@ class Pods_GF_UI {
 				),
 
 				// Automatically delete the GF entry created, defaults to false
-				'auto_delete => true,
+				'auto_delete' => true,
 
 				// Enable Markdown syntax for GF HTML fields, defaults to false
 				'markdown' => true,
@@ -147,9 +152,11 @@ class Pods_GF_UI {
 
 					'text' => 'Submit!', // use text for button
 
-					'action' => 'secondary-action' // name of button: pods_gf_ui_action_{$action}
+					'action' => 'secondary-action', // name of button: pods_gf_ui_action_{$action}
 
-					'value' => 'custom-value' // custom value of button (default is 1)
+					'value' => 'custom-value', // custom value of button (default is 1)
+		,
+					'value_from_ui' => 'next_id' // get value from PodsUI object (next_id|prev_id)
 				)
 				// Multiple secondary submit buttons
 				'secondary_submits' => array(
@@ -158,9 +165,11 @@ class Pods_GF_UI {
 
 						'text' => 'Submit!', // use text for button
 
-						'action' => 'secondary-action' // name of button: pods_gf_ui_action_{$action}
+						'action' => 'secondary-action', // name of button: pods_gf_ui_action_{$action}
 
-						'value' => 'custom-value' // custom value of button (default is 1)
+						'value' => 'custom-value', // custom value of button (default is 1)
+		,
+						'value_from_ui' => 'prev_id' // get value from PodsUI object (next_id|prev_id)
 					),
 					array(
 						'imageUrl' => '/my/site/my-image2.png', // use image url for button
@@ -169,7 +178,9 @@ class Pods_GF_UI {
 
 						'action' => 'secondary-action2', // name of button: pods_gf_ui_action_{$action}
 
-						'value' => 'custom-value2' // custom value of button (default is 1)
+						'value' => 'custom-value2', // custom value of button (default is 1)
+		,
+						'value_from_ui' => 'next_id' // get value from PodsUI object (next_id|prev_id)
 					)
 				)
 
@@ -538,7 +549,7 @@ class Pods_GF_UI {
 			$this->ui = array_merge( $default_ui, $this->ui );
 		}
 		elseif ( !is_object( $this->pod ) && !empty( $this->pod ) ) {
-			$this->pod = pods( $this->pod, ( 0 < $this->id ? $this->id : null ) );
+			$this->pod = pods( $this->pod, ( 0 < $id ? $id : null ) );
 			$this->id = $this->pod->id();
 		}
 
@@ -735,6 +746,7 @@ class Pods_GF_UI {
 	 */
 	public function _action_add( $obj ) {
 
+		self::$pods_ui =& $obj;
 ?>
 <div class="wrap pods-admin pods-ui">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
@@ -744,6 +756,10 @@ class Pods_GF_UI {
 
 			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) ) {
 				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
+
+				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
+					$link = $obj->action_links[ 'manage' ];
+				}
 		?>
 			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods' ), $obj->heading[ 'manage' ] ); ?></a>
 		<?php
@@ -777,6 +793,8 @@ class Pods_GF_UI {
 	 */
 	public function _action_edit( $duplicate, $obj = null  ) {
 
+		self::$pods_ui =& $obj;
+
 		// Hackarounds because of current state of callback variable usage
 		$duplicate = false;
 
@@ -797,6 +815,10 @@ class Pods_GF_UI {
 
 			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) ) {
 				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
+
+				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
+					$link = $obj->action_links[ 'manage' ];
+				}
 		?>
 			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods' ), $obj->heading[ 'manage' ] ); ?></a>
 		<?php
@@ -829,6 +851,8 @@ class Pods_GF_UI {
 	 */
 	public function _action_view( $obj = null ) {
 
+		self::$pods_ui =& $obj;
+
 		$fields = pods_v( 'fields', $this->actions[ $this->action ] );
 
         if ( empty( $obj->row ) ) {
@@ -843,6 +867,10 @@ class Pods_GF_UI {
 
 			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) ) {
 				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
+
+				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
+					$link = $obj->action_links[ 'manage' ];
+				}
 		?>
 			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods' ), $obj->heading[ 'manage' ] ); ?></a>
 		<?php
@@ -874,6 +902,8 @@ class Pods_GF_UI {
 	 * @param PodsUI $obj
 	 */
 	public function _action_delete( $id, $obj = null ) {
+
+		self::$pods_ui =& $obj;
 
 		if ( is_object( $this->pod ) ) {
 			return false; // continue as normal
