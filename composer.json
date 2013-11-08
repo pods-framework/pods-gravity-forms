@@ -1,0 +1,30 @@
+{
+	"name"       : "pods-framework/pods-gravity-forms",
+	"description": "Pods Gravity Forms Add-On",
+	"type"       : "wordpress-plugin",
+	"keywords"   : ["pods", "wordpress", "gravityforms", "gravity-forms"],
+	"homepage"   : "https://github.com/pods-framework/pods-gravity-forms",
+    "require"    : {
+        "php": ">=5.3"
+    },
+	"license"    : "GPL-2.0",
+	"authors"    : [
+		{
+			"name"    : "Pods Framework Team",
+			"email"   : "contact@pods.io",
+			"homepage": "http://pods.io/"
+		},
+        {
+			"name"    : "Scott Kingsley Clark",
+			"email"   : "lol@scottkclark.com",
+			"homepage": "http://scottkclark.com"
+		}
+	],
+	"support"    : {
+		"issues": "https://github.com/pods-framework/pods-gravity-forms/issues",
+        "source": "https://github.com/pods-framework/pods-gravity-forms"
+	},
+    "require": {
+        "composer/installers": "~1.0"
+    }
+}
