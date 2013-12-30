@@ -258,7 +258,7 @@ class Pods_GF {
 			'length'
 		);
 
-		$supported_checks = apply_filters( 'wds_gf_condition_supported_comparisons', $supported_checks );
+		$supported_checks = apply_filters( 'pods_gf_condition_supported_comparisons', $supported_checks );
 
 		if ( !in_array( $field_check, $supported_checks ) ) {
 			$field_check = 'value';
@@ -281,7 +281,7 @@ class Pods_GF {
 				'NOT BETWEEN'
 			);
 
-			$supported_length_comparisons = apply_filters( 'wds_gf_condition_supported_length_comparisons', $supported_length_comparisons );
+			$supported_length_comparisons = apply_filters( 'pods_gf_condition_supported_length_comparisons', $supported_length_comparisons );
 
 			if ( !in_array( $field_compare, $supported_length_comparisons ) ) {
 				$field_compare = '=';
@@ -310,7 +310,7 @@ class Pods_GF {
 				'RLIKE'
 			);
 
-			$supported_comparisons = apply_filters( 'wds_gf_condition_supported_comparisons', $supported_comparisons, $field_check );
+			$supported_comparisons = apply_filters( 'pods_gf_condition_supported_comparisons', $supported_comparisons, $field_check );
 
 			if ( !in_array( $field_compare, $supported_comparisons ) ) {
 				$field_compare = '=';
@@ -392,15 +392,15 @@ class Pods_GF {
 		// Do comparisons
 		$valid = false;
 
-		if ( 'length' == $condition[ 'check' ] ) {
-			$valid = self::condition_validate_length( $condition, $value );
+		if ( method_exists( get_class(), 'condition_validate_' . $condition[ 'check' ] ) ) {
+			$valid = call_user_func( array( get_class(), 'condition_validate_' . $condition[ 'check' ] ), $condition, $value );
 		}
-		elseif ( 'value' == $condition[ 'value' ] ) {
-			$valid = self::condition_validate_value( $condition, $value );
+		elseif ( is_callable( $condition[ 'check' ] ) ) {
+			$valid = call_user_func( $condition[ 'check' ], $condition, $value );
 		}
 
-		$valid = apply_filters( 'wds_gf_condition_validate_' . $condition[ 'check' ], $valid, $condition, $value, $field );
-		$valid = apply_filters( 'wds_gf_condition_validate', $valid, $condition, $value, $field );
+		$valid = apply_filters( 'pods_gf_condition_validate_' . $condition[ 'check' ], $valid, $condition, $value, $field );
+		$valid = apply_filters( 'pods_gf_condition_validate', $valid, $condition, $value, $field );
 
 		return $valid;
 
@@ -624,7 +624,7 @@ class Pods_GF {
     public static function dynamic_select( $form_id, $field_id, $options ) {
         self::$dynamic_selects[] = array_merge(
 			array(
-				'form' => $form_id,
+				'form_id' => $form_id,
 
 				'gf_field' => $field_id, // override $field
 				'default' => null, // override default selected value
@@ -732,7 +732,7 @@ class Pods_GF {
      */
     public static function prepopulate( $form_id, $pod, $id, $fields ) {
         self::$prepopulate = array(
-			'form' => $form_id,
+			'form_id' => $form_id,
 
 			'pod' => $pod,
 			'id' => $id,
@@ -1617,7 +1617,7 @@ class Pods_GF {
 
 			$dynamic_select = array_merge(
 				array(
-					'form' => $form[ 'id' ],
+					'form_id' => $form[ 'id' ],
 
 					'gf_field' => $field, // override $field
 					'default' => null, // override default selected value
@@ -1636,7 +1636,7 @@ class Pods_GF {
 				$field = (string) $dynamic_select[ 'gf_field' ];
 			}
 
-			if ( empty( $field ) || !isset( $field_keys[ $field ] ) || $dynamic_select[ 'form' ] != $form[ 'id' ] ) {
+			if ( empty( $field ) || !isset( $field_keys[ $field ] ) || $dynamic_select[ 'form_id' ] != $form[ 'id' ] ) {
 				continue;
 			}
 
@@ -1777,7 +1777,7 @@ class Pods_GF {
 
 		$prepopulate = array_merge(
 			array(
-				'form' => $form[ 'id' ],
+				'form_id' => $form[ 'id' ],
 
 				'pod' => null,
 				'id' => null,
@@ -1786,7 +1786,7 @@ class Pods_GF {
 			$prepopulate
 		);
 
-		if ( $prepopulate[ 'form' ] != $form[ 'id' ] ) {
+		if ( $prepopulate[ 'form_id' ] != $form[ 'id' ] ) {
 			return $form;
 		}
 
@@ -2114,7 +2114,7 @@ class Pods_GF {
      */
     public static function read_only( $form_id, $fields = true, $exclude_fields = array() ) {
         self::$read_only = array(
-			'form' => $form_id,
+			'form_id' => $form_id,
 
 			'fields' => $fields,
 			'exclude_fields' => $exclude_fields
@@ -2168,7 +2168,7 @@ class Pods_GF {
 
 		$read_only = array_merge(
 			array(
-				'form' => $form[ 'id' ],
+				'form_id' => $form[ 'id' ],
 
 				'fields' => array(),
 				'exclude_fields' => array()
@@ -2178,7 +2178,7 @@ class Pods_GF {
 
 		self::$read_only = $read_only;
 
-		if ( $read_only[ 'form' ] != $form[ 'id' ] || false === $read_only[ 'fields' ] ) {
+		if ( $read_only[ 'form_id' ] != $form[ 'id' ] || false === $read_only[ 'fields' ] ) {
 			return $form;
 		}
 
@@ -2261,13 +2261,13 @@ class Pods_GF {
 		}
 
 		// Get / set $form for pagination info
-		if ( !isset( self::$actioned[ $form_id ][ 'form' ] ) ) {
+		if ( !isset( self::$actioned[ $form_id ][ 'form_id' ] ) ) {
 			$form = RGFormsModel::get_form_meta( $form_id );
 
-			self::$actioned[ $form_id ][ 'form' ] = $form;
+			self::$actioned[ $form_id ][ 'form_id' ] = $form;
 		}
 		else {
-			$form = self::$actioned[ $form_id ][ 'form' ];
+			$form = self::$actioned[ $form_id ][ 'form_id' ];
 		}
 
 		if ( !isset( self::$actioned[ $form_id ][ __FUNCTION__ ] ) ) {
@@ -2276,7 +2276,7 @@ class Pods_GF {
 
 		$read_only = self::$read_only;
 
-		if ( empty( $read_only ) || !isset( $read_only[ 'form' ] ) || $read_only[ 'form' ] != $form_id ) {
+		if ( empty( $read_only ) || !isset( $read_only[ 'form_id' ] ) || $read_only[ 'form_id' ] != $form_id ) {
 			return $input_html;
 		}
 
@@ -2428,7 +2428,7 @@ class Pods_GF {
 
 		$read_only = self::$read_only;
 
-		if ( empty( $read_only ) || $read_only[ 'form' ] != $form_id ) {
+		if ( empty( $read_only ) || $read_only[ 'form_id' ] != $form_id ) {
 			return $input;
 		}
 
@@ -2436,7 +2436,7 @@ class Pods_GF {
 			return $input;
 		}
 
-		if ( empty( $read_only ) || !isset( $read_only[ 'form' ] ) || $read_only[ 'form' ] != $form_id ) {
+		if ( empty( $read_only ) || !isset( $read_only[ 'form_id' ] ) || $read_only[ 'form_id' ] != $form_id ) {
 			return $input;
 		}
 
@@ -2491,7 +2491,7 @@ class Pods_GF {
 
 		$read_only = self::$read_only;
 
-		if ( empty( $read_only ) || !isset( $read_only[ 'form' ] ) || $read_only[ 'form' ] != $form[ 'id' ] || false === $read_only[ 'fields' ] ) {
+		if ( empty( $read_only ) || !isset( $read_only[ 'form_id' ] ) || $read_only[ 'form_id' ] != $form[ 'id' ] || false === $read_only[ 'fields' ] ) {
 			return $form;
 		}
 
@@ -2549,7 +2549,7 @@ class Pods_GF {
 		// Read Only handling
 		if ( isset( $this->options[ 'read_only' ] ) && !empty( $this->options[ 'read_only' ] ) ) {
 			$read_only = array(
-				'form' => $form[ 'id' ],
+				'form_id' => $form[ 'id' ],
 
 				'fields' => $this->options[ 'read_only' ],
 				'exclude_fields' => array()
@@ -2733,16 +2733,16 @@ class Pods_GF {
 			return $validation_result;
 		}
 
-		if ( isset( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) ) {
+		if ( isset( self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ] ) ) {
 			return $validation_result;
 		}
-		elseif ( !isset( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) ) {
-			self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] = array();
+		elseif ( !isset( self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ] ) ) {
+			self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ] = array();
 		}
 
-		self::$actioned[ $validation_result[ 'form' ][ 'id' ] ][] = __FUNCTION__;
+		self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ][] = __FUNCTION__;
 
-		$form = $validation_result[ 'form' ];
+		$form = $validation_result[ 'form_id' ];
 
 		if ( empty( $this->options ) ) {
 			return $form;
@@ -2897,7 +2897,7 @@ class Pods_GF {
 		// Read Only handling
 		if ( isset( $this->options[ 'read_only' ] ) && !empty( $this->options[ 'read_only' ] ) ) {
 			$read_only = array(
-				'form' => $form[ 'id' ],
+				'form_id' => $form[ 'id' ],
 
 				'fields' => $this->options[ 'read_only' ],
 				'exclude_fields' => array()
@@ -3013,6 +3013,43 @@ class Pods_GF {
 		}
 
 		return $entry;
+
+	}
+
+	/**
+	 * Get the value of a variable key, with a default fallback
+	 *
+	 * @param mixed $name Variable key to get value of
+	 * @param array|object $var Array or Object to get key value from
+	 * @param null|mixed $default Default value to use if key not found
+	 * @param bool $strict Whether to force $default if $value is empty
+	 *
+	 * @return null|mixed Value of the variable key or default value
+	 */
+	public static function v( $name, $var, $default = null, $strict = false ) {
+
+		$value = $default;
+
+		if ( is_object( $var ) ) {
+			if ( isset( $var->{$name} ) ) {
+				$value = $var->{$name};
+			}
+		}
+		elseif ( is_array( $var ) ) {
+			if ( isset( $var[ $name ] ) ) {
+				$value = $var[ $name ];
+			}
+		}
+
+		if ( $strict && empty( $value ) ) {
+			$value = $default;
+		}
+
+		if ( is_string( $value ) ) {
+			$value = trim( $value );
+		}
+
+		return $value;
 
 	}
 

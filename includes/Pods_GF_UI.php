@@ -49,23 +49,24 @@ class Pods_GF_UI {
 	 * @var array Available actions
 	 */
 	public $actions = array(
-		/*
-			'action_name' => array(
+
+			/*'action_name' => array(
 				'label' => 'Label used in action link',
 				'heading' => 'Title used as action on action page',
 				'header' => 'Title used on action page',
 
 				'fields' => array(
-					'1' => 'pod_field_name' // GF field ID or $_POST name, mapped to a pod field
+					'1' => 'pod_field_name', // GF field ID or $_POST name, mapped to a pod field
 					'2' => array(
 						'field' => 'pod_field_name'
-					)
+					),
 					// All fields processed, even if not found/set in GF/$_POST
 					'_faux' => array(
-						'field' => 'pod_field_name'
+						'field' => 'pod_field_name',
 						'value' => 'Manual value to use'
 					)
 				),
+				'pod' => 'mypod',
 
 				'save_action' => 'add', // What action to use when saving (add|save)
 				'save_id' => 123, // ID to override what to save to (if save action is save)
@@ -73,10 +74,10 @@ class Pods_GF_UI {
 				'callback' => null, // Function to callback on action page
 				'access_callback' => null, // Access callback to override access rights
 
-				'disabled' => false // Whether action is disabled
+				'disabled' => false, // Whether action is disabled
 
 				// GF specific
-				'form' => 123, // Form ID
+				'form_id' => 123, // Form ID
 				'dynamic_select' => array(
 					'1' => array( // GF Field ID
 						'pod' => 'other_pod', // Pod to pull data from
@@ -144,7 +145,7 @@ class Pods_GF_UI {
 					'imageUrl' => '/my/site/my-image.png', // use image url for button
 
 					'text' => 'Submit!' // use text for button
-				)
+				),
 
 				// Add a secondary submit action to the form
 				'secondary_submits' => array(
@@ -155,9 +156,9 @@ class Pods_GF_UI {
 					'action' => 'secondary-action', // name of button: pods_gf_ui_action_{$action}
 
 					'value' => 'custom-value', // custom value of button (default is 1)
-		,
+
 					'value_from_ui' => 'next_id' // get value from PodsUI object (next_id|prev_id)
-				)
+				),
 				// Multiple secondary submit buttons
 				'secondary_submits' => array(
 					array(
@@ -168,7 +169,7 @@ class Pods_GF_UI {
 						'action' => 'secondary-action', // name of button: pods_gf_ui_action_{$action}
 
 						'value' => 'custom-value', // custom value of button (default is 1)
-		,
+
 						'value_from_ui' => 'prev_id' // get value from PodsUI object (next_id|prev_id)
 					),
 					array(
@@ -179,7 +180,7 @@ class Pods_GF_UI {
 						'action' => 'secondary-action2', // name of button: pods_gf_ui_action_{$action}
 
 						'value' => 'custom-value2', // custom value of button (default is 1)
-		,
+
 						'value_from_ui' => 'next_id' // get value from PodsUI object (next_id|prev_id)
 					)
 				)
@@ -192,10 +193,10 @@ class Pods_GF_UI {
 
 					'message' => 'Thanks!' // show a message
 				)
-			),
-		 */
+			),*/
+
 		'manage' => array( // table ui manage
-			'form' => 0,
+			'form_id' => 0,
 			'fields' => array(),
 			'callback' => null,
 			'access_callback' => null,
@@ -203,7 +204,7 @@ class Pods_GF_UI {
 			'prepopulate' => true
 		),
 		'add' => array( // form
-			'form' => 0,
+			'form_id' => 0,
 			'fields' => array(),
 			'dynamic_select' => array(),
 			'callback' => null,
@@ -212,7 +213,7 @@ class Pods_GF_UI {
 			'prepopulate' => true
 		),
 		'edit' => array( // alternate form or original form (pre-populate data)
-			'form' => 0,
+			'form_id' => 0,
 			'fields' => array(),
 			'dynamic_select' => array(),
 			'callback' => null,
@@ -224,7 +225,7 @@ class Pods_GF_UI {
 		),
 		'status' => array( // switching status, can define field name (default 'status')
 			'label' => 'Change Status',
-			'form' => 0,
+			'form_id' => 0,
 			'field' => 'status',
 			'data' => array(), // what stati to use (dynamically build, based on pod/field)
 			'fields' => array(),
@@ -266,7 +267,9 @@ class Pods_GF_UI {
 				'type' => 'limit',
 				'compare' => '<',
 				'value' => -1,
-				'params' => array(),
+				'params' => array(
+
+				),
 			)
 		)
 	);
@@ -321,7 +324,7 @@ class Pods_GF_UI {
 		$this->setup_ui();
 
 		foreach ( $this->actions as $action => $action_data ) {
-			$form_id = (int) pods_v( 'form', $action_data );
+			$form_id = (int) pods_v( 'form_id', $action_data );
 
 			if ( !pods_v( 'disabled', $action_data ) && 0 < $form_id && $this->action == $action ) {
 				$pods_gf = pods_gf( $this->pod, $form_id, $action_data );
@@ -342,6 +345,10 @@ class Pods_GF_UI {
 				$this->actions[ $action ][ 'disabled' ] = true;
 
 				$this->ui[ 'actions_disabled' ][ $action ] = $action;
+			}
+
+			if ( isset( $this->actions[ $action ][ 'form' ] ) ) {
+				$this->actions[ $action ][ 'form_id' ] = $this->actions[ $action ][ 'form' ];
 			}
 		}
 
@@ -364,7 +371,7 @@ class Pods_GF_UI {
 			'header' => '',
 			'label' => '',
 			'label_alt' => '',
-			'form' => 0,
+			'form_id' => 0,
 			'edit' => false,
 			'fields' => array(),
 			'dynamic_select' => array(),
@@ -441,7 +448,7 @@ class Pods_GF_UI {
 			}
 		}
 
-		if ( 0 < $this->actions[ 'manage' ][ 'form' ] ) {
+		if ( 0 < $this->actions[ 'manage' ][ 'form_id' ] ) {
 			$this->pod = array();
 
 			if ( 0 < $id ) {
@@ -473,7 +480,7 @@ class Pods_GF_UI {
 				}
 			}
 			else {
-				$leads = RGFormsModel::get_leads( $this->actions[ 'manage' ][ 'form' ], 0, 'DESC', '', 0, 999 );
+				$leads = RGFormsModel::get_leads( $this->actions[ 'manage' ][ 'form_id' ], 0, 'DESC', '', 0, 999 );
 
 				// @todo Hook into save for later data and display saved entries in the list like normal entries
 
@@ -768,10 +775,10 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
-		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
+		if ( isset( $this->actions[ $this->action ][ 'form_id' ] ) && 0 < $this->actions[ $this->action ][ 'form_id' ] ) {
+			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form_id' ] );
 
-			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
+			gravity_form( $this->actions[ $this->action ][ 'form_id' ], false, false );
 		}
 		elseif ( is_object( $this->pod ) ) {
 			$this->pod->form();
@@ -827,10 +834,10 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
-		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
+		if ( isset( $this->actions[ $this->action ][ 'form_id' ] ) && 0 < $this->actions[ $this->action ][ 'form_id' ] ) {
+			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form_id' ] );
 
-			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
+			gravity_form( $this->actions[ $this->action ][ 'form_id' ], false, false );
 		}
 		elseif ( is_object( $this->pod ) ) {
 			$this->pod->form();
@@ -879,10 +886,10 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
-		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
+		if ( isset( $this->actions[ $this->action ][ 'form_id' ] ) && 0 < $this->actions[ $this->action ][ 'form_id' ] ) {
+			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form_id' ] );
 
-			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
+			gravity_form( $this->actions[ $this->action ][ 'form_id' ], false, false );
 		}
 		elseif ( is_object( $this->pod ) ) {
 			echo $this->pod->view( $fields );
