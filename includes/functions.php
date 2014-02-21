@@ -200,7 +200,7 @@ function pods_gf_ui_detect_shortcode() {
         $form_id = (int) pods_v( 'gform_submit', 'post' );
 
 		if ( 0 < $form_id && preg_match( '/\[pods\-gf\-ui/i', $post->post_content ) ) {
-			$form_info = RGFormsModel::get_form( $form_id );
+			$form_info = GFFormsModel::get_form( $form_id );
 
 			if ( !empty( $form_info ) && $form_info->is_active ) {
 				$GLOBALS[ 'pods-gf-ui-off' ] = true;

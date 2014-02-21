@@ -12,6 +12,13 @@ class Pods_GF {
 	public static $actioned = array();
 
 	/**
+	 * Last ID for inserted item added by GF to Pods mapping
+	 *
+	 * @var int
+	 */
+	public static $gf_to_pods_id = 0;
+
+	/**
 	 * Pods object
 	 *
 	 * @var Pods
@@ -107,18 +114,12 @@ class Pods_GF {
 		// Pod object
 		if ( is_object( $pod ) ) {
 			$this->pod =& $pod;
-
-			if ( $this->pod->exists() ) {
-				$this->id = $this->pod->id();
-			}
+			$this->id =& $this->pod->id;
 		}
 		// Pod name
 		elseif ( !is_array( $pod ) ) {
-			$this->pod = pods( $pod, pods_v( 'id', 'get', null, true ) );
-
-			if ( $this->pod->exists() ) {
-				$this->id = $this->pod->id();
-			}
+			$this->pod = pods( $pod );
+			$this->id =& $this->pod->id;
 		}
 		// GF entry
 		elseif ( isset( $pod[ 'id' ] ) ) {
@@ -624,7 +625,7 @@ class Pods_GF {
     public static function dynamic_select( $form_id, $field_id, $options ) {
         self::$dynamic_selects[] = array_merge(
 			array(
-				'form_id' => $form_id,
+				'form' => $form_id,
 
 				'gf_field' => $field_id, // override $field
 				'default' => null, // override default selected value
@@ -732,7 +733,7 @@ class Pods_GF {
      */
     public static function prepopulate( $form_id, $pod, $id, $fields ) {
         self::$prepopulate = array(
-			'form_id' => $form_id,
+			'form' => $form_id,
 
 			'pod' => $pod,
 			'id' => $id,
@@ -1538,14 +1539,14 @@ class Pods_GF {
 
 		do_action( 'gform_delete_lead', $lead_id );
 
-		$lead_table = RGFormsModel::get_lead_table_name();
-		$lead_notes_table = RGFormsModel::get_lead_notes_table_name();
-		$lead_detail_table = RGFormsModel::get_lead_details_table_name();
-		$lead_detail_long_table = RGFormsModel::get_lead_details_long_table_name();
+		$lead_table = GFFormsModel::get_lead_table_name();
+		$lead_notes_table = GFFormsModel::get_lead_notes_table_name();
+		$lead_detail_table = GFFormsModel::get_lead_details_table_name();
+		$lead_detail_long_table = GFFormsModel::get_lead_details_long_table_name();
 
 		//deleting uploaded files
 		if ( !$keep_files ) {
-			RGFormsModel::delete_files( $lead_id );
+			GFFormsModel::delete_files( $lead_id );
 		}
 
 		//Delete from detail long
@@ -1617,7 +1618,7 @@ class Pods_GF {
 
 			$dynamic_select = array_merge(
 				array(
-					'form_id' => $form[ 'id' ],
+					'form' => $form[ 'id' ],
 
 					'gf_field' => $field, // override $field
 					'default' => null, // override default selected value
@@ -1636,7 +1637,7 @@ class Pods_GF {
 				$field = (string) $dynamic_select[ 'gf_field' ];
 			}
 
-			if ( empty( $field ) || !isset( $field_keys[ $field ] ) || $dynamic_select[ 'form_id' ] != $form[ 'id' ] ) {
+			if ( empty( $field ) || !isset( $field_keys[ $field ] ) || $dynamic_select[ 'form' ] != $form[ 'id' ] ) {
 				continue;
 			}
 
@@ -1777,7 +1778,7 @@ class Pods_GF {
 
 		$prepopulate = array_merge(
 			array(
-				'form_id' => $form[ 'id' ],
+				'form' => $form[ 'id' ],
 
 				'pod' => null,
 				'id' => null,
@@ -1786,7 +1787,7 @@ class Pods_GF {
 			$prepopulate
 		);
 
-		if ( $prepopulate[ 'form_id' ] != $form[ 'id' ] ) {
+		if ( $prepopulate[ 'form' ] != $form[ 'id' ] ) {
 			return $form;
 		}
 
@@ -1816,7 +1817,7 @@ class Pods_GF {
 			}
 
 			if ( !empty( $id ) ) {
-				$pod = RGFormsModel::get_lead( $id );
+				$pod = GFFormsModel::get_lead( $id );
 			}
 			else {
 				$pod = array();
@@ -1826,23 +1827,32 @@ class Pods_GF {
 
 		// Prepopulate values
 		foreach ( $prepopulate[ 'fields' ] as $field => $field_options ) {
-			$field = (string) $field;
-
-			$field_options = array_merge(
-				array(
-					'gf_field' => $field,
+			if ( is_int( $field ) && is_string( $field_options ) ) {
+				$field_options = array(
+					'gf_field' => $field_options,
 					'field' => $field_options,
 					'value' => null
-				),
-				( is_array( $field_options ) ? $field_options : array() )
-			);
+				);
+			}
+			else {
+				$field = (string) $field;
+
+				$field_options = array_merge(
+					array(
+						'gf_field' => $field,
+						'field' => $field_options,
+						'value' => null
+					),
+					( is_array( $field_options ) ? $field_options : array() )
+				);
+			}
 
 			if ( !empty( $field_options[ 'gf_field' ] ) ) {
 				$field = (string) $field_options[ 'gf_field' ];
 			}
 
 			// No GF field set
-			if ( empty( $field ) ) {
+			if ( empty( $field ) || !isset( $field_keys[ $field ] ) ) {
 				continue;
 			}
 
@@ -1851,16 +1861,12 @@ class Pods_GF {
 				continue;
 			}
 
-			$field_key = null;
-
-			if ( isset( $field_keys[ $field ] ) ) {
-				$field_key = $field_keys[ $field ];
-			}
+			$field_key = $field_keys[ $field ];
 
 			// Allow for value to be overridden by existing prepopulation or callback
 			$value_override = $field_options[ 'value' ];
 
-			if ( null !== $field_key && null === $value_override && isset( $form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] ) && $form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] ) {
+			if ( null === $value_override && isset( $form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] ) && $form[ 'fields' ][ $field_key ][ 'allowsPrepopulate' ] ) {
 				// @todo handling for field types that have different $_POST input names
 
 				if ( 'checkbox' == $form[ 'fields' ][ $field_key ][ 'type' ] ) {
@@ -1895,7 +1901,7 @@ class Pods_GF {
 					if ( isset( $pod[ $field_options[ 'field' ] ] ) ) {
 						$value_override = maybe_unserialize( $pod[ $field_options[ 'field' ] ] );
 
-						if ( null !== $field_key && !empty( $value_override ) ) {
+						if ( !empty( $value_override ) ) {
 							if ( 'list' == $form[ 'fields' ][ $field_key ][ 'type' ] ) {
 								$list = $value_override;
 
@@ -2004,6 +2010,12 @@ class Pods_GF {
 
 		if ( is_array( $confirmation ) ) {
 			if ( isset( $confirmation[ 'url' ] ) ) {
+				if ( 0 === strpos( $confirmation[ 'url' ], '?' ) ) {
+					$path = explode( '?', $_SERVER[ 'REQUEST_URI' ] );
+					$path = explode( '#', $path[ 0 ] );
+					$confirmation[ 'url' ] = 'http' . ( is_ssl() ? 's' : '' ) . '://' . $_SERVER[ 'HTTP_HOST' ] . $path[ 0 ] . $confirmation[ 'url' ];
+				}
+
 				$confirmation[ 'type' ] = 'redirect';
 			}
 			elseif ( isset( $confirmation[ 'message' ] ) ) {
@@ -2012,7 +2024,13 @@ class Pods_GF {
 
 			$new_confirmation = $confirmation;
 		}
-		elseif ( ( false !== strpos( $confirmation, '://' ) && strpos( $confirmation, '://' ) < 6 ) || 0 === strpos( $confirmation, '/' ) ) {
+		elseif ( ( false !== strpos( $confirmation, '://' ) && strpos( $confirmation, '://' ) < 6 ) || 0 === strpos( $confirmation, '/' ) || 0 === strpos( $confirmation, '?' ) ) {
+			if ( 0 === strpos( $confirmation, '?' ) ) {
+				$path = explode( '?', $_SERVER[ 'REQUEST_URI' ] );
+				$path = explode( '#', $path[ 0 ] );
+				$confirmation = 'http' . ( is_ssl() ? 's' : '' ) . '://' . $_SERVER[ 'HTTP_HOST' ] . $path[ 0 ] . $confirmation[ 'url' ];
+			}
+
 			$new_confirmation = array(
 				'url' => $confirmation,
 				'type' => 'redirect'
@@ -2114,7 +2132,7 @@ class Pods_GF {
      */
     public static function read_only( $form_id, $fields = true, $exclude_fields = array() ) {
         self::$read_only = array(
-			'form_id' => $form_id,
+			'form' => $form_id,
 
 			'fields' => $fields,
 			'exclude_fields' => $exclude_fields
@@ -2168,7 +2186,7 @@ class Pods_GF {
 
 		$read_only = array_merge(
 			array(
-				'form_id' => $form[ 'id' ],
+				'form' => $form[ 'id' ],
 
 				'fields' => array(),
 				'exclude_fields' => array()
@@ -2178,7 +2196,7 @@ class Pods_GF {
 
 		self::$read_only = $read_only;
 
-		if ( $read_only[ 'form_id' ] != $form[ 'id' ] || false === $read_only[ 'fields' ] ) {
+		if ( $read_only[ 'form' ] != $form[ 'id' ] || false === $read_only[ 'fields' ] ) {
 			return $form;
 		}
 
@@ -2200,7 +2218,7 @@ class Pods_GF {
 
 				$form[ 'fields' ][ $field_keys[ $field ] ][ 'isRequired' ] = false;
 
-				if ( 'list' == RGFormsModel::get_input_type( $gf_field ) ) {
+				if ( 'list' == GFFormsModel::get_input_type( $gf_field ) ) {
 					$columns = ( is_array( $gf_field[ 'choices' ] ) ? $gf_field[ 'choices' ] : array( array() ) );
 
 					$col_number = 1;
@@ -2223,7 +2241,7 @@ class Pods_GF {
 
 				$form[ 'fields' ][ $k ][ 'isRequired' ] = false;
 
-				if ( 'list' == RGFormsModel::get_input_type( $field ) ) {
+				if ( 'list' == GFFormsModel::get_input_type( $field ) ) {
 					$columns = ( is_array( $field[ 'choices' ] ) ? $field[ 'choices' ] : array( array() ) );
 
 					$col_number = 1;
@@ -2261,13 +2279,13 @@ class Pods_GF {
 		}
 
 		// Get / set $form for pagination info
-		if ( !isset( self::$actioned[ $form_id ][ 'form_id' ] ) ) {
-			$form = RGFormsModel::get_form_meta( $form_id );
+		if ( !isset( self::$actioned[ $form_id ][ 'form' ] ) ) {
+			$form = GFFormsModel::get_form_meta( $form_id );
 
-			self::$actioned[ $form_id ][ 'form_id' ] = $form;
+			self::$actioned[ $form_id ][ 'form' ] = $form;
 		}
 		else {
-			$form = self::$actioned[ $form_id ][ 'form_id' ];
+			$form = self::$actioned[ $form_id ][ 'form' ];
 		}
 
 		if ( !isset( self::$actioned[ $form_id ][ __FUNCTION__ ] ) ) {
@@ -2276,7 +2294,7 @@ class Pods_GF {
 
 		$read_only = self::$read_only;
 
-		if ( empty( $read_only ) || !isset( $read_only[ 'form_id' ] ) || $read_only[ 'form_id' ] != $form_id ) {
+		if ( empty( $read_only ) || !isset( $read_only[ 'form' ] ) || $read_only[ 'form' ] != $form_id ) {
 			return $input_html;
 		}
 
@@ -2299,7 +2317,7 @@ class Pods_GF {
 			'list'
 		);
 
-		$field_type = RGFormsModel::get_input_type( $field );
+		$field_type = GFFormsModel::get_input_type( $field );
 
 		if ( in_array( $field_type, $non_read_only ) ) {
 			return $input_html;
@@ -2428,7 +2446,7 @@ class Pods_GF {
 
 		$read_only = self::$read_only;
 
-		if ( empty( $read_only ) || $read_only[ 'form_id' ] != $form_id ) {
+		if ( empty( $read_only ) || $read_only[ 'form' ] != $form_id ) {
 			return $input;
 		}
 
@@ -2436,7 +2454,7 @@ class Pods_GF {
 			return $input;
 		}
 
-		if ( empty( $read_only ) || !isset( $read_only[ 'form_id' ] ) || $read_only[ 'form_id' ] != $form_id ) {
+		if ( empty( $read_only ) || !isset( $read_only[ 'form' ] ) || $read_only[ 'form' ] != $form_id ) {
 			return $input;
 		}
 
@@ -2491,7 +2509,7 @@ class Pods_GF {
 
 		$read_only = self::$read_only;
 
-		if ( empty( $read_only ) || !isset( $read_only[ 'form_id' ] ) || $read_only[ 'form_id' ] != $form[ 'id' ] || false === $read_only[ 'fields' ] ) {
+		if ( empty( $read_only ) || !isset( $read_only[ 'form' ] ) || $read_only[ 'form' ] != $form[ 'id' ] || false === $read_only[ 'fields' ] ) {
 			return $form;
 		}
 
@@ -2549,7 +2567,7 @@ class Pods_GF {
 		// Read Only handling
 		if ( isset( $this->options[ 'read_only' ] ) && !empty( $this->options[ 'read_only' ] ) ) {
 			$read_only = array(
-				'form_id' => $form[ 'id' ],
+				'form' => $form[ 'id' ],
 
 				'fields' => $this->options[ 'read_only' ],
 				'exclude_fields' => array()
@@ -2733,11 +2751,11 @@ class Pods_GF {
 			return $validation_result;
 		}
 
-		if ( isset( self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ] ) ) {
+		if ( isset( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) ) {
 			return $validation_result;
 		}
-		elseif ( !isset( self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ] ) ) {
-			self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ] = array();
+		elseif ( !isset( self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] ) ) {
+			self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] = array();
 		}
 
 		self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ][] = __FUNCTION__;
@@ -2754,12 +2772,7 @@ class Pods_GF {
 			$field_keys[ (string) $field[ 'id' ] ] = $k;
 		}
 
-		if ( is_object( $this->pod ) ) {
-			$id = $this->pod->id();
-		}
-		else {
-			$id = (int) pods_v( 'id', $this->pod, 0 );
-		}
+		$id = (int) pods_v( 'id', $this->pod, 0 );
 
 		$save_action = 'add';
 
@@ -2794,7 +2807,7 @@ class Pods_GF {
 			if ( is_object( $this->pod ) ) {
 				$id = call_user_func_array( array( $this->pod, $save_action ), $args );
 
-				$this->pod->id = $this->id = $id;
+				$this->pod->id = $id;
 				$this->pod->fetch( $id );
 
 				do_action( 'pods_gf_to_pods_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
@@ -2802,6 +2815,8 @@ class Pods_GF {
 			else {
 				$this->id = $id = apply_filters( 'pods_gf_to_pod_' . $save_action, $id, $this->pod, $data, $this );
 			}
+
+			self::$gf_to_pods_id = $id;
 
 			do_action( 'pods_gf_to_pods', $this->pod, $save_action, $data, $id, $this );
 		}
@@ -2897,7 +2912,7 @@ class Pods_GF {
 		// Read Only handling
 		if ( isset( $this->options[ 'read_only' ] ) && !empty( $this->options[ 'read_only' ] ) ) {
 			$read_only = array(
-				'form_id' => $form[ 'id' ],
+				'form' => $form[ 'id' ],
 
 				'fields' => $this->options[ 'read_only' ],
 				'exclude_fields' => array()

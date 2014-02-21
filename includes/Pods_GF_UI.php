@@ -49,8 +49,8 @@ class Pods_GF_UI {
 	 * @var array Available actions
 	 */
 	public $actions = array(
-
-			/*'action_name' => array(
+		/*
+			'action_name' => array(
 				'label' => 'Label used in action link',
 				'heading' => 'Title used as action on action page',
 				'header' => 'Title used on action page',
@@ -77,7 +77,7 @@ class Pods_GF_UI {
 				'disabled' => false, // Whether action is disabled
 
 				// GF specific
-				'form_id' => 123, // Form ID
+				'form' => 123, // Form ID
 				'dynamic_select' => array(
 					'1' => array( // GF Field ID
 						'pod' => 'other_pod', // Pod to pull data from
@@ -187,16 +187,19 @@ class Pods_GF_UI {
 
 				// Customize the submit redirect URL of a form on the fly
 				'confirmation' => 'http://mysite.com/my/site/?id={entry_id}', // simple redirect
+				'confirmation' => '/my/site/?id={entry_id}', // simple redirect (relative site)
+				'confirmation' => '?id={entry_id}', // simple redirect (relative to path)
 				'confirmation' => 'Totally Awesome, Great Job!', // simple text
 				'confirmation' => array(
 					'url' => '/my/site/?id={entry_id}', // redirect to a url
 
 					'message' => 'Thanks!' // show a message
 				)
-			),*/
+			),
+		 */
 
 		'manage' => array( // table ui manage
-			'form_id' => 0,
+			'form' => 0,
 			'fields' => array(),
 			'callback' => null,
 			'access_callback' => null,
@@ -204,7 +207,7 @@ class Pods_GF_UI {
 			'prepopulate' => true
 		),
 		'add' => array( // form
-			'form_id' => 0,
+			'form' => 0,
 			'fields' => array(),
 			'dynamic_select' => array(),
 			'callback' => null,
@@ -213,7 +216,7 @@ class Pods_GF_UI {
 			'prepopulate' => true
 		),
 		'edit' => array( // alternate form or original form (pre-populate data)
-			'form_id' => 0,
+			'form' => 0,
 			'fields' => array(),
 			'dynamic_select' => array(),
 			'callback' => null,
@@ -225,7 +228,7 @@ class Pods_GF_UI {
 		),
 		'status' => array( // switching status, can define field name (default 'status')
 			'label' => 'Change Status',
-			'form_id' => 0,
+			'form' => 0,
 			'field' => 'status',
 			'data' => array(), // what stati to use (dynamically build, based on pod/field)
 			'fields' => array(),
@@ -324,12 +327,14 @@ class Pods_GF_UI {
 		$this->setup_ui();
 
 		foreach ( $this->actions as $action => $action_data ) {
-			$form_id = (int) pods_v( 'form_id', $action_data );
+			$form_id = (int) pods_v( 'form', $action_data );
 
 			if ( !pods_v( 'disabled', $action_data ) && 0 < $form_id && $this->action == $action ) {
 				$pods_gf = pods_gf( $this->pod, $form_id, $action_data );
 
 				self::$pods_gf = $pods_gf;
+
+				break;
 			}
 		}
 
@@ -347,8 +352,8 @@ class Pods_GF_UI {
 				$this->ui[ 'actions_disabled' ][ $action ] = $action;
 			}
 
-			if ( isset( $this->actions[ $action ][ 'form' ] ) ) {
-				$this->actions[ $action ][ 'form_id' ] = $this->actions[ $action ][ 'form' ];
+			if ( isset( $this->actions[ $action ][ 'form_id' ] ) ) {
+				$this->actions[ $action ][ 'form' ] = $this->actions[ $action ][ 'form_id' ];
 			}
 		}
 
@@ -371,7 +376,7 @@ class Pods_GF_UI {
 			'header' => '',
 			'label' => '',
 			'label_alt' => '',
-			'form_id' => 0,
+			'form' => 0,
 			'edit' => false,
 			'fields' => array(),
 			'dynamic_select' => array(),
@@ -438,6 +443,9 @@ class Pods_GF_UI {
 					);
 				}
 			}
+			else {
+				$this->ui[ 'actions_custom' ][ $action ] = $action;
+			}
 
 			if ( !empty( $options[ 'action_data' ] ) ) {
 				$this->ui[ 'actions_custom' ][ $action ] = array_merge( $this->ui[ 'actions_custom' ][ $action ], pods_v( 'action_data', $options, null, true ) );
@@ -448,11 +456,11 @@ class Pods_GF_UI {
 			}
 		}
 
-		if ( 0 < $this->actions[ 'manage' ][ 'form_id' ] ) {
+		if ( 0 < $this->actions[ 'manage' ][ 'form' ] ) {
 			$this->pod = array();
 
 			if ( 0 < $id ) {
-				$lead = RGFormsModel::get_lead( $id );
+				$lead = GFFormsModel::get_lead( $id );
 
 				if ( !empty( $lead ) ) {
 					$this->pod = array(
@@ -462,7 +470,7 @@ class Pods_GF_UI {
 					// @todo Replace the below code when GF adds functionality to get all lead meta
 					global $wpdb, $_gform_lead_meta;
 
-					$gf_meta_table = RGFormsModel::get_lead_meta_table_name();
+					$gf_meta_table = GFFormsModel::get_lead_meta_table_name();
 
 					$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE lead_id = %d", $lead[ 'id' ] ) );
 
@@ -480,18 +488,18 @@ class Pods_GF_UI {
 				}
 			}
 			else {
-				$leads = RGFormsModel::get_leads( $this->actions[ 'manage' ][ 'form_id' ], 0, 'DESC', '', 0, 999 );
+				$leads = GFFormsModel::get_leads( $this->actions[ 'manage' ][ 'form' ], 0, 'DESC', '', 0, 999 );
 
 				// @todo Hook into save for later data and display saved entries in the list like normal entries
 
 				// @todo Replace the below code when GF adds functionality to get all lead data in get_leads
 				foreach ( $leads as $lead ) {
-					$this->pod[ $lead[ 'id' ] ] = RGFormsModel::get_lead( $lead[ 'id' ] );
+					$this->pod[ $lead[ 'id' ] ] = GFFormsModel::get_lead( $lead[ 'id' ] );
 
 					// @todo Replace the below code when GF adds functionality to get all lead meta
 					global $wpdb, $_gform_lead_meta;
 
-					$gf_meta_table = RGFormsModel::get_lead_meta_table_name();
+					$gf_meta_table = GFFormsModel::get_lead_meta_table_name();
 
 					$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE lead_id = %d", $lead[ 'id' ] ) );
 
@@ -775,10 +783,10 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
-		if ( isset( $this->actions[ $this->action ][ 'form_id' ] ) && 0 < $this->actions[ $this->action ][ 'form_id' ] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form_id' ] );
+		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
+			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
 
-			gravity_form( $this->actions[ $this->action ][ 'form_id' ], false, false );
+			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
 		}
 		elseif ( is_object( $this->pod ) ) {
 			$this->pod->form();
@@ -834,10 +842,10 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
-		if ( isset( $this->actions[ $this->action ][ 'form_id' ] ) && 0 < $this->actions[ $this->action ][ 'form_id' ] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form_id' ] );
+		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
+			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
 
-			gravity_form( $this->actions[ $this->action ][ 'form_id' ], false, false );
+			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
 		}
 		elseif ( is_object( $this->pod ) ) {
 			$this->pod->form();
@@ -886,10 +894,10 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
-		if ( isset( $this->actions[ $this->action ][ 'form_id' ] ) && 0 < $this->actions[ $this->action ][ 'form_id' ] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form_id' ] );
+		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
+			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
 
-			gravity_form( $this->actions[ $this->action ][ 'form_id' ], false, false );
+			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
 		}
 		elseif ( is_object( $this->pod ) ) {
 			echo $this->pod->view( $fields );
