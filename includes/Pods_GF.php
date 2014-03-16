@@ -89,6 +89,13 @@ class Pods_GF {
 	public static $save_for_later = array();
 
     /**
+     * Array of options for Confirmation
+     *
+     * @var array
+     */
+	public static $confirmation = array();
+
+    /**
      * Array of options for Remember for next time
      *
      * @var array
@@ -168,6 +175,11 @@ class Pods_GF {
 			}
 		}
 
+		// Confirmation handling
+		if ( isset( $this->options[ 'confirmation' ] ) && !empty( $this->options[ 'confirmation' ] ) ) {
+			self::confirmation( $form_id, $this->options[ 'confirmation' ] );
+		}
+
 		// Read Only handling
 		if ( isset( $this->options[ 'read_only' ] ) && !empty( $this->options[ 'read_only' ] ) ) {
 			if ( !has_filter( 'gform_pre_submission_filter_' . $form_id, array( 'Pods_GF', 'gf_read_only_pre_submission' ) ) ) {
@@ -176,10 +188,13 @@ class Pods_GF {
 		}
 
 		// Editing
-		if ( isset( $this->options[ 'edit' ] ) && $this->options[ 'edit' ] ) {
-			if ( !has_filter( 'gform_entry_pre_save_' . $form_id, array( $this, '_gf_entry_pre_save' ) ) ) {
-				add_filter( 'gform_entry_pre_save_' . $form_id, array( $this, '_gf_entry_pre_save' ), 10, 2 );
-			}
+		if ( !has_filter( 'gform_entry_pre_save_' . $form_id, array( $this, '_gf_entry_pre_save' ) ) ) {
+			add_filter( 'gform_entry_pre_save_' . $form_id, array( $this, '_gf_entry_pre_save' ), 10, 2 );
+		}
+
+		// Saving
+		if ( !has_filter( 'gform_entry_post_save' . $form_id, array( $this, '_gf_entry_post_save' ) ) ) {
+			add_filter( 'gform_entry_post_save', array( $this, '_gf_entry_post_save' ), 10, 2 );
 		}
 
 	}
@@ -822,6 +837,8 @@ class Pods_GF {
 	/**
 	 * Add Secondary Submit button(s)
 	 *
+	 * Warning: Gravity Forms Duplicate Prevention plugin's JS *will* break this!
+	 *
 	 * @param string $button_input Button HTML
 	 * @param array $form GF Form array
 	 *
@@ -875,8 +892,8 @@ class Pods_GF {
 						$button_input .= ' <button type="submit" class="button gform_button pods-gf-secondary-submit pods-gf-secondary-submit-' . sanitize_title( $secondary_submit[ 'action' ] ) . '"'
 										 . ' name="pods_gf_ui_action_' . sanitize_title( $secondary_submit[ 'action' ] ) . '"'
 										 . ' value="' . esc_attr( $secondary_submit[ 'value' ] ) . '"'
-										 . ' onclick="if(window[\'gf_submitting\']){return false;} window[\'gf_submitting\']=true;">'
-										 . esc_html( $secondary_submit[ 'text' ] ) . '</button>';
+										 . ' onclick="if(window[\'gf_submitting\']){return false;} window[\'gf_submitting\']=true;"'
+										 . '>' . esc_html( $secondary_submit[ 'text' ] ) . '</button>';
 					}
 					else {
 						$button_input .= ' <input type="submit" class="button gform_button pods-gf-secondary-submit pods-gf-secondary-submit-' . sanitize_title( $secondary_submit[ 'action' ] ) . '"'
@@ -1023,6 +1040,12 @@ class Pods_GF {
 			}
 
 			if ( !empty( $save_for_later[ 'redirect' ] ) ) {
+				if ( 0 === strpos( $save_for_later[ 'redirect' ], '?' ) ) {
+					$path = explode( '?', $_SERVER[ 'REQUEST_URI' ] );
+					$path = explode( '#', $path[ 0 ] );
+					$save_for_later[ 'redirect' ] = 'http' . ( is_ssl() ? 's' : '' ) . '://' . $_SERVER[ 'HTTP_HOST' ] . $path[ 0 ] . $save_for_later[ 'redirect' ];
+				}
+
 				$button_input .= '<input type="hidden" name="pods_gf_save_for_later_redirect" value="' . esc_attr( $save_for_later[ 'redirect' ] ) . '" />';
 			}
 
@@ -2001,14 +2024,58 @@ class Pods_GF {
 	}
 
 	/**
+	 * Setup Confirmation for a form
+	 *
+	 * @param int $form_id GF Form ID
+	 * @param array $options Confirmation options
+	 */
+	public static function confirmation( $form_id, $options = array() ) {
+
+		self::$confirmation[ $form_id ] = $options;
+
+		if ( !add_filter( 'gform_confirmation_' . $form_id, array( 'Pods_GF', 'gf_confirmation' ) ) ) {
+			add_filter( 'gform_confirmation_' . $form_id, array( 'Pods_GF', 'gf_confirmation' ), 10, 4 );
+		}
+
+	}
+
+	/**
 	 * Submit Redirect URL customization
 	 *
 	 * @param array $form GF Form array
 	 * @param array $confirmation Confirmation array
 	 */
-	public static function gf_confirmation( $form, $confirmation ) {
+	public static function gf_confirmation( $confirmation, $form, $lead, $ajax = false, $return_confirmation = false ) {
 
-		if ( is_array( $confirmation ) ) {
+		if ( isset( self::$actioned[ $form[ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $form[ 'id' ] ] ) ) {
+			return $form;
+		}
+		elseif ( !isset( self::$actioned[ $form[ 'id' ] ] ) ) {
+			self::$actioned[ $form[ 'id' ] ] = array();
+		}
+
+		self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
+
+		$gf_confirmation = pods_v( $form[ 'id' ], self::$confirmation, array(), true );
+
+		if ( !empty( $gf_confirmation ) ) {
+			$confirmation = $gf_confirmation;
+
+			if ( !is_array( $confirmation ) ) {
+				if ( ( false !== strpos( $confirmation, '://' ) && strpos( $confirmation, '://' ) < 6 ) || 0 === strpos( $confirmation, '/' ) || 0 === strpos( $confirmation, '?' ) ) {
+					$confirmation = array(
+						'url' => $confirmation,
+						'type' => 'redirect'
+					);
+				}
+				else {
+					$confirmation = array(
+						'message' => $confirmation,
+						'type' => 'message'
+					);
+				}
+			}
+
 			if ( isset( $confirmation[ 'url' ] ) ) {
 				if ( 0 === strpos( $confirmation[ 'url' ], '?' ) ) {
 					$path = explode( '?', $_SERVER[ 'REQUEST_URI' ] );
@@ -2022,33 +2089,78 @@ class Pods_GF {
 				$confirmation[ 'type' ] = 'message';
 			}
 
-			$new_confirmation = $confirmation;
-		}
-		elseif ( ( false !== strpos( $confirmation, '://' ) && strpos( $confirmation, '://' ) < 6 ) || 0 === strpos( $confirmation, '/' ) || 0 === strpos( $confirmation, '?' ) ) {
-			if ( 0 === strpos( $confirmation, '?' ) ) {
-				$path = explode( '?', $_SERVER[ 'REQUEST_URI' ] );
-				$path = explode( '#', $path[ 0 ] );
-				$confirmation = 'http' . ( is_ssl() ? 's' : '' ) . '://' . $_SERVER[ 'HTTP_HOST' ] . $path[ 0 ] . $confirmation[ 'url' ];
+			$confirmation[ 'isDefault' ] = true;
+
+			if ( $return_confirmation ) {
+				return $confirmation;
 			}
 
-			$new_confirmation = array(
-				'url' => $confirmation,
-				'type' => 'redirect'
-			);
+			if ( $confirmation[ 'type' ] == 'message' ) {
+				$default_anchor = GFFormDisplay::has_pages( $form ) ? 1 : 0;
+				$anchor = apply_filters( 'gform_confirmation_anchor_' . $form[ 'id' ], apply_filters( 'gform_confirmation_anchor', $default_anchor ) ) ? '<a id="gf_' . $form[ 'id' ] . '" name="gf_' . $form[ 'id' ] . '" class="gform_anchor" ></a>' : '';
+				$nl2br = rgar( $confirmation, 'disableAutoformat' ) ? false : true;
+				$cssClass = rgar( $form, 'cssClass' );
+
+				if ( empty( $confirmation[ 'message' ] ) ) {
+					$confirmation = $anchor . ' ';
+				}
+				else {
+					$confirmation = $anchor
+									. '<div id="gform_confirmation_wrapper_' . $form[ 'id' ] . '" class="gform_confirmation_wrapper ' . $cssClass . '">'
+									. '<div id="gforms_confirmation_message" class="gform_confirmation_message_' . $form[ 'id' ] . '">'
+									. GFCommon::replace_variables( $confirmation[ 'message' ], $form, $lead, false, true, $nl2br )
+									. '</div></div>';
+				}
+			}
+			else {
+				if ( !empty( $confirmation[ 'pageId' ] ) ) {
+					$url = get_permalink( $confirmation[ 'pageId' ] );
+				}
+				else {
+					$url = GFCommon::replace_variables( trim( $confirmation[ 'url' ] ), $form, $lead, false, true );
+					$url_info = parse_url( $url );
+					$query_string = $url_info[ 'query' ];
+					$dynamic_query = GFCommon::replace_variables( trim( $confirmation[ 'queryString' ] ), $form, $lead, true );
+					$query_string .= empty( $url_info[ 'query' ] ) || empty( $dynamic_query ) ? $dynamic_query : '&' . $dynamic_query;
+
+					if ( !empty( $url_info[ 'fragment' ] ) ) {
+						$query_string .= '#' . $url_info[ 'fragment' ];
+					}
+
+					$url = $url_info[ 'scheme' ] . '://' . $url_info[ 'host' ];
+
+					if ( !empty( $url_info[ 'port' ] ) ) {
+						$url .= ':' . $url_info[ 'port' ];
+					}
+
+					$url .= rgar( $url_info, 'path' );
+
+					if ( !empty( $query_string ) ) {
+						$url .= '?' . $query_string;
+					}
+
+				}
+
+				if ( headers_sent() || $ajax ) {
+					//Perform client side redirect for AJAX forms, of if headers have already been sent
+					$confirmation = GFFormDisplay::get_js_redirect_confirmation( $url, $ajax );
+				}
+				else {
+					$confirmation = array( 'redirect' => $url );
+				}
+			}
+
+			if ( !is_array( $confirmation ) ) {
+				$confirmation = GFCommon::gform_do_shortcode( $confirmation ); //enabling shortcodes
+			}
+			elseif ( headers_sent() || $ajax ) {
+				//Perform client side redirect for AJAX forms, of if headers have already been sent
+				$confirmation = GFFormDisplay::get_js_redirect_confirmation( $confirmation[ 'redirect' ], $ajax ); //redirecting via client side
+			}
 		}
-		else {
-			$new_confirmation = array(
-				'message' => $confirmation,
-				'type' => 'message'
-			);
-		}
 
-		$new_confirmation[ 'isDefault' ] = true;
+		return $confirmation;
 
-		$form[ 'confirmations' ] = array( $new_confirmation );
-		$form[ 'confirmation' ] = $new_confirmation;
-
-		return $form;
 	}
 
 	/**
@@ -2618,11 +2730,6 @@ class Pods_GF {
 			self::secondary_submits( $form[ 'id' ], $this->options[ 'secondary_submits' ] );
 		}
 
-		// Submit Redirect URL customization
-		if ( isset( $this->options[ 'confirmation' ] ) && !empty( $this->options[ 'confirmation' ] ) ) {
-			$form = self::gf_confirmation( $form, $this->options[ 'confirmation' ] );
-		}
-
 		return $form;
 
 	}
@@ -2676,7 +2783,7 @@ class Pods_GF {
 		self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__ . '_' . $field[ 'id' ];
 
 		if ( empty( $this->options ) ) {
-			return $form;
+			return $validation_result;
 		}
 
 		$field_options = array();
@@ -2758,12 +2865,12 @@ class Pods_GF {
 			self::$actioned[ $validation_result[ 'form' ][ 'id' ] ] = array();
 		}
 
-		self::$actioned[ $validation_result[ 'form_id' ][ 'id' ] ][] = __FUNCTION__;
+		self::$actioned[ $validation_result[ 'form' ][ 'id' ] ][] = __FUNCTION__;
 
-		$form = $validation_result[ 'form_id' ];
+		$form = $validation_result[ 'form' ][ 'id' ];
 
 		if ( empty( $this->options ) ) {
-			return $form;
+			return $validation_result;
 		}
 
 		$field_keys = array();
@@ -2777,7 +2884,7 @@ class Pods_GF {
 		$save_action = 'add';
 
 		if ( !empty( $id ) ) {
-			$save_action = 'save';
+			$save_action = 'edit';
 		}
 
 		if ( isset( $this->options[ 'save_id' ] ) && !empty( $this->options[ 'save_id' ] ) ) {
@@ -2810,9 +2917,12 @@ class Pods_GF {
 				$this->pod->id = $id;
 				$this->pod->fetch( $id );
 
+				do_action( 'pods_gf_to_pods_' . $form[ 'id' ] . '_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
 				do_action( 'pods_gf_to_pods_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
 			}
 			else {
+				$id = apply_filters( 'pods_gf_to_pod_' . $form[ 'id' ] . '_' . $save_action, $id, $this->pod, $data, $this );
+
 				$this->id = $id = apply_filters( 'pods_gf_to_pod_' . $save_action, $id, $this->pod, $data, $this );
 			}
 
@@ -2891,6 +3001,20 @@ class Pods_GF {
 					'id' => $this->id
 				);
 			}
+
+			foreach ( $form[ 'fields' ] as $field ) {
+				$value = $original_value = null;
+
+				if ( isset( $_POST[ 'input_' . $field[ 'id' ] ] ) ) {
+					$value = $original_value = $_POST[ 'input_' . $field[ 'id' ] ];
+				}
+
+				$value = apply_filters( 'pods_gf_entry_pre_save_' . $form[ 'id' ] . '_' . $field[ 'id' ], $value, $entry, $field, $form );
+
+				if ( null !== $value && $original_value !== $value ) {
+					$lead[ $field[ 'id' ] ] = $value;
+				}
+			}
 		}
 
 		return $entry;
@@ -2925,12 +3049,64 @@ class Pods_GF {
 			$form = self::gf_read_only( $form, false, $read_only );
 		}
 
-		// Submit Redirect URL customization
-		if ( isset( $this->options[ 'confirmation' ] ) && !empty( $this->options[ 'confirmation' ] ) ) {
-			$form = self::gf_confirmation( $form, $this->options[ 'confirmation' ] );
+		return $form;
+
+	}
+
+	/**
+	 * Action handler for Gravity Forms: gform_entry_post_save
+	 *
+	 * @param array $lead GF Entry array
+	 * @param array $form GF Form array
+	 */
+	public function _gf_entry_post_save( $lead, $form ) {
+
+		global $wpdb;
+
+		if ( $form[ 'id' ] == $this->form_id && empty( $this->gf_validation_message ) ) {
+			if ( isset( self::$actioned[ $form[ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $form[ 'id' ] ] ) ) {
+				return $lead;
+			}
+			elseif ( !isset( self::$actioned[ $form[ 'id' ] ] ) ) {
+				self::$actioned[ $form[ 'id' ] ] = array();
+			}
+
+			self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
+
+			$old_post = $_POST;
+
+			$changed = array();
+
+			$lead_detail_table = GFFormsModel::get_lead_details_table_name();
+
+			$current_fields = $wpdb->get_results( $wpdb->prepare( "SELECT id, field_number FROM {$lead_detail_table} WHERE lead_id = %d", $lead["id"]));
+
+			foreach ( $form[ 'fields' ] as $field ) {
+				$value = $original_value = null;
+
+				if ( isset( $lead[ $field[ 'id' ] ] ) ) {
+					$value = $original_value = $lead[ $field[ 'id' ] ];
+				}
+
+				$value = apply_filters( 'pods_gf_entry_save_' . $form[ 'id' ] . '_' . $field[ 'id' ], $value, $lead, $field, $form );
+
+				if ( null !== $value && $original_value !== $value ) {
+					$field[ 'adminOnly' ] = false;
+
+					$_POST[ 'input_' . $field[ 'id' ] ] = $value;
+
+                    GFFormsModel::save_input( $form, $field, $lead, $current_fields, $field[ 'id' ] );
+
+					$lead[ $field[ 'id' ] ] = $value;
+
+					$changed[ $field[ 'id' ] ] = array( 'old' => $original_value, 'new' => $value );
+				}
+			}
+
+			$_POST = $old_post;
 		}
 
-		return $form;
+		return $lead;
 
 	}
 
@@ -2943,6 +3119,8 @@ class Pods_GF {
 	public function _gf_after_submission( $entry, $form ) {
 
 		if ( empty( $this->gf_validation_message ) ) {
+			remove_action( 'gform_post_submission_' . $form[ 'id' ], array( $this, '_gf_after_submission' ), 10 );
+
 			if ( isset( self::$actioned[ $form[ 'id' ] ] ) && in_array( __FUNCTION__, self::$actioned[ $form[ 'id' ] ] ) ) {
 				return $entry;
 			}
@@ -2952,9 +3130,7 @@ class Pods_GF {
 
 			self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
 
-			if ( !is_object( $this->pod ) ) {
-				$this->id = $entry[ 'id' ];
-			}
+			$this->id = $entry[ 'id' ];
 
 			if ( empty( $this->options ) ) {
 				return $entry;
@@ -3016,12 +3192,15 @@ class Pods_GF {
 					}
 				}
 
-				$confirmation = GFFormDisplay::handle_confirmation( $form, $entry );
+				$confirmation = self::gf_confirmation( $form[ 'confirmation' ], $form, $entry, false, true );
 
-				if ( 'redirect' != $form[ 'confirmation' ][ 'type' ] || !is_array( $confirmation ) || !isset( $confirmation[ 'redirect' ] ) ) {
+				if ( 'redirect' != $confirmation[ 'type' ] || !is_array( $confirmation ) || ( !isset( $confirmation[ 'url' ] ) && !isset( $confirmation[ 'redirect' ] ) ) ) {
 					pods_redirect( pods_var_update( array( 'action' => 'edit', 'id' => $this->id ) ) );
 				}
-				else {
+				elseif ( isset( $confirmation[ 'url' ] ) ) {
+					pods_redirect( $confirmation[ 'url' ] );
+				}
+				elseif ( isset( $confirmation[ 'redirect' ] ) ) {
 					pods_redirect( $confirmation[ 'redirect' ] );
 				}
 			}

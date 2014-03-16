@@ -3,7 +3,7 @@
 Plugin Name: Pods Gravity Forms Add-On
 Plugin URI: http://pods.io/
 Description: Integration with Gravity Forms (http://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.0 Alpha 3
+Version: 1.0 Alpha 4
 Author: Pods Framework Team
 Author URI: http://pods.io/about/
 Text Domain: pods-gravity-forms
@@ -75,3 +75,7 @@ function pods_gf_init() {
 
 }
 add_action( 'init', 'pods_gf_init' );
+
+// Warning: Gravity Forms Duplicate Prevention plugin's JS *will* break secondary submits!
+// So we need to disable it now
+add_filter( 'gform_duplicate_prevention_load_script', '__return_false' );

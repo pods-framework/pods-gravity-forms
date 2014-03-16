@@ -83,6 +83,21 @@ jQuery( function() {
 						}
 					} );
 				} );
+
+				// Secondary submits for each page of a form
+				$pods_secondary_submits = jQuery( 'div.gform_page_footer.top_label .pods-gf-secondary-submit', $this );
+
+				$pods_secondary_submits.each( function() {
+					var $secondary_submit = jQuery( this );
+
+					jQuery( '.gform_page_footer' ).not( '.top_label' ).each( function() {
+						var $page_footer = jQuery( this );
+
+						$new_secondary = $secondary_submit.clone();
+
+						$new_secondary.insertBefore( jQuery( 'img.spinner', $page_footer ) );
+					} );
+				} );
 			}
 		} );
 	}

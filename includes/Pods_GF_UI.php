@@ -66,7 +66,9 @@ class Pods_GF_UI {
 						'value' => 'Manual value to use'
 					)
 				),
-				'pod' => 'mypod',
+				'pod' => 'mypod', // Can be used on other actions to override the pod used too
+				'save_id' => 123, // Override the ID to save to
+				'save_action' => 'add', // Override the action to do when saving (add/save)
 
 				'save_action' => 'add', // What action to use when saving (add|save)
 				'save_id' => 123, // ID to override what to save to (if save action is save)
@@ -330,7 +332,9 @@ class Pods_GF_UI {
 			$form_id = (int) pods_v( 'form', $action_data );
 
 			if ( !pods_v( 'disabled', $action_data ) && 0 < $form_id && $this->action == $action ) {
-				$pods_gf = pods_gf( $this->pod, $form_id, $action_data );
+				$pod = pods_v( 'pod', $action_data, $this->pod );
+
+				$pods_gf = pods_gf( $pod, $form_id, $action_data );
 
 				self::$pods_gf = $pods_gf;
 
@@ -808,18 +812,24 @@ class Pods_GF_UI {
 	 */
 	public function _action_edit( $duplicate, $obj = null  ) {
 
-		self::$pods_ui =& $obj;
-
-		// Hackarounds because of current state of callback variable usage
-		$duplicate = false;
-
 		if ( is_object( $duplicate ) ) {
 			$obj = $duplicate;
 			$duplicate = false;
 		}
 
+		// Hackarounds because of current state of callback variable usage
+		$duplicate = false;
+
+		self::$pods_ui =& $obj;
+
         if ( empty( $obj->row ) ) {
             $obj->get_row();
+		}
+
+		if ( empty( $obj->row ) ) {
+			$obj->message( sprintf( __( '%s not found.', 'pods' ), $obj->item ) );
+
+			return;
 		}
 ?>
 <div class="wrap pods-admin pods-ui">
@@ -872,6 +882,12 @@ class Pods_GF_UI {
 
         if ( empty( $obj->row ) ) {
             $obj->get_row();
+		}
+
+		if ( empty( $obj->row ) ) {
+			$obj->message( sprintf( __( '%s not found.', 'pods' ), $obj->item ) );
+
+			return;
 		}
 ?>
 <div class="wrap pods-admin pods-ui">
