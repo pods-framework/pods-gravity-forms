@@ -2867,7 +2867,7 @@ class Pods_GF {
 
 		self::$actioned[ $validation_result[ 'form' ][ 'id' ] ][] = __FUNCTION__;
 
-		$form = $validation_result[ 'form' ][ 'id' ];
+		$form = $validation_result[ 'form' ];
 
 		if ( empty( $this->options ) ) {
 			return $validation_result;
