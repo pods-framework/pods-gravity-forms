@@ -3,7 +3,7 @@
 Plugin Name: Pods Gravity Forms Add-On
 Plugin URI: http://pods.io/
 Description: Integration with Gravity Forms (http://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.0 Alpha 4
+Version: 1.0 Alpha 5
 Author: Pods Framework Team
 Author URI: http://pods.io/about/
 Text Domain: pods-gravity-forms
@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * @package Pods\Gravity Forms
  */
 
-define( 'PODS_GF_VERSION', '1.0-a-3' );
+define( 'PODS_GF_VERSION', '1.0-a-5' );
 define( 'PODS_GF_FILE', __FILE__ );
 define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
 define( 'PODS_GF_URL', plugin_dir_url( PODS_GF_FILE ) );
@@ -79,3 +79,11 @@ add_action( 'init', 'pods_gf_init' );
 // Warning: Gravity Forms Duplicate Prevention plugin's JS *will* break secondary submits!
 // So we need to disable it now
 add_filter( 'gform_duplicate_prevention_load_script', '__return_false' );
+
+// Include GF Feed Addon code
+	if ( !class_exists( 'GFFeedAddOn' ) ) {
+		GFForms::include_feed_addon_framework();
+	}
+
+	// Include GF Add-On
+	require_once( PODS_GF_DIR . 'includes/Pods_GF_Addon.php' );
