@@ -1,16 +1,18 @@
-=== Pods Gravity Forms integration ===
-Contributors: sc0ttkclark
+=== Pods Gravity Forms Add-On ===
+Contributors: sc0ttkclark, naomicbush, gravityplus
 Donate link: http://podsfoundation.org/donate/
 Tags: pods, gravity forms, form mapping
 Requires at least: 3.4
-Tested up to: 3.6
+Tested up to: 3.9
 Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Pods Integration with Gravity Forms (http://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
+Integrate with [Gravity Forms](http://www.gravityforms.com/) to create a Pod item from a form submission.
 
 == Description ==
+
+Requires Pods 2.4, Gravity Forms 1.8.8.
 
 Check out http://pods.io/ for our User Guide, Forums, and other resources to help you develop with Pods.
 
@@ -25,10 +27,18 @@ OR you can just install it with WordPress by going to Plugins >> Add New >> and 
 
 == Screenshots ==
 
-1. Map a Gravity Form's fields to a Pod
+1. In the Pods Admin, create your Pods and Pod Fields
+2. In the Pods Admin, create your Pods and Pod Fields
+3. Create your Gravity Form that will be used to create a Pod item
+4. Form Settings->Pods menu
+5. Pods feed page
+6. Map form fields to Pod fields
+7. Example form
+8. New Pod item created from form submission
+9. Form entries page showing Pod ID
 
 == Changelog ==
 
-= 1.0 - XXX Xth, 2013 =
+= 1.0 - XXX Xth, 2014 =
 
 * Initial release
