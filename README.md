@@ -1,8 +1,14 @@
-# Pods Gravity Forms Add-On
-
+<p align="center">
+  <img src="./pods-gravity-forms.png" alt="Pods Gravity Forms" />
+</p>
+<h1 align="center">Pods Gravity Forms Add-On</h1>
+<p align="center">
 Integrate with [Gravity Forms](http://www.gravityforms.com/) to create a Pod from a form submission.
-
+</p>
+<p>
+<br />
 _Please Note: This plugin is currently in alpha development._
+</p>
 
 ## Requirements
 
@@ -14,28 +20,29 @@ Pods 2.4, Gravity Forms 1.8.8
 
 2. In the Pods Admin, create your Pods and Pod Fields
 
-   ![screenshot 1](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-1.png)
+   ![Pods Admin -> Add New](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-1.png?raw=true)
 
-   ![screenshot 2](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-2.png)
+   ![Pod Edit Screen](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-2.png?raw=true)
 
 3. Create your Gravity Form that will be used to create your Pod item
 
-   ![screenshot 3](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-3.png)
+   ![Gravity Form editor](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-3.png?raw=true)
 
 4. Create a Pods feed, to map your form fields to your Pods fields
 
-   ![screenshot 4](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-4.png)
+   ![Form Settings->Pods menu](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-4.png?raw=true)
 
-   ![screenshot 5](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-5.png)
+   ![Pods feed page](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-5.png?raw=true)
 
-   ![screenshot 6](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-6.png)
+   ![Map form fields to Pod fields](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-6.png?raw=true)
 
 
 After a form submission, a new Pod item ID will be created.
 
-   ![screenshot 7](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-7.png) ![screenshot 8](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-8.png)
-
+<p align="center">
+  <img src="https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-7.png?raw=true" alt="Example form" width=50% /><img src="https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-8.png?raw=true" alt="New Pod item created from form submission" width=50% />
+</p>
 
 And the Pod item ID will be saved with the Gravity Forms entry information.
 
-   ![screenshot 9](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-9.png)
+   ![Form entries page showing Pod ID](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-9.png?raw=true)
