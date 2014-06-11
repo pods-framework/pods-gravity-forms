@@ -34,6 +34,8 @@ Pods 2.4, Gravity Forms 1.8.8
 
    ![Pods feed page](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-5.png?raw=true)
 
+5. In Pods Feed, map Gravity Form fields to Pods fields
+
    ![Map form fields to Pod fields](https://github.com/pods-framework/pods-gravity-forms/blob/master/screenshot-6.png?raw=true)
 
 
