@@ -780,7 +780,7 @@ class Pods_GF_UI {
 					$link = $obj->action_links[ 'manage' ];
 				}
 		?>
-			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods' ), $obj->heading[ 'manage' ] ); ?></a>
+			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading[ 'manage' ] ); ?></a>
 		<?php
 			}
 		?>
@@ -827,7 +827,7 @@ class Pods_GF_UI {
 		}
 
 		if ( empty( $obj->row ) ) {
-			$obj->message( sprintf( __( '%s not found.', 'pods' ), $obj->item ) );
+			$obj->message( sprintf( __( '%s not found.', 'pods-gravity-forms' ), $obj->item ) );
 
 			return;
 		}
@@ -845,7 +845,7 @@ class Pods_GF_UI {
 					$link = $obj->action_links[ 'manage' ];
 				}
 		?>
-			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods' ), $obj->heading[ 'manage' ] ); ?></a>
+			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading[ 'manage' ] ); ?></a>
 		<?php
 			}
 		?>
@@ -885,7 +885,7 @@ class Pods_GF_UI {
 		}
 
 		if ( empty( $obj->row ) ) {
-			$obj->message( sprintf( __( '%s not found.', 'pods' ), $obj->item ) );
+			$obj->message( sprintf( __( '%s not found.', 'pods-gravity-forms' ), $obj->item ) );
 
 			return;
 		}
@@ -903,7 +903,7 @@ class Pods_GF_UI {
 					$link = $obj->action_links[ 'manage' ];
 				}
 		?>
-			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods' ), $obj->heading[ 'manage' ] ); ?></a>
+			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading[ 'manage' ] ); ?></a>
 		<?php
 			}
 		?>
@@ -953,7 +953,7 @@ class Pods_GF_UI {
 			do_action( 'pods_gf_ui' . __FUNCTION__, $this->id, $this->pod, $obj, $this );
 		}
 
-		$obj->message( sprintf( __( '%s deleted successfully.', 'pods' ), $obj->item ) );
+		$obj->message( sprintf( __( '%s deleted successfully.', 'pods-gravity-forms' ), $obj->item ) );
 
 		return null;
 

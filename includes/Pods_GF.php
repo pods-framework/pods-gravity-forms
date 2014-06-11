@@ -1033,10 +1033,10 @@ class Pods_GF {
 
 			wp_enqueue_script( 'pods-gf' );
 
-			$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later" value="' . esc_attr__( 'Save for Later', 'pods-gf-ui' ) . '" />';
+			$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later" value="' . esc_attr__( 'Save for Later', 'pods-gravity-forms' ) . '" />';
 
 			if ( 1 == pods_v( 'pods_gf_save_for_later_loaded', 'post' ) ) {
-				$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later-reset" value="' . esc_attr__( 'Reset Saved Form', 'pods-gf-ui' ) . '" />';
+				$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later-reset" value="' . esc_attr__( 'Reset Saved Form', 'pods-gravity-forms' ) . '" />';
 			}
 
 			if ( !empty( $save_for_later[ 'redirect' ] ) ) {
@@ -2962,7 +2962,7 @@ class Pods_GF {
 		self::$actioned[ $form[ 'id' ] ][] = __FUNCTION__;
 
 		if ( !empty( $this->gf_validation_message ) ) {
-			if ( false === strpos( $validation_message, __( "There was a problem with your submission.", "gravityforms" ) . " " . __( "Errors have been highlighted below.", "gravityforms" ) ) ) {
+			if ( false === strpos( $validation_message, __( 'There was a problem with your submission.', 'pods-gravity-forms' ) . " " . __( 'Errors have been highlighted below.', 'pods-gravity-forms' ) ) ) {
 				$validation_message .= "\n" . '<div class="validation_error">' . $this->gf_validation_message . '</div>';
 			}
 			else {
