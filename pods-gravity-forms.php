@@ -36,9 +36,6 @@ define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
 define( 'PODS_GF_URL', plugin_dir_url( PODS_GF_FILE ) );
 define( 'PODS_GF_ADDON_FILE', basename( PODS_GF_DIR ) . '/' . basename( PODS_GF_FILE ) );
 
-
-if ( class_exists( 'GFForms' ) && defined( 'PODS_VERSION' ) ) {
-
 /**
  * @global Pods_GF_UI $GLOBALS['pods_gf_ui']
  * @name $pods_gf_ui
@@ -90,16 +87,3 @@ add_filter( 'gform_duplicate_prevention_load_script', '__return_false' );
 
 	// Include GF Add-On
 	require_once( PODS_GF_DIR . 'includes/Pods_GF_Addon.php' );
-
-}
-
-else {
-	if ( is_admin() ) {
-		echo sprintf( '<div id="message" class="error"><p>%s</p></div>',
-			sprintf(
-				__( '%1$s requires that the Pods and Gravity Forms core plugins be installed and activated.', 'pods-gf' ),
-				'Pods Gravity Forms' )
-		);
-	}
-
-}
