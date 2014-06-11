@@ -81,9 +81,27 @@ add_action( 'init', 'pods_gf_init' );
 add_filter( 'gform_duplicate_prevention_load_script', '__return_false' );
 
 // Include GF Feed Addon code
-	if ( !class_exists( 'GFFeedAddOn' ) ) {
-		GFForms::include_feed_addon_framework();
-	}
+if ( class_exists( 'GFForms' ) && !class_exists( 'GFFeedAddOn' ) ) {
+	GFForms::include_feed_addon_framework();
+}
 
-	// Include GF Add-On
+// Include GF Add-On
+if ( class_exists( 'GFForms' ) && defined( 'PODS_VERSION' )   ) {
 	require_once( PODS_GF_DIR . 'includes/Pods_GF_Addon.php' );
+}
+
+
+/**
+ * Admin nag if Pods or GF isn't activated.
+ */
+add_action( 'plugins_loaded', 'pods_gf_admin_nag' );
+function pods_gf_admin_nag() {
+	if ( is_admin() && ( !class_exists( 'GFForms' ) || !defined( 'PODS_VERSION' ) ) ) {
+		echo sprintf( '<div id="message" class="error"><p>%s</p></div>',
+			sprintf(
+				__( '%1$s requires that the Pods and Gravity Forms core plugins be installed and activated.', 'pods-gf' ),
+				'Pods Gravity Forms' )
+		);
+	}
+	
+}
