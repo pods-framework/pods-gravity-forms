@@ -3,11 +3,11 @@
 </p>
 <h1 align="center">Pods Gravity Forms Add-On</h1>
 <p align="center">
-Integrate with [Gravity Forms](http://www.gravityforms.com/) to create a Pod from a form submission.
+Integrate with <a href="http://www.gravityforms.com/">Gravity Forms</a> to create a Pod from a form submission.
 </p>
 <p>
 <br />
-_Please Note: This plugin is currently in alpha development._
+<em>Please Note: This plugin is currently in alpha development.</em>
 </p>
 
 ## Requirements
