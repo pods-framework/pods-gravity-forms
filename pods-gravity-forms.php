@@ -85,9 +85,12 @@ if ( class_exists( 'GFForms' ) && !class_exists( 'GFFeedAddOn' ) ) {
 	GFForms::include_feed_addon_framework();
 }
 
-// Include GF Add-On
-if ( class_exists( 'GFForms' ) && defined( 'PODS_VERSION' )   ) {
-	require_once( PODS_GF_DIR . 'includes/Pods_GF_Addon.php' );
+add_action( 'plugins_loaded', 'pods_gf_inclue' );
+function pods_gf_inclue() {
+ 	// Include GF Add-On
+	if ( class_exists( 'GFForms' ) && defined( 'PODS_VERSION' ) ) {
+		require_once( PODS_GF_DIR . 'includes/Pods_GF_Addon.php' );
+	}
 }
 
 
