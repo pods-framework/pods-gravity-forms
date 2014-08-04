@@ -3,7 +3,7 @@ Contributors: sc0ttkclark, naomicbush, gravityplus
 Donate link: http://podsfoundation.org/donate/
 Tags: pods, gravity forms, form mapping
 Requires at least: 3.4
-Tested up to: 3.9
+Tested up to: 4.0
 Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -12,7 +12,7 @@ Integrate with [Gravity Forms](http://www.gravityforms.com/) to create a Pod ite
 
 == Description ==
 
-Requires Pods 2.4, Gravity Forms 1.8.8.
+Requires Pods 2.4+, Gravity Forms 1.8.8+.
 
 Check out http://pods.io/ for our User Guide, Forums, and other resources to help you develop with Pods.
 
