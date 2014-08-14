@@ -1654,7 +1654,7 @@ class Pods_GF {
 					'field_value' => null, // set to field to use for value (option value)
 					'params'      => null, // set to a $params array to override the default find()
 				),
-				( is_array( $dynamic_select ) ? $dynamic_selects : array() )
+				( is_array( $dynamic_select ) ? $dynamic_select : array() )
 			);
 
 			if ( ! empty( $dynamic_select['gf_field'] ) ) {
