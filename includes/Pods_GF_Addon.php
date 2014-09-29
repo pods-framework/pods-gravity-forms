@@ -172,6 +172,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	}
 
 	public function get_entry_meta ( $entry_meta, $form_id ) {
+		if ( $this->has_feed( $form_id ) ) {
 			$entry_meta['pod_id'] = array(
 				'label'                      => 'Pod ID',
 				'is_numeric'                 => true,
@@ -181,6 +182,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					'operators' => array( 'is', 'isnot', '>', '<' )
 				)
 			);
+		}
 
 		return $entry_meta;
 	}
