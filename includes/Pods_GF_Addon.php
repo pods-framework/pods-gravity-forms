@@ -2,6 +2,9 @@
 // addon settings page
 // addon feed
 // addon mapping save
+
+require_once( PODS_GF_DIR . 'includes/Pods_GF.php' );
+
 class Pods_GF_Addon extends GFFeedAddOn {
 
 	protected $_version = PODS_GF_VERSION;
