@@ -1290,6 +1290,12 @@ class Pods_GF {
 
 		$data = array();
 
+		// bug fix for issue #23
+		if($_POST['gform_target_page_number_' . $form['id']] != 0){
+			return $data;
+		}
+		
+		
 		if ( ! isset( $options['fields'] ) || empty( $options['fields'] ) ) {
 			return $data;
 		}
