@@ -114,11 +114,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		);
 	}
 
-	protected function field_map_title () {
+	public function field_map_title () {
 		return __( 'Pod Field', 'pods-gravity-forms' );
 	}
 
-	protected function feed_list_columns () {
+	public function feed_list_columns () {
 		return array(
 			'feedName' => __( 'Name', 'pods-gravity-forms' ),
 			'pod'      => __( 'Pod', 'pods-gravity-forms' )
