@@ -2,8 +2,8 @@
 Contributors: sc0ttkclark, naomicbush, gravityplus
 Donate link: http://podsfoundation.org/donate/
 Tags: pods, gravity forms, form mapping
-Requires at least: 3.4
-Tested up to: 4.0
+Requires at least: 4.0
+Tested up to: 4.2
 Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -12,7 +12,7 @@ Integrate with [Gravity Forms](http://www.gravityforms.com/) to create a Pod ite
 
 == Description ==
 
-Requires Pods 2.4+, Gravity Forms 1.8.8+.
+Requires Pods 2.4+, Gravity Forms 1.9+.
 
 Check out http://pods.io/ for our User Guide, Forums, and other resources to help you develop with Pods.
 
@@ -39,6 +39,6 @@ OR you can just install it with WordPress by going to Plugins >> Add New >> and 
 
 == Changelog ==
 
-= 1.0 - XXX Xth, 2014 =
+= 1.0 - XXX Xth, 2015 =
 
 * Initial release

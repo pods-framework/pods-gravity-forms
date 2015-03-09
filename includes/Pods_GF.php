@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Class Pods_GF
  */
@@ -142,6 +141,10 @@ class Pods_GF {
 			wp_register_script( 'pods-gf', PODS_GF_URL . 'ui/pods-gf.js', array( 'jquery' ), PODS_GF_VERSION, true );
 		}
 
+		if ( !wp_style_is( 'pods-gf', 'registered' ) ) {
+			wp_register_style( 'pods-gf', PODS_GF_URL . 'ui/pods-gf.css', array(), PODS_GF_VERSION );
+		}
+
 		// Save for Later setup
 		if ( isset( $this->options['save_for_later'] ) && ! empty( $this->options['save_for_later'] ) ) {
 			self::save_for_later( $form_id, $this->options['save_for_later'] );
@@ -189,12 +192,12 @@ class Pods_GF {
 		}
 
 		// Editing
-		if ( ! has_filter( 'gform_entry_pre_save_' . $form_id, array( $this, '_gf_entry_pre_save' ) ) ) {
-			add_filter( 'gform_entry_pre_save_' . $form_id, array( $this, '_gf_entry_pre_save' ), 10, 2 );
+		if ( !has_filter( 'gform_entry_id_pre_save_lead' . $form_id, array( $this, '_gf_entry_pre_save_id' ) ) ) {
+			add_filter( 'gform_entry_id_pre_save_lead' . $form_id, array( $this, '_gf_entry_pre_save_id' ), 10, 2 );
 		}
 
 		// Saving
-		if ( ! has_filter( 'gform_entry_post_save' . $form_id, array( $this, '_gf_entry_post_save' ) ) ) {
+		if ( !has_filter( 'gform_entry_post_save', array( $this, '_gf_entry_post_save' ) ) ) {
 			add_filter( 'gform_entry_post_save', array( $this, '_gf_entry_post_save' ), 10, 2 );
 		}
 
@@ -833,6 +836,10 @@ class Pods_GF {
 			wp_register_script( 'pods-gf', PODS_GF_URL . 'ui/pods-gf.js', array( 'jquery' ), PODS_GF_VERSION, true );
 		}
 
+		if ( !wp_style_is( 'pods-gf', 'registered' ) ) {
+			wp_register_style( 'pods-gf', PODS_GF_URL . 'ui/pods-gf.css', array(), PODS_GF_VERSION );
+		}
+
 	}
 
 	/**
@@ -854,7 +861,10 @@ class Pods_GF {
 				$secondary_submits = array( $secondary_submits );
 			}
 
+			$secondary_submits = array_reverse( $secondary_submits );
+
 			wp_enqueue_script( 'pods-gf' );
+			wp_enqueue_style( 'pods-gf' );
 
 			$defaults = array(
 				'imageUrl'      => null,
@@ -1034,10 +1044,10 @@ class Pods_GF {
 
 			wp_enqueue_script( 'pods-gf' );
 
-			$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later" value="' . esc_attr__( 'Save for Later', 'pods-gravity-forms' ) . '" />';
+			$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later" value="' . esc_attr__( 'Save for Later', 'pods-gf-ui' ) . '" />';
 
 			if ( 1 == pods_v( 'pods_gf_save_for_later_loaded', 'post' ) ) {
-				$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later-reset" value="' . esc_attr__( 'Reset Saved Form', 'pods-gravity-forms' ) . '" />';
+				$button_input .= ' <input type="button" class="button gform_button pods-gf-save-for-later-reset" value="' . esc_attr__( 'Reset Saved Form', 'pods-gf-ui' ) . '" />';
 			}
 
 			if ( ! empty( $save_for_later['redirect'] ) ) {
@@ -1539,11 +1549,10 @@ class Pods_GF {
 	 * Delete a GF entry, because GF doesn't have an API to do this yet (the function itself is user-restricted)
 	 *
 	 * @param array $entry      GF Entry array
-	 * @param bool  $keep_files Whether to keep the files from the entry
 	 *
 	 * @return bool If the entry was successfully deleted
 	 */
-	public static function gf_delete_entry ( $entry, $keep_files = null ) {
+	public static function gf_delete_entry( $entry ) {
 
 		global $wpdb;
 
@@ -1557,46 +1566,7 @@ class Pods_GF {
 			return false;
 		}
 
-		if ( null === $keep_files ) {
-			$keep_files = self::$keep_files;
-		}
-
-		do_action( 'gform_delete_lead', $lead_id );
-
-		$lead_table             = GFFormsModel::get_lead_table_name();
-		$lead_notes_table       = GFFormsModel::get_lead_notes_table_name();
-		$lead_detail_table      = GFFormsModel::get_lead_details_table_name();
-		$lead_detail_long_table = GFFormsModel::get_lead_details_long_table_name();
-
-		//deleting uploaded files
-		if ( ! $keep_files ) {
-			GFFormsModel::delete_files( $lead_id );
-		}
-
-		//Delete from detail long
-		$sql = "
-			DELETE FROM {$lead_detail_long_table}
-			WHERE lead_detail_id IN(
-				SELECT id FROM {$lead_detail_table} WHERE lead_id = %d
-			)
-		";
-
-		$wpdb->query( $wpdb->prepare( $sql, $lead_id ) );
-
-		//Delete from lead details
-		$sql = "DELETE FROM {$lead_detail_table} WHERE lead_id = %d";
-		$wpdb->query( $wpdb->prepare( $sql, $lead_id ) );
-
-		//Delete from lead notes
-		$sql = "DELETE FROM {$lead_notes_table} WHERE lead_id = %d";
-		$wpdb->query( $wpdb->prepare( $sql, $lead_id ) );
-
-		//Delete from lead meta
-		gform_delete_meta( $lead_id );
-
-		//Delete from lead
-		$sql = "DELETE FROM {$lead_table} WHERE id = %d";
-		$wpdb->query( $wpdb->prepare( $sql, $lead_id ) );
+		GFAPI::delete_entry( $lead_id );
 
 		return true;
 
@@ -1841,7 +1811,7 @@ class Pods_GF {
 			}
 
 			if ( ! empty( $id ) ) {
-				$pod = GFFormsModel::get_lead( $id );
+				$pod = GFAPI::get_entry( $id );
 			}
 			else {
 				$pod = array();
@@ -2144,7 +2114,7 @@ class Pods_GF {
 
 				if ( headers_sent() || $ajax ) {
 					//Perform client side redirect for AJAX forms, of if headers have already been sent
-					$confirmation = self::get_js_redirect_confirmation( $url, $ajax );
+					$confirmation = self::gf_get_js_redirect_confirmation( $url, $ajax );
 				}
 				else {
 					$confirmation = array( 'redirect' => $url );
@@ -2156,7 +2126,7 @@ class Pods_GF {
 			}
 			elseif ( headers_sent() || $ajax ) {
 				//Perform client side redirect for AJAX forms, of if headers have already been sent
-				$confirmation = self::get_js_redirect_confirmation( $confirmation['redirect'], $ajax ); //redirecting via client side
+				$confirmation = self::gf_get_js_redirect_confirmation( $confirmation[ 'redirect' ], $ajax ); //redirecting via client side
 			}
 		}
 
@@ -2165,17 +2135,17 @@ class Pods_GF {
 	}
 
 	/**
-	 * Perform client side redirect for AJAX forms, or if headers have already been sent
+	 * A public access version of GFFormDisplay::get_js_redirect_confirmation
 	 *
-	 * Clone of private method GFFormDisplay::get_js_redirect_confirmation
+	 * @param string $url
+	 * @param bool $ajax
 	 *
-	 * @param string $url  Redirect URL
-	 * @param bool   $ajax Whether the form was submitted using AJAX
-	 *
-	 * @return string $confirmation Confirmation string
+	 * @return string
 	 */
-	private static function get_js_redirect_confirmation ( $url, $ajax ) {
+	public static function gf_get_js_redirect_confirmation( $url, $ajax ) {
+
 		$confirmation = "<script type=\"text/javascript\">" . apply_filters( "gform_cdata_open", "" ) . " function gformRedirect(){document.location.href='$url';}";
+
 		if ( ! $ajax ) {
 			$confirmation .= "gformRedirect();";
 		}
@@ -2183,6 +2153,7 @@ class Pods_GF {
 		$confirmation .= apply_filters( "gform_cdata_close", "" ) . "</script>";
 
 		return $confirmation;
+
 	}
 
 	/**
@@ -2475,7 +2446,7 @@ class Pods_GF {
 
 		$input_field_name = 'input_' . $field['id'];
 
-		if ( is_array( $value ) || isset( $field['choices'] ) ) {
+		if ( is_array( $value ) || ! empty( $field[ 'choices' ] ) ) {
 			$labels = array();
 			$values = array();
 
@@ -2490,8 +2461,8 @@ class Pods_GF {
 				$choice_number = 1;
 
 				foreach ( $field['choices'] as $choice ) {
-					if ( $choice_number % 10 == 0 ) //hack to skip numbers ending in 0. so that 5.1 doesn't conflict with 5.10
-					{
+					//hack to skip numbers ending in 0. so that 5.1 doesn't conflict with 5.10
+					if( $choice_number % 10 == 0 ) {
 						$choice_number ++;
 					}
 
@@ -2507,8 +2478,8 @@ class Pods_GF {
 				$choice_number = 1;
 
 				foreach ( $value as $val ) {
-					if ( $choice_number % 10 == 0 ) //hack to skip numbers ending in 0. so that 5.1 doesn't conflict with 5.10
-					{
+					//hack to skip numbers ending in 0. so that 5.1 doesn't conflict with 5.10
+					if( $choice_number % 10 == 0 ) {
 						$choice_number ++;
 					}
 
@@ -2779,6 +2750,15 @@ class Pods_GF {
 
 		self::$actioned[$form['id']][] = __FUNCTION__;
 
+		// Cleanup $_GET
+		if ( $_GET ) {
+			foreach ( $_GET as $key => $value ) {
+				if ( 0 === strpos( $key, 'pods_gf_field_' ) ) {
+					unset( $_GET[ $key ] );
+				}
+			}
+		}
+
 		return $form_string;
 
 	}
@@ -2884,16 +2864,16 @@ class Pods_GF {
 			return $validation_result;
 		}
 
-		if ( isset( self::$actioned[$validation_result['form']['id']] ) && in_array( __FUNCTION__, self::$actioned[$validation_result['form']['id']] ) ) {
+		$form = $validation_result['form'];
+
+		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
 			return $validation_result;
 		}
-		elseif ( ! isset( self::$actioned[$validation_result['form']['id']] ) ) {
-			self::$actioned[$validation_result['form']['id']] = array();
+		elseif ( ! isset( self::$actioned[$form['id']] ) ) {
+			self::$actioned[$form['id']] = array();
 		}
 
-		self::$actioned[$validation_result['form']['id']][] = __FUNCTION__;
-
-		$form = $validation_result['form'];
+		self::$actioned[$form['id']][] = __FUNCTION__;
 
 		if ( empty( $this->options ) ) {
 			return $validation_result;
@@ -2921,8 +2901,12 @@ class Pods_GF {
 			$save_action = $this->options['save_action'];
 		}
 
-		if ( empty( $id ) || ! in_array( $save_action, array( 'add', 'save' ) ) ) {
+		if ( empty( $id ) || !in_array( $save_action, array( 'add', 'save', 'bypass' ) ) ) {
 			$save_action = 'add';
+		}
+
+		if ( 'bypass' == $save_action ) {
+			return $validation_result;
 		}
 
 		$data = self::gf_to_pods( $form, $this->options );
@@ -3000,16 +2984,16 @@ class Pods_GF {
 	}
 
 	/**
-	 * Action handler for Gravity Forms: gform_entry_pre_save_{$form_id}
+	 * Action handler for Gravity Forms: gform_entry_id_pre_save_lead{$form_id}
 	 *
-	 * @param array $entry GF Entry array
+	 * @param null|int $lead_id GF Entry ID
 	 * @param array $form  GF Form array
 	 */
-	public function _gf_entry_pre_save ( $entry, $form ) {
+	public function _gf_entry_pre_save_id( $lead_id, $form ) {
 
 		if ( empty( $this->gf_validation_message ) ) {
 			if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
-				return $entry;
+				return $lead_id;
 			}
 			elseif ( ! isset( self::$actioned[$form['id']] ) ) {
 				self::$actioned[$form['id']] = array();
@@ -3018,31 +3002,15 @@ class Pods_GF {
 			self::$actioned[$form['id']][] = __FUNCTION__;
 
 			if ( empty( $this->options ) ) {
-				return $entry;
+				return $lead_id;
 			}
 
 			if ( isset( $this->options['edit'] ) && $this->options['edit'] && is_array( $this->pod ) && 0 < $this->id && empty( $entry ) ) {
-				$entry = array(
-					'id' => $this->id
-				);
-			}
-
-			foreach ( $form['fields'] as $field ) {
-				$value = $original_value = null;
-
-				if ( isset( $_POST['input_' . $field['id']] ) ) {
-					$value = $original_value = $_POST['input_' . $field['id']];
-				}
-
-				$value = apply_filters( 'pods_gf_entry_pre_save_' . $form['id'] . '_' . $field['id'], $value, $entry, $field, $form );
-
-				if ( null !== $value && $original_value !== $value ) {
-					$lead[$field['id']] = $value;
-				}
+				$lead_id = $this->id;
 			}
 		}
 
-		return $entry;
+		return $lead_id;
 
 	}
 
@@ -3115,16 +3083,22 @@ class Pods_GF {
 
 				$value = apply_filters( 'pods_gf_entry_save_' . $form['id'] . '_' . $field['id'], $value, $lead, $field, $form );
 
-				if ( null !== $value && $original_value !== $value ) {
+				$save_value = $value;
+
+				if ( is_array( $value ) ) {
+					$save_value = @serialize( $value );
+				}
+
+				if ( null !== $save_value && $original_value !== $save_value ) {
 					$field['adminOnly'] = false;
 
 					$_POST['input_' . $field['id']] = $value;
 
+					$lead[ $field[ 'id' ] ] = $save_value;
+
 					GFFormsModel::save_input( $form, $field, $lead, $current_fields, $field['id'] );
 
-					$lead[$field['id']] = $value;
-
-					$changed[$field['id']] = array( 'old' => $original_value, 'new' => $value );
+					$changed[ $field[ 'id' ] ] = array( 'old' => $original_value, 'new' => $save_value );
 				}
 			}
 
@@ -3165,13 +3139,7 @@ class Pods_GF {
 			self::gf_notifications( $entry, $form, $this->options );
 
 			if ( pods_v( 'auto_delete', $this->options, false ) ) {
-				$keep_files = false;
-
-				if ( pods_v( 'keep_files', $this->options, false ) ) {
-					$keep_files = true;
-				}
-
-				self::gf_delete_entry( $entry, $keep_files );
+				self::gf_delete_entry( $entry );
 			}
 
 			do_action( 'pods_gf_after_submission_' . $form['id'], $entry, $form );

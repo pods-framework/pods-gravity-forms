@@ -12,7 +12,7 @@ Integrate with <a href="http://www.gravityforms.com/">Gravity Forms</a> to creat
 
 ## Requirements
 
-Pods 2.4, Gravity Forms 1.8.8
+Pods 2.4+, Gravity Forms 1.9+
 
 ## How To Use
 

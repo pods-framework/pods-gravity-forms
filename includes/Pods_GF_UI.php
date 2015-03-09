@@ -67,8 +67,6 @@ class Pods_GF_UI {
 					)
 				),
 				'pod' => 'mypod', // Can be used on other actions to override the pod used too
-				'save_id' => 123, // Override the ID to save to
-				'save_action' => 'add', // Override the action to do when saving (add/save)
 
 				'save_action' => 'add', // What action to use when saving (add|save)
 				'save_id' => 123, // ID to override what to save to (if save action is save)
@@ -85,6 +83,7 @@ class Pods_GF_UI {
 						'pod' => 'other_pod', // Pod to pull data from
 						'field_text' => 'post_title', // Field to pull option text from, defaults to 'name'
 						'field_value' => 'ID', // Field to pull option value from, defaults to id()
+
 						'options' => array( // Custom array of options to use
 							array(
 								'text' => 'Option 1',
@@ -99,8 +98,10 @@ class Pods_GF_UI {
 						'params' => array(), // Params to use for find()
 					)
 				),
+
 				'field' => 'status', // Pod field name for action to interact with (used with Status action)
 				'data' => array(), // Array of options available for field (used with Status action)
+
 				'prepopulate' => false, // Disable value prepopulate, defaults to true
 
 				// Redirect after submission (confirmation redirect, or action=edit&id={entry_id})
@@ -463,10 +464,12 @@ class Pods_GF_UI {
 		if ( 0 < $this->actions[ 'manage' ][ 'form' ] ) {
 			$this->pod = array();
 
-			if ( 0 < $id ) {
-				$lead = GFFormsModel::get_lead( $id );
+			$total_found = 0;
 
-				if ( !empty( $lead ) ) {
+			if ( 0 < $id ) {
+				$lead = GFAPI::get_entry( $id );
+
+				if ( !empty( $lead ) && ! is_wp_error( $lead ) ) {
 					$this->pod = array(
 						$lead[ 'id' ] => $lead
 					);
@@ -490,15 +493,28 @@ class Pods_GF_UI {
 
 					$this->id = $id;
 				}
+
+				$total_found = count( $this->pod );
 			}
 			else {
-				$leads = GFFormsModel::get_leads( $this->actions[ 'manage' ][ 'form' ], 0, 'DESC', '', 0, 999 );
+				$search_criteria = apply_filters( 'pods_gf_ui_search_criteria', array() );
+				$sorting = apply_filters( 'pods_gf_ui_sorting', null );
+				$paging = array(
+					'offset' => 0,
+					'page_size' => 20
+				);
+
+				$page = (int) pods_v( 'pg', 'get', 1, true );
+				$offset = ( ( $page - 1 ) * $paging[ 'page_size' ] );
+
+				$paging[ 'offset' ] += $offset;
+
+				$leads = GFAPI::get_entries( $this->actions[ 'manage' ][ 'form' ], $search_criteria, $sorting, $paging, $total_found );
 
 				// @todo Hook into save for later data and display saved entries in the list like normal entries
 
-				// @todo Replace the below code when GF adds functionality to get all lead data in get_leads
 				foreach ( $leads as $lead ) {
-					$this->pod[ $lead[ 'id' ] ] = GFFormsModel::get_lead( $lead[ 'id' ] );
+					$this->pod[ $lead[ 'id' ] ] = $lead;
 
 					// @todo Replace the below code when GF adds functionality to get all lead meta
 					global $wpdb, $_gform_lead_meta;
@@ -524,10 +540,10 @@ class Pods_GF_UI {
 			$default_ui = array(
 				'data' => $this->pod,
 				'total' => count( $this->pod ),
-				'total_found' => count( $this->pod ),
+				'total_found' => $total_found,
 				'searchable' => false,
 				'sortable' => false,
-				'pagination' => false
+				'pagination' => true
 			);
 
 			if ( 0 < $this->id && !empty( $this->pod ) ) {
@@ -787,8 +803,13 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
+		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+
 		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
 			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
+
+			wp_print_scripts();
+			wp_print_styles();
 
 			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
 		}
@@ -798,6 +819,8 @@ class Pods_GF_UI {
 		else {
 			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $obj, $this );
 		}
+
+		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
 	?>
 </div>
 <?php
@@ -852,6 +875,8 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
+		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+
 		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
 			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
 
@@ -863,6 +888,8 @@ class Pods_GF_UI {
 		else {
 			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $duplicate, $obj, $this );
 		}
+
+		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
 	?>
 </div>
 <?php
@@ -910,6 +937,8 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
+		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+
 		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
 			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
 
@@ -921,6 +950,8 @@ class Pods_GF_UI {
 		else {
 			do_action( 'pods_gf_ui' . __FUNCTION__, $this->pod, $obj, $this );
 		}
+
+		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
 	?>
 </div>
 <?php
