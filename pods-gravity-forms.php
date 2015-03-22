@@ -40,7 +40,7 @@ define( 'PODS_GF_ADDON_FILE', basename( PODS_GF_DIR ) . '/' . basename( PODS_GF_
  * @global Pods_GF_UI $GLOBALS ['pods_gf_ui']
  * @name              $pods_gf_ui
  */
-global $pods_gf_ui, $pods_gf_ui_loaded;
+global $pods_gf_ui;
 
 /**
  * Include the Pods GF Add-On

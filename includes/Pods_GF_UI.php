@@ -615,9 +615,11 @@ class Pods_GF_UI {
 	/**
 	 * Handle current action
 	 *
+	 * @param array $args
+	 *
 	 * @return bool|mixed|PodsUI
 	 */
-	public function action() {
+	public function action( $args = array() ) {
 
 		$ui = false;
 
@@ -627,25 +629,28 @@ class Pods_GF_UI {
 
 		$GLOBALS[ 'pods-gf-ui-off' ] = true;
 
-		$args = func_get_args();
-
-		if ( empty( $args ) ) {
-			$args = array(
+		$args = array_merge(
+			array(
 				'action' => $this->action
-			);
-		}
+			),
+			$args
+		);
 
-		$action = array_shift( $args );
+		$action = $args[ 'action' ];
 
 		if ( isset( $this->actions[ $action ] ) ) {
+			// Pods object
+			// $this->pod = pods( 'pod_name' );
 			if ( is_object( $this->pod ) ) {
 				$ui = $this->pod->ui( $this->ui, true );
 			}
+			// An array of GF entries $lead_id => $entry
+			// $this->pod = array( .... );
 			elseif ( is_array( $this->pod ) ) {
 				$ui = pods_ui( $this->ui );
 			}
 			else {
-				do_action( 'pods_gf_ui_action_' . $action, $this );
+				do_action( 'pods_gf_ui_action_' . $action, $this, $args );
 			}
 		}
 
@@ -658,12 +663,14 @@ class Pods_GF_UI {
 	/**
 	 * Run UI, just shorthand for action()
 	 *
+	 * @param array $args
+	 *
 	 * @return bool|mixed|PodsUI
 	 * @see action
 	 */
-	public function ui() {
+	public function ui( $args = array() ) {
 
-		return $this->action();
+		return $this->action( $args );
 
 	}
 

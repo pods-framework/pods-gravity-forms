@@ -9,6 +9,7 @@
 function pods_gf( $pod = null, $form_id = null, $options = array() ) {
 
 	require_once( PODS_GF_DIR . 'includes/Pods_GF.php' );
+	require_once( PODS_GF_DIR . 'includes/Pods_GF_UI.php' );
 
 	if ( null !== $pod || null !== $form_id || array() !== $options ) {
 		return new Pods_GF( $pod, $form_id, $options );
@@ -41,7 +42,7 @@ function pods_gf_ui_shortcode( $args, $content = '' ) {
 	if ( is_object( $pods_gf_ui ) ) {
 		ob_start();
 
-		$pods_gf_ui->ui();
+		$pods_gf_ui->ui( $args );
 
 		return ob_get_clean();
 	}
@@ -108,7 +109,7 @@ function pods_gf_ui_init() {
 
 			$options = apply_filters( 'pods_gf_ui_init=' . $wildcard_uri, $options, $uri, $page );
 
-			if ( !is_array( $options ) ) {
+			if ( ! is_array( $options ) ) {
 				break;
 			}
 		}
@@ -129,30 +130,10 @@ function pods_gf_ui_init() {
 
 	$pods_gf_ui = pods_gf_ui( $options );
 
-	$pods_gf_ui_loaded = array(
-		'options' => $options,
-		'uri' => $uri,
-		'page' => $page
-	);
-
-	add_action( 'wp', 'pods_gf_ui_loaded' );
+	do_action( 'pods_gf_ui_loaded', $pods_gf_ui, $options, $uri, $page );
 
 	// Add content handler
 	add_filter( 'the_content', 'pods_gf_ui_content' );
-
-}
-
-function pods_gf_ui_loaded() {
-
-	global $pods_gf_ui, $pods_gf_ui_loaded;
-
-	if ( empty( $pods_gf_ui ) || empty( $pods_gf_ui_loaded ) ) {
-		return;
-	}
-
-	do_action( 'pods_gf_ui_loaded', $pods_gf_ui, $pods_gf_ui_loaded[ 'options' ], $pods_gf_ui_loaded[ 'uri' ], $pods_gf_ui_loaded[ 'page' ] );
-
-	$pods_gf_ui_loaded = null;
 
 }
 
