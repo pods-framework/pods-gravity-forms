@@ -209,8 +209,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 				$options = array(
 					// array ( 'gf_field_id' => 'pod_field_name' )
-					'fields' => array_merge( $pod_fields, $object_fields ),
-					'auto_delete' => (int) pods_v( $feed['meta'], 'delete_entry', 0 ),
+					'fields'              => array_merge( $pod_fields, $object_fields ),
+					'auto_delete'         => (int) pods_v( $feed['meta'], 'delete_entry', 0 ),
+					'gf_to_pods_priority' => 'submission',
 				);
 
 				// Things for the future

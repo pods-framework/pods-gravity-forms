@@ -1291,6 +1291,73 @@ class Pods_GF {
 	/**
 	 * Map GF form fields to Pods fields
 	 *
+	 * @param array $form GF Form array
+	 *
+	 * @return int Pod item ID
+	 */
+	public function _gf_to_pods_handler( $form ) {
+
+		$id = (int) pods_v( 'id', $this->pod, 0 );
+
+		$save_action = 'add';
+
+		if ( ! empty( $id ) ) {
+			$save_action = 'edit';
+		}
+
+		if ( isset( $this->options['save_id'] ) && ! empty( $this->options['save_id'] ) ) {
+			$id = (int) $this->options['save_id'];
+		}
+
+		if ( isset( $this->options['save_action'] ) ) {
+			$save_action = $this->options['save_action'];
+		}
+
+		if ( empty( $id ) || !in_array( $save_action, array( 'add', 'save', 'bypass' ) ) ) {
+			$save_action = 'add';
+		}
+
+		if ( 'bypass' == $save_action ) {
+			return $id;
+		}
+
+		$data = self::gf_to_pods( $form, $this->options );
+
+		$args = array(
+			$data // Data
+		);
+
+		if ( 'save' == $save_action ) {
+			$args[] = null; // Value
+			$args[] = $id; // ID
+		}
+
+		if ( is_object( $this->pod ) ) {
+			$id = call_user_func_array( array( $this->pod, $save_action ), $args );
+
+			$this->pod->id = $id;
+			$this->pod->fetch( $id );
+
+			do_action( 'pods_gf_to_pods_' . $form['id'] . '_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
+			do_action( 'pods_gf_to_pods_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
+		}
+		else {
+			$id = apply_filters( 'pods_gf_to_pod_' . $form['id'] . '_' . $save_action, $id, $this->pod, $data, $this );
+
+			$this->id = $id = apply_filters( 'pods_gf_to_pod_' . $save_action, $id, $this->pod, $data, $this );
+		}
+
+		self::$gf_to_pods_id = $id;
+
+		do_action( 'pods_gf_to_pods', $this->pod, $save_action, $data, $id, $this );
+
+		return $id;
+
+	}
+
+	/**
+	 * Map GF form fields to Pods fields
+	 *
 	 * @param array $form    GF Form array
 	 * @param array $options Form config
 	 *
@@ -2885,72 +2952,17 @@ class Pods_GF {
 			return $validation_result;
 		}
 
-		$field_keys = array();
-
-		foreach ( $form['fields'] as $k => $field ) {
-			$field_keys[(string) $field['id']] = $k;
-		}
-
-		$id = (int) pods_v( 'id', $this->pod, 0 );
-
-		$save_action = 'add';
-
-		if ( ! empty( $id ) ) {
-			$save_action = 'edit';
-		}
-
-		if ( isset( $this->options['save_id'] ) && ! empty( $this->options['save_id'] ) ) {
-			$id = (int) $this->options['save_id'];
-		}
-
-		if ( isset( $this->options['save_action'] ) ) {
-			$save_action = $this->options['save_action'];
-		}
-
-		if ( empty( $id ) || !in_array( $save_action, array( 'add', 'save', 'bypass' ) ) ) {
-			$save_action = 'add';
-		}
-
-		if ( 'bypass' == $save_action ) {
-			return $validation_result;
-		}
-
-		try {
-			$data = self::gf_to_pods( $form, $this->options );
-
-			$args = array(
-				$data // Data
-			);
-
-			if ( 'save' == $save_action ) {
-				$args[] = null; // Value
-				$args[] = $id; // ID
+		if ( empty( $this->options['gf_to_pods_priority'] ) || 'validation' == $this->options['gf_to_pods_priority'] ) {
+			try {
+				$this->_gf_to_pods_handler( $form );
 			}
+			catch ( Exception $e ) {
+				$validation_result['is_valid'] = false;
 
-			if ( is_object( $this->pod ) ) {
-				$id = call_user_func_array( array( $this->pod, $save_action ), $args );
+				$this->gf_validation_message = 'Error saving: ' . $e->getMessage();
 
-				$this->pod->id = $id;
-				$this->pod->fetch( $id );
-
-				do_action( 'pods_gf_to_pods_' . $form['id'] . '_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
-				do_action( 'pods_gf_to_pods_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
+				return $validation_result;
 			}
-			else {
-				$id = apply_filters( 'pods_gf_to_pod_' . $form['id'] . '_' . $save_action, $id, $this->pod, $data, $this );
-
-				$this->id = $id = apply_filters( 'pods_gf_to_pod_' . $save_action, $id, $this->pod, $data, $this );
-			}
-
-			self::$gf_to_pods_id = $id;
-
-			do_action( 'pods_gf_to_pods', $this->pod, $save_action, $data, $id, $this );
-		} catch ( Exception $e ) {
-			$validation_result['is_valid'] = false;
-
-			$this->gf_validation_message = 'Error saving: ' . $e->getMessage();
-
-			return $validation_result;
 		}
 
 		return $validation_result;
@@ -3139,6 +3151,16 @@ class Pods_GF {
 
 			if ( empty( $this->options ) ) {
 				return $entry;
+			}
+
+			// Alternative gf_to_pods handling
+			if ( ! empty( $this->options['gf_to_pods_priority'] ) && 'submission' == $this->options['gf_to_pods_priority'] ) {
+				try {
+					$this->_gf_to_pods_handler( $form );
+				}
+				catch ( Exception $e ) {
+					// @todo Log something to the form entry
+				}
 			}
 
 			// Send notifications
