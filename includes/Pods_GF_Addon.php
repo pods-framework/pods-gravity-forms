@@ -201,6 +201,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					continue;
 				}
 
+				// Block new post being created in GF
+				add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
+
 				$pod_fields    = array_flip( $this->get_field_map_fields( $feed, 'pod_fields' ) );
 				$object_fields = array_flip( $this->get_field_map_fields( $feed, 'wp_object_fields' ) );
 
