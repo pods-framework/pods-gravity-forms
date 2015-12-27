@@ -1304,10 +1304,15 @@ class Pods_GF {
 			return $data;
 		}
 
-		$field_keys = array();
+		/**
+		 * @var $fields GF_Field[]
+		 */
+		$fields = $form['fields'];
 
-		foreach ( $form['fields'] as $k => $field ) {
-			$field_keys[(string) $field['id']] = $k;
+		$gf_fields = array();
+
+		foreach ( $fields as $field ) {
+			$gf_fields[ (string) $field['id'] ] = $field;
 		}
 
 		foreach ( $options['fields'] as $field => $field_options ) {
@@ -1326,41 +1331,47 @@ class Pods_GF {
 				continue;
 			}
 
-			// GF input field
-			$value = pods_v( $field, 'post' );
-			$value = pods_v( 'input_' . str_replace( '.', '_', $field ), 'post', $value );
-			$value = pods_v( 'input_' . $field, 'post', $value );
+			// Get GF field object
+			$gf_field = null;
 
-			$field_key = null;
-
-			if ( isset( $field_keys[(string) $field] ) ) {
-				$field_key = $field_keys[(string) $field];
+			/**
+			 * @var $gf_field GF_Field
+			 */
+			if ( isset( $gf_fields[ $field ] ) ) {
+				$gf_field = $gf_fields[ $field ];
 			}
 
-			// @todo handling for field types that have different $_POST input names
-			if ( null !== $field_key && null === $value ) {
-				// Additional handling for checkboxes
-				if ( 'checkbox' == $form['fields'][$field_key]['type'] ) {
-					$values = array();
+			// GF input field
+			$value = null;
 
-					$choices = $form['fields'][$field_key]['choices'];
+			if ( $gf_field ) {
+				$value = GFFormsModel::get_field_value( $gf_field );
 
-					$input_id = 1;
+				if ( in_array( $gf_field->type, array( 'post_category', 'post_title', 'post_content', 'post_excerpt', 'post_tags', 'post_custom_field', 'post_image' ) ) ) {
+					// Block new post being created in GF
+					add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
+				}
 
-					foreach ( $choices as $choice ) {
-						// Workaround for GF bug with multiples of 10 (so that 5.1 doesn't conflict with 5.10)
-						if ( 0 == $input_id % 10 ) {
-							$input_id ++;
-						}
+				if ( in_array( $gf_field->type, array( 'fileupload', 'post_image' ) ) ) {
+                    require_once( ABSPATH . 'wp-admin/includes/file.php' );
+                    require_once( ABSPATH . 'wp-admin/includes/image.php' );
+                    require_once( ABSPATH . 'wp-admin/includes/media.php' );
 
-						$choice_value = pods_v( 'input_' . $field . '_' . $input_id, 'post' );
+					$attachment_id = media_handle_upload( 'input_' . $gf_field->id, 0 );
 
-						if ( null !== $choice_value ) {
-							$values[] = $choice_value;
-						}
-					}
+	                if ( is_object( $attachment_id ) ) {
+	                    $errors = array();
 
-					$value = $values;
+	                    foreach ( $attachment_id->errors[ 'upload_error' ] as $error_code => $error_message ) {
+	                        $errors[] = '[' . $error_code . '] ' . $error_message;
+	                    }
+
+	                    pods_error( implode( '</div><div>', $errors ) );
+
+		                $value = null;
+	                } else {
+		                $value = $attachment_id;
+	                }
 				}
 			}
 
@@ -1369,20 +1380,13 @@ class Pods_GF {
 				$value = $field_options['value'];
 			}
 
-			// Filters
-			$field_data = array();
-
-			if ( isset( $field_keys[$field] ) ) {
-				$field_data = $form['fields'][$field_keys[$field]];
-			}
-
-			$value = apply_filters( 'pods_gf_to_pods_value_' . $form['id'] . '_' . $field, $value, $field, $field_options, $form, $field_data, $data, $options );
-			$value = apply_filters( 'pods_gf_to_pods_value_' . $form['id'], $value, $field, $field_options, $form, $field_data, $data, $options );
-			$value = apply_filters( 'pods_gf_to_pods_value', $value, $field, $field_options, $form, $field_data, $data, $options );
+			$value = apply_filters( 'pods_gf_to_pods_value_' . $form['id'] . '_' . $field, $value, $field, $field_options, $form, $gf_field, $data, $options );
+			$value = apply_filters( 'pods_gf_to_pods_value_' . $form['id'], $value, $field, $field_options, $form, $gf_field, $data, $options );
+			$value = apply_filters( 'pods_gf_to_pods_value', $value, $field, $field_options, $form, $gf_field, $data, $options );
 
 			// Set data
 			if ( null !== $value ) {
-				$data[$field_options['field']] = $value;
+				$data[ $field_options['field'] ] = $value;
 			}
 		}
 

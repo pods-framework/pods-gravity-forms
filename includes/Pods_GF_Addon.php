@@ -56,9 +56,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		$selected_pod = $this->get_setting( 'pod' );
 		$pod_fields   = array();
+		$pod_type     = '';
 		if ( ! empty( $selected_pod ) ) {
 			$pod_object = $pods_api->load_pod( array( 'name' => $selected_pod ) );
 			if ( ! empty( $pod_object ) ) {
+				$pod_type = $pod_object['type'];
 				foreach ( $pod_object['fields'] as $name => $field ) {
 					$pod_fields[] = array( 'name'     => $name,
 										   'label'    => $field['label'],
@@ -75,12 +77,40 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'field_map'  => $pod_fields
 		);
 
+		$ignore_object_fields = array(
+			'ID',
+			'post_type',
+			'comment_type',
+			'taxonomy',
+			'guid',
+			'menu_order',
+			'post_mime_type',
+			'comment_count',
+			'comment_status',
+			'ping_status',
+			'post_date_gmt',
+			'post_modified_gmt',
+			'post_password',
+			'post_status',
+			'post_content_filtered',
+			'pinged',
+			'to_ping',
+		);
+
 		$wp_object_fields = array();
 		if ( ! empty( $pod_object ) ) {
 			foreach ( $pod_object['object_fields'] as $name => $field ) {
+				if ( in_array( $name, $ignore_object_fields ) ) {
+					continue;
+				}
+
 				$wp_object_fields[] = array( 'name'  => $name,
 											 'label' => $field['label'] );
 			}
+		}
+
+		if ( 'post_type' == $pod_type ) {
+			$wp_object_fields[] = array( 'name' => '_thumbnail_id', 'label' => 'Featured Image' );
 		}
 
 		$feed_field_wp_object_fields = array(
