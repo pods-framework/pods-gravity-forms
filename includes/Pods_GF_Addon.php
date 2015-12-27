@@ -42,6 +42,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		foreach ( $all_pods as $name => $label ) {
 			$pod_choice_list[] = array(
 				'label' => $label,
+				'name'  => $label,
 				'value' => $name
 			);
 		}
@@ -154,6 +155,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				array(
 					'value' => 1,
 					'label' => __( 'Delete entry after processing', 'pods-gravity-forms' ),
+					'name'  => __( 'Delete entry after processing', 'pods-gravity-forms' ),
 				),
 			),
 		);
