@@ -1484,6 +1484,11 @@ class Pods_GF {
 
 			// Set data
 			if ( null !== $value ) {
+				// @todo Support simple repeatable fields in Pods 2.9
+				if ( $gf_field && 'list' == $gf_field->type && is_array( $value ) ) {
+					$value = json_encode( $value );
+				}
+
 				$data[ $field_options['field'] ] = $value;
 			}
 		}
