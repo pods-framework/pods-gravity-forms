@@ -1353,25 +1353,27 @@ class Pods_GF {
 				}
 
 				if ( in_array( $gf_field->type, array( 'fileupload', 'post_image' ) ) ) {
-                    require_once( ABSPATH . 'wp-admin/includes/file.php' );
-                    require_once( ABSPATH . 'wp-admin/includes/image.php' );
-                    require_once( ABSPATH . 'wp-admin/includes/media.php' );
+					$value = null;
 
-					$attachment_id = media_handle_upload( 'input_' . $gf_field->id, 0 );
+					if ( ! empty( $_FILES[ 'input_' . $gf_field->id ]['tmp_name'] ) ) {
+						require_once( ABSPATH . 'wp-admin/includes/file.php' );
+						require_once( ABSPATH . 'wp-admin/includes/image.php' );
+						require_once( ABSPATH . 'wp-admin/includes/media.php' );
 
-	                if ( is_object( $attachment_id ) ) {
-	                    $errors = array();
+						$attachment_id = media_handle_upload( 'input_' . $gf_field->id, 0 );
 
-	                    foreach ( $attachment_id->errors[ 'upload_error' ] as $error_code => $error_message ) {
-	                        $errors[] = '[' . $error_code . '] ' . $error_message;
-	                    }
+						if ( is_object( $attachment_id ) ) {
+							$errors = array();
 
-	                    pods_error( implode( '</div><div>', $errors ) );
+							foreach ( $attachment_id->errors['upload_error'] as $error_code => $error_message ) {
+								$errors[] = '[' . $error_code . '] ' . $error_message;
+							}
 
-		                $value = null;
-	                } else {
-		                $value = $attachment_id;
-	                }
+							throw new Exception( 'File field #' . $gf_field->id . ' error - ' . implode( '</div><div>', $errors ) );
+						} else {
+							$value = $attachment_id;
+						}
+					}
 				}
 			}
 
@@ -2913,9 +2915,9 @@ class Pods_GF {
 			return $validation_result;
 		}
 
-		$data = self::gf_to_pods( $form, $this->options );
-
 		try {
+			$data = self::gf_to_pods( $form, $this->options );
+
 			$args = array(
 				$data // Data
 			);
