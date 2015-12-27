@@ -18,11 +18,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 	protected $_capabilities = array( 'pods_gravityforms', 'pods_gravityforms_uninstall' );
 
-	public function plugin_page () {
+	/*public function plugin_page () {
 		?>
 		This page appears in the Forms menu
 	<?php
-	}
+	}*/
 
 	public function feed_settings_fields () {
 
