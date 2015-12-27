@@ -204,12 +204,12 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				// Block new post being created in GF
 				add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
 
-				$pod_fields    = array_flip( $this->get_field_map_fields( $feed, 'pod_fields' ) );
-				$object_fields = array_flip( $this->get_field_map_fields( $feed, 'wp_object_fields' ) );
+				$pod_fields    = $this->get_field_map_fields( $feed, 'pod_fields' );
+				$object_fields = $this->get_field_map_fields( $feed, 'wp_object_fields' );
 
 				$options = array(
 					// array ( 'gf_field_id' => 'pod_field_name' )
-					'fields'              => array_merge( $pod_fields, $object_fields ),
+					'fields'              => array_flip( array_merge( $pod_fields, $object_fields ) ),
 					'auto_delete'         => (int) pods_v( $feed['meta'], 'delete_entry', 0 ),
 					'gf_to_pods_priority' => 'submission',
 				);
@@ -232,8 +232,6 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				pods_gf( $feed['meta']['pod'], $form['id'], $options );
 			}
 		}
-
-		die();
 
 	}
 
