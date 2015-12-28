@@ -159,6 +159,19 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			),
 		);
 
+		$settings['fields'][] = array(
+			'name'    => 'enable_markdown',
+			'label'   => 'Enable Markdown',
+			'type'    => 'checkbox',
+			'choices' => array(
+				array(
+					'value' => 1,
+					'label' => __( 'Enable Markdown in HTML Fields', 'pods-gravity-forms' ),
+					'name'  => 'enable_markdown',
+				),
+			),
+		);
+
 		return array( $settings );
 
 	}
@@ -298,6 +311,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			}
 		}
 
+		// @todo Add support for Pods_GF::remember()
+
 		return $form;
 
 	}
@@ -322,23 +337,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					// array ( 'gf_field_id' => 'pod_field_name' )
 					'fields'              => array_flip( array_merge( $pod_fields, $object_fields ) ),
 					'auto_delete'         => (int) pods_v( $feed['meta'], 'delete_entry', 0 ),
+					'markdown'            => (int) pods_v( $feed['meta'], 'enable_markdown', 0 ),
 					'gf_to_pods_priority' => 'submission',
 				);
-
-				// Things for the future
-				//$options['save_for_later']
-				//$options['confirmation']
-				//$options['read_only']
-				//$options['dynamic_select']
-				//$options['prepopulate']
-				//$options['markdown']
-				//$options['submit_button']
-				//$options['secondary_submits']
-				//$options['save_id']
-				//$options['save_action']
-				//$options['edit']
-				//$options['keep_files']
-				//see Pods_GF_UI->$actions
 
 				pods_gf( $feed['meta']['pod'], $form['id'], $options );
 			}
