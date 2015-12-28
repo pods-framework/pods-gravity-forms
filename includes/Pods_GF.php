@@ -1747,7 +1747,20 @@ class Pods_GF {
 			$choices = false;
 
 			if ( is_array( $dynamic_select['options'] ) && ! empty( $dynamic_select['options'] ) ) {
-				$choices = $dynamic_select['options'];
+				$choice_options = $dynamic_select['options'];
+
+				$choices = array();
+
+				foreach ( $choice_options as $option_value => $choice ) {
+					if ( ! is_array( $choice ) ) {
+						$choices[] = array(
+							'text'  => $choice,
+							'value' => $option_value
+						);
+					} else {
+						$choices[] = $choice;
+					}
+				}
 			}
 			elseif ( ! empty( $dynamic_select['pod'] ) ) {
 				if ( ! is_object( $dynamic_select['pod'] ) ) {

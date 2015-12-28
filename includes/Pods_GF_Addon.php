@@ -184,11 +184,121 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 	}
 
+	public function init_admin() {
+
+		parent::init_admin();
+
+		add_action( 'gform_field_standard_settings', array( $this, 'populate_related_items_settings' ), 10, 2 );
+		add_filter( 'gform_tooltips', array( $this, 'populate_related_items_tooltip' ) );
+		add_action( 'gform_editor_js', array( $this, 'populate_related_items_editor_script' ) );
+
+	}
+
+	public function populate_related_items_settings( $position, $form_id ) {
+
+	    if ( -1 == $position ) {
+	        ?>
+	        <li class="pods_populate_related_items_setting field_setting">
+                <?php _e( 'Pods', 'pods-gravity-forms' ); ?><br />
+
+	            <input type="checkbox" id="pods_populate_related_items_value" onclick="SetFieldProperty('pods_populate_related_items', this.checked);" />
+	            <label for="pods_populate_related_items_value" class="inline">
+		            <?php _e( 'Populate Related Items (requires a feed configured)', 'pods-gravity-forms' ); ?>
+	                <?php gform_tooltip( 'form_populate_related_items_value' ) ?>
+	            </label>
+	        </li>
+	        <?php
+	    }
+
+	}
+
+	public function populate_related_items_editor_script() {
+
+?>
+	<script type='text/javascript'>
+	    fieldSettings['select'] += ', .pods_populate_related_items_setting';
+	    fieldSettings['multiselect'] += ', .pods_populate_related_items_setting';
+	    fieldSettings['checkbox'] += ', .pods_populate_related_items_setting';
+	    fieldSettings['radio'] += ', .pods_populate_related_items_setting';
+
+	    jQuery( document ).bind( 'gform_load_field_settings', function ( event, field, form ) {
+		    jQuery( '#pods_populate_related_items_value' ).attr( 'checked', field['pods_populate_related_items'] == true );
+	    } );
+	</script>
+<?php
+
+	}
+
+	public function populate_related_items_tooltip( $tooltips ) {
+
+	   $tooltips['form_populate_related_items_value'] = sprintf( '<h6>%s</h6> %s', __( 'Populate Related Items from Pods', 'pods-gravity-forms' ), __( 'Check this box to populate the related items from Pods instead of keeping the list up-to-date manually.' ) );
+
+	   return $tooltips;
+
+	}
+
 	public function init_frontend() {
 
 		parent::init_frontend();
 
+		add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ) );
 		add_action( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
+
+	}
+
+	public function _gf_pre_render( $form ) {
+
+		$feeds = $this->get_feeds( $form['id'] );
+
+		if ( empty( $feeds ) ) {
+			return $form;
+		}
+
+		$pod_fields = array();
+		$pod_name = '';
+
+		foreach ( $feeds as $feed ) {
+			if ( 1 !== (int) $feed['is_active'] ) {
+				continue;
+			}
+
+			$pod_fields = $this->get_field_map_fields( $feed, 'pod_fields' );
+
+			$pod_name = $feed['meta']['pod'];
+
+			break;
+		}
+
+		if ( $pod_fields && $pod_name ) {
+			$pod_fields = array_flip( $pod_fields );
+
+			$pod_obj = pods( $pod_name, null, false );
+
+			if ( empty( $pod_obj ) || ! $pod_obj->valid() ) {
+				return $form;
+			}
+
+			/**
+			 * @var GF_Field $gf_field
+			 */
+			foreach ( $form['fields'] as $gf_field ) {
+				if ( ! empty( $gf_field->pods_populate_related_items ) && ! empty( $pod_fields[ (string) $gf_field->id ] ) ) {
+					$data = $pod_obj->fields( $pod_fields[ (string) $gf_field->id ], 'data' );
+
+					if ( empty( $data ) ) {
+						continue;
+					}
+
+					$options = array(
+						'options' => $data,
+					);
+
+					Pods_GF::dynamic_select( $form['id'], $gf_field->id, $options );
+				}
+			}
+		}
+
+		return $form;
 
 	}
 
