@@ -13,6 +13,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	protected $_short_title = 'Pods';
 
 	protected $_capabilities = array( 'pods_gravityforms', 'pods_gravityforms_uninstall' );
+	protected $_capabilities_form_settings = array( 'pods_gravityforms', 'pods' );
 
 	/*public function plugin_page() {
 
