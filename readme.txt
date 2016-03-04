@@ -14,9 +14,9 @@ Integrate with Gravity Forms to create a Pod item from a form submission.
 
 Requires [Pods](https://wordpress.org/plugins/pods/) 2.4+, [Gravity Forms](http://www.gravityforms.com/) 1.9+.
 
-Check out http://pods.io/ for our User Guide, Forums, and other resources to help you develop with Pods.
+Check out [pods.io](http://pods.io/) for our User Guide, Forums, and other resources to help you develop with Pods.
 
-Please report bugs or request featured on [GitHub](https://github.com/pods-framework/pods-gravity-forms)
+Please report bugs or request featured on [GitHub](https://github.com/pods-framework/pods-gravity-forms/)
 
 Special thanks to Naomi C. Bush for her help
 
