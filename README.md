@@ -1,18 +1,11 @@
-<p align="center">
-  <img src="./pods-gravity-forms.png" alt="Pods Gravity Forms" />
-</p>
-<h1 align="center">Pods Gravity Forms Add-On</h1>
-<p align="center">
-Integrate with <a href="http://www.gravityforms.com/">Gravity Forms</a> to create a Pod from a form submission.
-</p>
-<p>
-<br />
-<em>Please Note: This plugin is currently in alpha development.</em>
-</p>
+# Pods Gravity Forms Add-On
+
+![Pods Gravity Forms](https://github.com/pods-framework/pods-gravity-forms/blob/assets/banner-772x250.png?raw=true)
 
 ## Requirements
 
-Pods 2.4+, Gravity Forms 1.9+
+* [Pods](http://pods.io/) 2.4+
+* [Gravity Forms](http://www.gravityforms.com/) 1.9+
 
 ## How To Use
 
