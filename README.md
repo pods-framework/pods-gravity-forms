@@ -9,9 +9,7 @@
 
 ## How To Use
 
-1. Install and activate the latest versions of [Pods](http://wordpress.org/plugins/pods/), [Gravity Forms](http://www.gravityforms.com/), and the [Pods Gravity Forms Add-On](https://github.com/pods-framework/pods-gravity-forms/archive/master.zip).
-
-2. In the Pods Admin, create your Pods and Pod Fields
+1. In the Pods Admin, create your Pods and Pod Fields
 
    ![Pods Admin -> Add New](https://github.com/pods-framework/pods-gravity-forms/blob/assets/screenshot-1.png?raw=true)
 
@@ -31,13 +29,12 @@
 
    ![Map form fields to Pod fields](https://github.com/pods-framework/pods-gravity-forms/blob/assets/screenshot-6.png?raw=true)
 
+6. After a form submission, a new Pod item ID will be created.
 
-After a form submission, a new Pod item ID will be created.
+   ![Example Gravity Form filled out](https://github.com/pods-framework/pods-gravity-forms/blob/assets/screenshot-7.png?raw=true)
+   
+   ![New Pod item created from form submission](https://github.com/pods-framework/pods-gravity-forms/blob/assets/screenshot-8.png?raw=true)
 
-<p align="center">
-  <img src="https://github.com/pods-framework/pods-gravity-forms/blob/assets/screenshot-7.png?raw=true" alt="Example form" width=50% /><img src="https://github.com/pods-framework/pods-gravity-forms/blob/assets/screenshot-8.png?raw=true" alt="New Pod item created from form submission" width=50% />
-</p>
-
-And the Pod item ID will be saved with the Gravity Forms entry information.
+7. And the Pod item ID will be saved with the Gravity Forms entry information.
 
    ![Form entries page showing Pod ID](https://github.com/pods-framework/pods-gravity-forms/blob/assets/screenshot-9.png?raw=true)
