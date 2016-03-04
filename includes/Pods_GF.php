@@ -1337,6 +1337,24 @@ class Pods_GF {
 		}
 
 		if ( is_object( $this->pod ) ) {
+			if ( 'post_type' == $this->pod->pod_data['type'] ) {
+				if ( ! empty( $form['postStatus'] ) && empty( $args[0]['post_status'] ) ) {
+					$args[0]['post_status'] = $form['postStatus'];
+				}
+
+				if ( ! empty( $form['postAuthor'] ) && empty( $args[0]['post_author'] ) ) {
+					$args[0]['post_author'] = $form['postAuthor'];
+				}
+
+				if ( ! empty( $form['postCategory'] ) && empty( $args[0]['category'] ) && ! empty( $this->pod->pod_data['object_fields']['category'] ) ) {
+					$args[0]['category'] = $form['postCategory'];
+				}
+
+				if ( ! empty( $form['postFormat'] ) && empty( $args[0]['post_format'] ) && ! empty( $this->pod->pod_data['object_fields']['post_format'] ) ) {
+					$args[0]['post_format'] = $form['postFormat'];
+				}
+			}
+
 			$id = call_user_func_array( array( $this->pod, $save_action ), $args );
 
 			$this->pod->id = $id;
