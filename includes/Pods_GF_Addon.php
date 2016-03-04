@@ -337,8 +337,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				$options = array(
 					// array ( 'gf_field_id' => 'pod_field_name' )
 					'fields'              => array_flip( array_merge( $pod_fields, $object_fields ) ),
-					'auto_delete'         => (int) pods_v( $feed['meta'], 'delete_entry', 0 ),
-					'markdown'            => (int) pods_v( $feed['meta'], 'enable_markdown', 0 ),
+					'auto_delete'         => (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
+					'markdown'            => (int) pods_v( 'enable_markdown', $feed['meta'], 0 ),
 					'gf_to_pods_priority' => 'submission',
 				);
 
