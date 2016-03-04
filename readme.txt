@@ -1,5 +1,5 @@
 === Pods Gravity Forms Add-On ===
-Contributors: sc0ttkclark, naomicbush, gravityplus
+Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
 Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.0
