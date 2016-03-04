@@ -1416,65 +1416,7 @@ class Pods_GF {
 			$value = null;
 
 			if ( $gf_field ) {
-				$value = GFFormsModel::get_field_value( $gf_field );
-
-				if ( in_array( $gf_field->type, array( 'post_category', 'post_title', 'post_content', 'post_excerpt', 'post_tags', 'post_custom_field', 'post_image' ) ) ) {
-					// Block new post being created in GF
-					add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
-				}
-
-				if ( in_array( $gf_field->type, array( 'fileupload', 'post_image' ) ) ) {
-					$value = null;
-
-					// Form already submitted
-					if ( ! empty( $options['gf_to_pods_priority'] ) && 'submission' == $options['gf_to_pods_priority'] ) {
-						if ( ! empty( $options['entry'] ) && ! empty( $options['entry'][ $gf_field->id ] ) ) {
-							$attachment_id = pods_attachment_import( $options['entry'][ $gf_field->id ] );
-
-							if ( $attachment_id ) {
-								$value = $attachment_id;
-							}
-						} else {
-							$uploaded_file = null;
-
-							if ( ! empty( GFFormsModel::$uploaded_files[ $form['id'] ][ 'input_' . $gf_field->id ] ) ) {
-								$uploaded_file = GFFormsModel::$uploaded_files[ $form['id'] ][ 'input_' . $gf_field->id ];
-							}
-
-							if ( ! empty( $uploaded_file ) ) {
-								$filepath = GFFormsModel::get_file_upload_path( $form['id'], $uploaded_file );
-
-								if ( ! empty( $filepath['url'] ) ) {
-									$attachment_id = pods_attachment_import( $filepath['url'] );
-
-									if ( $attachment_id ) {
-										$value = $attachment_id;
-									}
-								}
-							}
-						}
-					}
-
-					if ( null === $value && ! empty( $_FILES[ 'input_' . $gf_field->id ]['tmp_name'] ) && empty( $_FILES[ 'input_' . $gf_field->id ]['error'] ) ) {
-						require_once( ABSPATH . 'wp-admin/includes/file.php' );
-						require_once( ABSPATH . 'wp-admin/includes/image.php' );
-						require_once( ABSPATH . 'wp-admin/includes/media.php' );
-
-						$attachment_id = media_handle_upload( 'input_' . $gf_field->id, 0 );
-
-						if ( is_object( $attachment_id ) ) {
-							$errors = array();
-
-							foreach ( $attachment_id->errors['upload_error'] as $error_code => $error_message ) {
-								$errors[] = '[' . $error_code . '] ' . $error_message;
-							}
-
-							//throw new Exception( 'File field #' . $gf_field->id . ' error - ' . implode( '</div><div>', $errors ) );
-						} else {
-							$value = $attachment_id;
-						}
-					}
-				}
+				$value = self::get_gf_field_value( null, $gf_field, $form, $options, true );
 			}
 
 			// Manual value override
@@ -2875,12 +2817,130 @@ class Pods_GF {
 	}
 
 	/**
+	 * Get GF field value
+	 *
+	 * @param mixed    $value
+	 * @param array|GF_Field $gf_field
+	 * @param array    $form
+	 * @param array    $options
+	 * @param bool     $handle_files
+	 *
+	 * @return mixed
+	 */
+	public static function get_gf_field_value( $value, $gf_field, $form, $options, $handle_files = false ) {
+
+		if ( is_array( $gf_field ) ) {
+			/**
+			 * @var $fields GF_Field[]
+			 */
+			$fields = $form['fields'];
+
+			$gf_fields = array();
+
+			foreach ( $fields as $field ) {
+				if ( $field->id == $gf_field['id'] ) {
+					$gf_field = $field;
+
+					break;
+				}
+			}
+		}
+
+		if ( null === $value ) {
+			$value = GFFormsModel::get_field_value( $gf_field );
+		}
+
+		if ( in_array( $gf_field->type, array( 'post_category', 'post_title', 'post_content', 'post_excerpt', 'post_tags', 'post_custom_field', 'post_image' ) ) ) {
+			// Block new post being created in GF
+			add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
+		}
+
+		if ( in_array( $gf_field->type, array( 'name' ) ) ) {
+			$value = implode( ' ', $value );
+		} elseif ( $handle_files && in_array( $gf_field->type, array( 'fileupload', 'post_image' ) ) ) {
+			$value = null;
+
+			// Form already submitted
+			if ( ! empty( $options['gf_to_pods_priority'] ) && 'submission' == $options['gf_to_pods_priority'] ) {
+				$attachment_url = '';
+
+				if ( ! empty( $options['entry'] ) && isset( $options['entry'][ $gf_field->id ] ) ) {
+					$attachment_url = $options['entry'][ $gf_field->id ];
+				} else {
+					$uploaded_file = null;
+
+					if ( ! empty( GFFormsModel::$uploaded_files[ $form['id'] ][ 'input_' . $gf_field->id ] ) ) {
+						$uploaded_file = GFFormsModel::$uploaded_files[ $form['id'] ][ 'input_' . $gf_field->id ];
+					}
+
+					if ( ! empty( $uploaded_file ) ) {
+						$filepath = GFFormsModel::get_file_upload_path( $form['id'], $uploaded_file );
+
+						if ( isset( $filepath['url'] ) ) {
+							$attachment_url = $filepath['url'];
+						}
+					}
+				}
+
+				if ( ! empty( $attachment_url ) ) {
+					$attachments = explode( '|', $attachment_url );
+
+					$value = array();
+
+					foreach ( $attachments as $attachment ) {
+						if ( empty( $attachment ) || ':' == $attachment ) {
+							continue;
+						}
+
+						$attachment_id = pods_attachment_import( $attachment );
+
+						if ( $attachment_id ) {
+							$value[] = $attachment_id;
+						}
+					}
+
+					$value_count = count( $value );
+
+					if ( 1 == $value_count ) {
+						$value = current( $value );
+					} elseif ( 0 == $value_count ) {
+						$value = null;
+					}
+				}
+			}
+
+			if ( null === $value && ! empty( $_FILES[ 'input_' . $gf_field->id ]['tmp_name'] ) && empty( $_FILES[ 'input_' . $gf_field->id ]['error'] ) ) {
+				require_once( ABSPATH . 'wp-admin/includes/file.php' );
+				require_once( ABSPATH . 'wp-admin/includes/image.php' );
+				require_once( ABSPATH . 'wp-admin/includes/media.php' );
+
+				$attachment_id = media_handle_upload( 'input_' . $gf_field->id, 0 );
+
+				if ( is_object( $attachment_id ) ) {
+					$errors = array();
+
+					foreach ( $attachment_id->errors['upload_error'] as $error_code => $error_message ) {
+						$errors[] = '[' . $error_code . '] ' . $error_message;
+					}
+
+					//throw new Exception( 'File field #' . $gf_field->id . ' error - ' . implode( '</div><div>', $errors ) );
+				} else {
+					$value = $attachment_id;
+				}
+			}
+		}
+
+		return $value;
+
+	}
+
+	/**
 	 * Action handler for Gravity Forms: gform_field_validation_{$form_id}_{$field_id}
 	 *
 	 * @param array $validation_result GF validation result
 	 * @param mixed $value             Value submitted
 	 * @param array $form              GF Form array
-	 * @param array $field             GF Form Field array
+	 * @param array|GF_Field $field             GF Form Field array
 	 *
 	 * @return array GF validation result
 	 */
@@ -2929,7 +2989,9 @@ class Pods_GF {
 
 			$pods_api = pods_api();
 
-			$validate = $pods_api->handle_field_validation( $value, $field_options['field'], $this->pod->pod_data['object_fields'], $this->pod->pod_data['fields'], $this->pod, null );
+			$gf_value = self::get_gf_field_value( $value, $field, $form, $this->options );
+
+			$validate = $pods_api->handle_field_validation( $gf_value, $field_options['field'], $this->pod->pod_data['object_fields'], $this->pod->pod_data['fields'], $this->pod, null );
 		}
 
 		$validate = apply_filters( 'pods_gf_field_validation_' . $form['id'] . '_' . (string) $field['id'], $validate, $field['id'], $field_options, $value, $form, $field, $this );
