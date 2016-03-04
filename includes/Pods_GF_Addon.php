@@ -276,7 +276,10 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				continue;
 			}
 
-			$pod_fields = $this->get_field_map_fields( $feed, 'pod_fields' );
+			$pod_fields    = $this->get_field_map_fields( $feed, 'pod_fields' );
+			$object_fields = $this->get_field_map_fields( $feed, 'wp_object_fields' );
+
+			$pod_fields = array_flip( array_merge( $pod_fields, $object_fields ) );
 
 			$pod_name = $feed['meta']['pod'];
 
@@ -284,8 +287,6 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		}
 
 		if ( $pod_fields && $pod_name ) {
-			$pod_fields = array_flip( $pod_fields );
-
 			$pod_obj = pods( $pod_name, null, false );
 
 			if ( empty( $pod_obj ) || ! $pod_obj->valid() ) {
@@ -334,9 +335,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				$pod_fields    = $this->get_field_map_fields( $feed, 'pod_fields' );
 				$object_fields = $this->get_field_map_fields( $feed, 'wp_object_fields' );
 
+				$fields = array_flip( array_merge( $pod_fields, $object_fields ) );
+
 				$options = array(
 					// array ( 'gf_field_id' => 'pod_field_name' )
-					'fields'              => array_flip( array_merge( $pod_fields, $object_fields ) ),
+					'fields'              => $fields,
 					'auto_delete'         => (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
 					'markdown'            => (int) pods_v( 'enable_markdown', $feed['meta'], 0 ),
 					'gf_to_pods_priority' => 'submission',
