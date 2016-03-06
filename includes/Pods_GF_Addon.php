@@ -345,6 +345,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					'gf_to_pods_priority' => 'submission',
 				);
 
+				$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form );
+
 				pods_gf( $feed['meta']['pod'], $form['id'], $options );
 			}
 		}
