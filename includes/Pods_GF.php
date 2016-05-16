@@ -1337,6 +1337,16 @@ class Pods_GF {
 		}
 
 		if ( is_object( $this->pod ) ) {
+			if ( ! empty( $this->pod->data->field_id ) && ! empty( $data[ $this->pod->data->field_id ] ) ) {
+				$save_action = 'save';
+
+				$args[1] = null; // Value
+				$args[2] = $data[ $this->pod->data->field_id ]; // ID
+
+				// Remove field, not saving it
+				unset( $data[ $this->pod->data->field_id ] );
+			}
+
 			if ( 'post_type' == $this->pod->pod_data['type'] ) {
 				if ( ! empty( $form['postStatus'] ) && empty( $args[0]['post_status'] ) ) {
 					$args[0]['post_status'] = $form['postStatus'];
