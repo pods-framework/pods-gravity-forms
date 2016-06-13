@@ -5,23 +5,16 @@
 class Pods_GF {
 
 	/**
-	 * GF Actions / Filters that have already run
+	 * Instances of Pods_GF
 	 *
-	 * @var array
+	 * @var Pods_GF[]
 	 */
-	public static $actioned = array();
+	private static $instances = array();
 
 	/**
-	 * Last ID for inserted item added by GF to Pods mapping
+	 * Pods object or GF entry
 	 *
-	 * @var int
-	 */
-	public static $gf_to_pods_id = 0;
-
-	/**
-	 * Pods object
-	 *
-	 * @var Pods
+	 * @var Pods|array
 	 */
 	public $pod;
 
@@ -31,6 +24,13 @@ class Pods_GF {
 	 * @var int
 	 */
 	public $id;
+
+	/**
+	 * Entry ID (if editing an GF entry or just saved one)
+	 *
+	 * @var int
+	 */
+	public $entry_id;
 
 	/**
 	 * GF Form ID
@@ -54,11 +54,25 @@ class Pods_GF {
 	public $gf_validation_message;
 
 	/**
+	 * GF Actions / Filters that have already run
+	 *
+	 * @var array
+	 */
+	public static $actioned = array();
+
+	/**
+	 * Last ID for inserted item added by GF to Pods mapping
+	 *
+	 * @var int[]
+	 */
+	public static $gf_to_pods_id = array();
+
+	/**
 	 * To keep or delete files when deleting GF entries
 	 *
-	 * @var bool
+	 * @var bool[]
 	 */
-	public static $keep_files = false;
+	public static $keep_files = array();
 
 	/**
 	 * Array of options for Dynamic Select
@@ -110,13 +124,34 @@ class Pods_GF {
 	public static $read_only = array();
 
 	/**
+	 * Get Pods_GF instance unique to $form_id
+	 *
+	 * @param $pod
+	 * @param $form_id
+	 * @param $options
+	 *
+	 * @return Pods_GF
+	 */
+	public static function get_instance( $pod, $form_id, $options ) {
+
+		if ( ! isset( self::$instances[ $form_id ] ) ) {
+			self::$instances[ $form_id ] = new self( $pod, $form_id );
+		}
+
+		self::$instances[ $form_id ]->setup_options( $options );
+
+		return self::$instances[ $form_id ];
+
+	}
+
+	/**
 	 * Add Pods GF integration for a specific form
 	 *
 	 * @param string|Pods Pod      name (or Pods object)
 	 * @param int         $form_id GF Form ID
 	 * @param array       $options Form options for integration
 	 */
-	public function __construct ( $pod, $form_id, $options = array() ) {
+	private function __construct ( $pod, $form_id ) {
 
 		// Pod object
 		if ( is_object( $pod ) ) {
@@ -130,12 +165,27 @@ class Pods_GF {
 		}
 		// GF entry
 		elseif ( isset( $pod['id'] ) ) {
-			$this->pod = $pod;
-			$this->id  = $pod['id'];
+			$this->pod      = $pod;
+			$this->id       = $pod['id'];
+			$this->entry_id = $this->id;
 		}
 
 		$this->form_id = $form_id;
-		$this->options = $options;
+
+	}
+
+	/**
+	 * Setup options for Pods_GF
+	 *
+	 * @param array $options
+	 */
+	public function setup_options( $options ) {
+
+		// Merge options together
+		$this->options = array_merge( $this->options, $options );
+
+		$form_id = $this->form_id;
+		$options = $this->options;
 
 		if ( ! wp_script_is( 'pods-gf', 'registered' ) ) {
 			wp_register_script( 'pods-gf', PODS_GF_URL . 'ui/pods-gf.js', array( 'jquery' ), PODS_GF_VERSION, true );
@@ -146,11 +196,11 @@ class Pods_GF {
 		}
 
 		// Save for Later setup
-		if ( isset( $this->options['save_for_later'] ) && ! empty( $this->options['save_for_later'] ) ) {
-			self::save_for_later( $form_id, $this->options['save_for_later'] );
+		if ( isset( $options['save_for_later'] ) && ! empty( $options['save_for_later'] ) ) {
+			self::save_for_later( $form_id, $options['save_for_later'] );
 		}
 
-		if ( ! pods_v( 'admin', $this->options, 0 ) && ( is_admin() && RGForms::is_gravity_page() ) ) {
+		if ( ! pods_v( 'admin', $options, 0 ) && ( is_admin() && RGForms::is_gravity_page() ) ) {
 			return;
 		}
 
@@ -166,8 +216,8 @@ class Pods_GF {
 			add_filter( 'gform_validation_' . $form_id, array( $this, '_gf_validation' ), 11, 1 );
 			add_filter( 'gform_validation_message_' . $form_id, array( $this, '_gf_validation_message' ), 11, 2 );
 
-			if ( isset( $this->options['fields'] ) && ! empty( $this->options['fields'] ) ) {
-				foreach ( $this->options['fields'] as $field => $field_options ) {
+			if ( isset( $options['fields'] ) && ! empty( $options['fields'] ) ) {
+				foreach ( $options['fields'] as $field => $field_options ) {
 					if ( is_array( $field_options ) && isset( $field_options['gf_field'] ) ) {
 						$field = $field_options['gf_field'];
 					}
@@ -180,12 +230,12 @@ class Pods_GF {
 		}
 
 		// Confirmation handling
-		if ( isset( $this->options['confirmation'] ) && ! empty( $this->options['confirmation'] ) ) {
-			self::confirmation( $form_id, $this->options['confirmation'] );
+		if ( isset( $options['confirmation'] ) && ! empty( $options['confirmation'] ) ) {
+			self::confirmation( $form_id, $options['confirmation'] );
 		}
 
 		// Read Only handling
-		if ( isset( $this->options['read_only'] ) && ! empty( $this->options['read_only'] ) ) {
+		if ( isset( $options['read_only'] ) && ! empty( $options['read_only'] ) ) {
 			if ( ! has_filter( 'gform_pre_submission_filter_' . $form_id, array( 'Pods_GF', 'gf_read_only_pre_submission' ) ) ) {
 				add_filter( 'gform_pre_submission_filter_' . $form_id, array( 'Pods_GF', 'gf_read_only_pre_submission' ), 10, 1 );
 			}
@@ -623,7 +673,7 @@ class Pods_GF {
 	public static function auto_delete ( $form_id = null, $keep_files = null ) {
 
 		if ( null !== $keep_files ) {
-			self::$keep_files = (boolean) $keep_files;
+			self::$keep_files[ $form_id ] = (boolean) $keep_files;
 		}
 
 		$form = ( ! empty( $form_id ) ? '_' . (int) $form_id : '' );
@@ -1301,23 +1351,27 @@ class Pods_GF {
 	 */
 	public function _gf_to_pods_handler( $form ) {
 
-		$id = (int) pods_v( 'id', $this->pod, 0 );
+		$id = 0;
 
-		$save_action = 'add';
-
-		if ( ! empty( $id ) ) {
-			$save_action = 'edit';
+		if ( isset( $this->options['edit'] ) && $this->options['edit'] ) {
+			$id = $this->get_current_id();
 		}
 
 		if ( isset( $this->options['save_id'] ) && ! empty( $this->options['save_id'] ) ) {
 			$id = (int) $this->options['save_id'];
 		}
 
+		$save_action = 'add';
+
+		if ( ! empty( $id ) ) {
+			$save_action = 'save';
+		}
+
 		if ( isset( $this->options['save_action'] ) ) {
 			$save_action = $this->options['save_action'];
 		}
 
-		if ( empty( $id ) || !in_array( $save_action, array( 'add', 'save', 'bypass' ) ) ) {
+		if ( empty( $id ) || ! in_array( $save_action, array( 'add', 'save', 'bypass' ) ) ) {
 			$save_action = 'add';
 		}
 
@@ -1332,11 +1386,21 @@ class Pods_GF {
 		);
 
 		if ( 'save' == $save_action ) {
-			$args[] = null; // Value
-			$args[] = $id; // ID
+			$args[1] = null; // Value
+			$args[2] = $id; // ID
 		}
 
 		if ( is_object( $this->pod ) ) {
+			if ( ! empty( $this->pod->data->field_id ) && ! empty( $data[ $this->pod->data->field_id ] ) ) {
+				$save_action = 'save';
+
+				$args[1] = null; // Value
+				$args[2] = $data[ $this->pod->data->field_id ]; // ID
+
+				// Remove field, not saving it
+				unset( $data[ $this->pod->data->field_id ] );
+			}
+
 			if ( 'post_type' == $this->pod->pod_data['type'] ) {
 				if ( ! empty( $form['postStatus'] ) && empty( $args[0]['post_status'] ) ) {
 					$args[0]['post_status'] = $form['postStatus'];
@@ -1355,10 +1419,12 @@ class Pods_GF {
 				}
 			}
 
-			$id = call_user_func_array( array( $this->pod, $save_action ), $args );
+			if ( ! empty( $this->pod->pod_data ) ) {
+				$id = call_user_func_array( array( $this->pod, $save_action ), $args );
 
-			$this->pod->id = $id;
-			$this->pod->fetch( $id );
+				$this->pod->id = $id;
+				$this->pod->fetch( $id );
+			}
 
 			do_action( 'pods_gf_to_pods_' . $form['id'] . '_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
 			do_action( 'pods_gf_to_pods_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
@@ -1369,7 +1435,7 @@ class Pods_GF {
 			$this->id = $id = apply_filters( 'pods_gf_to_pod_' . $save_action, $id, $this->pod, $data, $this );
 		}
 
-		self::$gf_to_pods_id = $id;
+		self::$gf_to_pods_id[ $this->form_id ] = $id;
 
 		do_action( 'pods_gf_to_pods', $this->pod, $save_action, $data, $id, $this );
 
@@ -1890,9 +1956,11 @@ class Pods_GF {
 			}
 		}
 
+		$basic_array = isset( $prepopulate['fields'][0] );
+
 		// Prepopulate values
 		foreach ( $prepopulate['fields'] as $field => $field_options ) {
-			if ( is_int( $field ) && is_string( $field_options ) ) {
+			if ( $basic_array && is_string( $field_options ) ) {
 				$field_options = array(
 					'gf_field' => $field_options,
 					'field'    => $field_options,
@@ -2075,7 +2143,7 @@ class Pods_GF {
 
 		self::$confirmation[$form_id] = $options;
 
-		if ( ! add_filter( 'gform_confirmation_' . $form_id, array( 'Pods_GF', 'gf_confirmation' ) ) ) {
+		if ( ! has_filter( 'gform_confirmation_' . $form_id, array( 'Pods_GF', 'gf_confirmation' ) ) ) {
 			add_filter( 'gform_confirmation_' . $form_id, array( 'Pods_GF', 'gf_confirmation' ), 10, 4 );
 		}
 
@@ -2159,11 +2227,29 @@ class Pods_GF {
 					$url = get_permalink( $confirmation['pageId'] );
 				}
 				else {
-					$url           = GFCommon::replace_variables( trim( $confirmation['url'] ), $form, $lead, false, true );
-					$url_info      = parse_url( $url );
-					$query_string  = $url_info['query'];
-					$dynamic_query = GFCommon::replace_variables( trim( $confirmation['queryString'] ), $form, $lead, true );
-					$query_string .= empty( $url_info['query'] ) || empty( $dynamic_query ) ? $dynamic_query : '&' . $dynamic_query;
+					$gf_to_pods_id = 0;
+
+					if ( ! empty( self::$gf_to_pods_id[ $form['id'] ] ) ) {
+						$gf_to_pods_id = self::$gf_to_pods_id[ $form['id'] ];
+					}
+
+					$confirmation['url'] = str_replace( '{@gf_to_pods_id}', $gf_to_pods_id, $confirmation['url'] );
+
+					$url          = trim( GFCommon::replace_variables( trim( $confirmation['url'] ), $form, $lead, false, true ) );
+					$url_info     = parse_url( $url );
+					$query_string = trim( $url_info['query'] );
+
+					if ( ! empty( $confirmation['queryString'] ) ) {
+						$dynamic_query = trim( GFCommon::replace_variables( trim( $confirmation['queryString'] ), $form, $lead, true ) );
+
+						if ( ! empty( $dynamic_query ) ) {
+							if ( ! empty( $url_info['query'] ) ) {
+								$query_string .= '&';
+							}
+
+							$query_string .= $dynamic_query;
+						}
+					}
 
 					if ( ! empty( $url_info['fragment'] ) ) {
 						$query_string .= '#' . $url_info['fragment'];
@@ -2191,15 +2277,12 @@ class Pods_GF {
 					$confirmation = array( 'redirect' => $url );
 				}
 			}
-
-			if ( ! is_array( $confirmation ) ) {
-				$confirmation = GFCommon::gform_do_shortcode( $confirmation ); //enabling shortcodes
-			}
-			elseif ( headers_sent() || $ajax ) {
-				//Perform client side redirect for AJAX forms, of if headers have already been sent
-				$confirmation = self::gf_get_js_redirect_confirmation( $confirmation[ 'redirect' ], $ajax ); //redirecting via client side
-			}
 		}
+
+		// @todo Is this needed still?
+		/*if ( ! is_array( $confirmation ) ) {
+			$confirmation = GFCommon::gform_do_shortcode( $confirmation ); //enabling shortcodes
+		}*/
 
 		return $confirmation;
 
@@ -2733,7 +2816,7 @@ class Pods_GF {
 		if ( isset( $this->options['prepopulate'] ) && ! empty( $this->options['prepopulate'] ) ) {
 			$prepopulate = array(
 				'pod'    => $this->pod,
-				'id'     => pods_v( 'save_id', $this->options, pods_v( 'id', $this->pod, $this->id, true ), true ),
+				'id'     => pods_v( 'save_id', $this->options, $this->get_current_id(), true ),
 				'fields' => $this->options['fields']
 			);
 
@@ -2999,17 +3082,21 @@ class Pods_GF {
 		$validate = true;
 
 		if ( is_object( $this->pod ) ) {
-			$field_data = $this->pod->fields( $field_options['field'] );
+			if ( empty( $this->pod->pod_data ) ) {
+				$validate = 'Invalid pod for mapping';
+			} else {
+				$field_data = $this->pod->fields( $field_options['field'] );
 
-			if ( empty( $field_data ) ) {
-				return $validation_result;
+				if ( empty( $field_data ) ) {
+					return $validation_result;
+				}
+
+				$pods_api = pods_api();
+
+				$gf_value = self::get_gf_field_value( $value, $field, $form, $this->options );
+
+				$validate = $pods_api->handle_field_validation( $gf_value, $field_options['field'], $this->pod->pod_data['object_fields'], $this->pod->pod_data['fields'], $this->pod, null );
 			}
-
-			$pods_api = pods_api();
-
-			$gf_value = self::get_gf_field_value( $value, $field, $form, $this->options );
-
-			$validate = $pods_api->handle_field_validation( $gf_value, $field_options['field'], $this->pod->pod_data['object_fields'], $this->pod->pod_data['fields'], $this->pod, null );
 		}
 
 		$validate = apply_filters( 'pods_gf_field_validation_' . $form['id'] . '_' . (string) $field['id'], $validate, $field['id'], $field_options, $value, $form, $field, $this );
@@ -3128,21 +3215,16 @@ class Pods_GF {
 	public function _gf_entry_pre_save_id( $lead_id, $form ) {
 
 		if ( empty( $this->gf_validation_message ) ) {
-			if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
-				return $lead_id;
-			}
-			elseif ( ! isset( self::$actioned[$form['id']] ) ) {
-				self::$actioned[$form['id']] = array();
-			}
-
-			self::$actioned[$form['id']][] = __FUNCTION__;
-
 			if ( empty( $this->options ) ) {
 				return $lead_id;
 			}
 
-			if ( isset( $this->options['edit'] ) && $this->options['edit'] && is_array( $this->pod ) && 0 < $this->id && empty( $entry ) ) {
-				$lead_id = $this->id;
+			if ( isset( $this->options['edit'] ) && $this->options['edit'] && is_array( $this->pod ) && empty( $entry ) ) {
+				if ( 0 < $this->entry_id ) {
+					$lead_id = $this->entry_id;
+				} elseif ( 0 < $this->id ) {
+					$lead_id = $this->id;
+				}
 			}
 		}
 
@@ -3265,7 +3347,11 @@ class Pods_GF {
 
 			self::$actioned[$form['id']][] = __FUNCTION__;
 
-			$this->id = $entry['id'];
+			if ( is_array( $this->pod ) ) {
+				$this->id = $entry['id'];
+			}
+
+			$this->entry_id = $entry['id'];
 
 			if ( empty( $this->options ) ) {
 				return $entry;
@@ -3336,7 +3422,7 @@ class Pods_GF {
 				$confirmation = self::gf_confirmation( $form['confirmation'], $form, $entry, false, true );
 
 				if ( 'redirect' != $confirmation['type'] || ! is_array( $confirmation ) || ( ! isset( $confirmation['url'] ) && ! isset( $confirmation['redirect'] ) ) ) {
-					pods_redirect( pods_var_update( array( 'action' => 'edit', 'id' => $this->id ) ) );
+					pods_redirect( pods_var_update( array( 'action' => 'edit', 'id' => $this->get_current_id() ) ) );
 				}
 				elseif ( isset( $confirmation['url'] ) ) {
 					pods_redirect( $confirmation['url'] );
@@ -3348,6 +3434,29 @@ class Pods_GF {
 		}
 
 		return $entry;
+
+	}
+
+	/**
+	 * Get current ID
+	 *
+	 * @return int
+	 */
+	public function get_current_id() {
+
+		$id = (int) $this->id;
+
+		if ( empty( $id ) ) {
+			if ( is_object( $this->pod ) ) {
+				// Pod object
+				$id = (int) $this->pod->id();
+			} elseif ( is_array( $this->pod ) ) {
+				// GF entry
+				$id = (int) pods_v( 'id', $this->pod, $id );
+			}
+		}
+
+		return $id;
 
 	}
 

@@ -10,7 +10,7 @@ class Pods_GF_UI {
 	public static $pods_gf;
 
 	/**
-	 * @var Pods_UI
+	 * @var PodsUI
 	 */
 	public static $pods_ui;
 

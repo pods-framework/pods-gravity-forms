@@ -345,9 +345,20 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					'gf_to_pods_priority' => 'submission',
 				);
 
-				$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form );
+				$edit_id = (int) apply_filters( 'pods_gf_addon_edit_id', 0, $feed['meta']['pod'], $form['id'], $feed, $form, $options );
 
-				pods_gf( $feed['meta']['pod'], $form['id'], $options );
+				if ( 0 < $edit_id ) {
+					$options['edit'] = true;
+
+					// Setup pod object
+					$pod = pods( $feed['meta']['pod'], $edit_id );
+				} else {
+					$pod = pods( $feed['meta']['pod'] );
+				}
+
+				$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
+
+				pods_gf( $pod, $form['id'], $options );
 			}
 		}
 
@@ -389,8 +400,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 	public function update_entry_meta_pod_id( $key, $entry, $form ) {
 
-		if ( ! empty( Pods_GF::$gf_to_pods_id ) ) {
-			$value = Pods_GF::$gf_to_pods_id;
+		if ( ! empty( Pods_GF::$gf_to_pods_id[ $form['id'] ] ) ) {
+			$value = Pods_GF::$gf_to_pods_id[ $form['id'] ];
 		} else {
 			$value = 0;
 		}

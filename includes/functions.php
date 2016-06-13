@@ -12,7 +12,7 @@ function pods_gf( $pod = null, $form_id = null, $options = array() ) {
 	require_once( PODS_GF_DIR . 'includes/Pods_GF_UI.php' );
 
 	if ( null !== $pod || null !== $form_id || array() !== $options ) {
-		return new Pods_GF( $pod, $form_id, $options );
+		return Pods_GF::get_instance( $pod, $form_id, $options );
 	}
 
 }
