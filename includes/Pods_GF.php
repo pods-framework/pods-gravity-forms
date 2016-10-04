@@ -3424,7 +3424,7 @@ class Pods_GF {
 
 				$confirmation = self::gf_confirmation( $form['confirmation'], $form, $entry, false, true );
 
-				if ( 'redirect' != $confirmation['type'] || ! is_array( $confirmation ) || ( ! isset( $confirmation['url'] ) && ! isset( $confirmation['redirect'] ) ) ) {
+				if ( ! is_array( $confirmation ) || 'redirect' != $confirmation['type'] || ( ! isset( $confirmation['url'] ) && ! isset( $confirmation['redirect'] ) ) ) {
 					pods_redirect( pods_var_update( array( 'action' => 'edit', 'id' => $this->get_current_id() ) ) );
 				}
 				elseif ( isset( $confirmation['url'] ) ) {
