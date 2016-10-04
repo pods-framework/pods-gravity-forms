@@ -455,7 +455,7 @@ class Pods_GF_UI {
 			}
 
 			if ( !empty( $options[ 'action_data' ] ) ) {
-				$this->ui[ 'actions_custom' ][ $action ] = array_merge( $this->ui[ 'actions_custom' ][ $action ], pods_v( 'action_data', $options, null, true ) );
+				$this->ui[ 'actions_custom' ][ $action ] = array_merge( $this->ui[ 'actions_custom' ][ $action ], (array) pods_v( 'action_data', $options, null, true ) );
 			}
 
 			if ( !empty( $options[ 'fields' ] ) ) {
