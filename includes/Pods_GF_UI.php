@@ -1003,4 +1003,57 @@ class Pods_GF_UI {
 
 	}
 
+	/**
+	 * Embed Custom form
+	 *
+	 * @param PodsUI $obj
+	 */
+	public function _action_custom( $obj ) {
+
+		self::$pods_ui =& $obj;
+?>
+<div class="wrap pods-admin pods-ui">
+	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
+	<h2>
+		<?php
+			echo $obj->header[ $this->action ];
+
+			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) ) {
+				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
+
+				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
+					$link = $obj->action_links[ 'manage' ];
+				}
+		?>
+			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading[ 'manage' ] ); ?></a>
+		<?php
+			}
+		?>
+	</h2>
+
+	<?php
+		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+
+		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
+			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
+
+			wp_print_scripts();
+			wp_print_styles();
+
+			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
+		}
+		elseif ( is_object( $this->pod ) ) {
+			$this->pod->form();
+		}
+		else {
+			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $obj, $this );
+		}
+
+		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
+	?>
+</div>
+<?php
+
+	}
+
 }
