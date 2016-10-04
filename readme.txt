@@ -4,7 +4,7 @@ Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.0
 Tested up to: 4.6
-Stable tag: 1.1
+Stable tag: 1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,15 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 9. Form entries page showing Pod ID
 
 == Changelog ==
+
+= 1.2 - October 4th, 2016 =
+
+* Added: When using a custom action and setting the form ID option in Pods GF UI, a new custom action will be used which embeds the GF form (if no callback provided in action_data option)
+* Added: New Pods GF UI option, specific to each action, for `action_link` which corresponds to the `action_links` Pods UI option
+* Fixed: Support for recent GF versions where pre_save_id hook uses a different Form-specific naming convention
+* Fixed: Custom confirmation handling may have not been functioning properly in some cases
+* Fixed: Removed some issues that were causing PHP notices
+
 
 = 1.1 - June 13th, 2016 =
 
