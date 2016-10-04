@@ -458,6 +458,10 @@ class Pods_GF_UI {
 				$this->ui[ 'actions_custom' ][ $action ] = array_merge( $this->ui[ 'actions_custom' ][ $action ], (array) pods_v( 'action_data', $options, null, true ) );
 			}
 
+			if ( !empty( $options[ 'action_link' ] ) ) {
+				$this->ui[ 'action_links' ][ $action ] = pods_v( 'action_link', $options, null, true );
+			}
+
 			if ( !empty( $options[ 'fields' ] ) ) {
 				$this->ui[ 'fields' ][ $action ] = $options[ 'fields' ];
 			}
