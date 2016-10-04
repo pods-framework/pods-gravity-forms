@@ -2160,124 +2160,118 @@ class Pods_GF {
 	 */
 	public static function gf_confirmation ( $confirmation, $form, $lead, $ajax = false, $return_confirmation = false ) {
 
-		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
-			return $form;
-		}
-		elseif ( ! isset( self::$actioned[$form['id']] ) ) {
-			self::$actioned[$form['id']] = array();
-		}
-
-		self::$actioned[$form['id']][] = __FUNCTION__;
-
 		$gf_confirmation = pods_v( $form['id'], self::$confirmation, array(), true );
 
 		if ( ! empty( $gf_confirmation ) ) {
 			$confirmation = $gf_confirmation;
 
-			if ( ! is_array( $confirmation ) ) {
-				if ( ( false !== strpos( $confirmation, '://' ) && strpos( $confirmation, '://' ) < 6 ) || 0 === strpos( $confirmation, '/' ) || 0 === strpos( $confirmation, '?' ) ) {
-					$confirmation = array(
-						'url'  => $confirmation,
-						'type' => 'redirect'
-					);
-				}
-				else {
-					$confirmation = array(
-						'message' => $confirmation,
-						'type'    => 'message'
-					);
-				}
-			}
-
-			if ( isset( $confirmation['url'] ) ) {
-				if ( 0 === strpos( $confirmation['url'], '?' ) ) {
-					$path                = explode( '?', $_SERVER['REQUEST_URI'] );
-					$path                = explode( '#', $path[0] );
-					$confirmation['url'] = 'http' . ( is_ssl() ? 's' : '' ) . '://' . $_SERVER['HTTP_HOST'] . $path[0] . $confirmation['url'];
+			if ( ! is_array( $confirmation ) || empty( $confirmation['pods_gf'] ) ) {
+				if ( ! is_array( $confirmation ) ) {
+					if ( ( false !== strpos( $confirmation, '://' ) && strpos( $confirmation, '://' ) < 6 ) || 0 === strpos( $confirmation, '/' ) || 0 === strpos( $confirmation, '?' ) ) {
+						$confirmation = array(
+							'url'  => $confirmation,
+							'type' => 'redirect'
+						);
+					}
+					else {
+						$confirmation = array(
+							'message' => $confirmation,
+							'type'    => 'message'
+						);
+					}
 				}
 
-				$confirmation['type'] = 'redirect';
-			}
-			elseif ( isset( $confirmation['message'] ) ) {
-				$confirmation['type'] = 'message';
-			}
-
-			$confirmation['isDefault'] = true;
-
-			if ( $return_confirmation ) {
-				return $confirmation;
-			}
-
-			if ( $confirmation['type'] == 'message' ) {
-				$default_anchor = GFCommon::has_pages( $form ) ? 1 : 0;
-				$anchor         = apply_filters( 'gform_confirmation_anchor_' . $form['id'], apply_filters( 'gform_confirmation_anchor', $default_anchor ) ) ? '<a id="gf_' . $form['id'] . '" name="gf_' . $form['id'] . '" class="gform_anchor" ></a>' : '';
-				$nl2br          = rgar( $confirmation, 'disableAutoformat' ) ? false : true;
-				$cssClass       = rgar( $form, 'cssClass' );
-
-				if ( empty( $confirmation['message'] ) ) {
-					$confirmation = $anchor . ' ';
-				}
-				else {
-					$confirmation = $anchor
-						. '<div id="gform_confirmation_wrapper_' . $form['id'] . '" class="gform_confirmation_wrapper ' . $cssClass . '">'
-						. '<div id="gforms_confirmation_message" class="gform_confirmation_message_' . $form['id'] . '">'
-						. GFCommon::replace_variables( $confirmation['message'], $form, $lead, false, true, $nl2br )
-						. '</div></div>';
-				}
-			}
-			else {
-				if ( ! empty( $confirmation['pageId'] ) ) {
-					$url = get_permalink( $confirmation['pageId'] );
-				}
-				else {
-					$gf_to_pods_id = 0;
-
-					if ( ! empty( self::$gf_to_pods_id[ $form['id'] ] ) ) {
-						$gf_to_pods_id = self::$gf_to_pods_id[ $form['id'] ];
+				if ( isset( $confirmation['url'] ) ) {
+					if ( 0 === strpos( $confirmation['url'], '?' ) ) {
+						$path                = explode( '?', $_SERVER['REQUEST_URI'] );
+						$path                = explode( '#', $path[0] );
+						$confirmation['url'] = 'http' . ( is_ssl() ? 's' : '' ) . '://' . $_SERVER['HTTP_HOST'] . $path[0] . $confirmation['url'];
 					}
 
-					$confirmation['url'] = str_replace( '{@gf_to_pods_id}', $gf_to_pods_id, $confirmation['url'] );
+					$confirmation['type'] = 'redirect';
+				}
+				elseif ( isset( $confirmation['message'] ) ) {
+					$confirmation['type'] = 'message';
+				}
 
-					$url          = trim( GFCommon::replace_variables( trim( $confirmation['url'] ), $form, $lead, false, true ) );
-					$url_info     = parse_url( $url );
-					$query_string = trim( $url_info['query'] );
+				$confirmation['isDefault'] = true;
+				$confirmation['pods_gf']   = true;
 
-					if ( ! empty( $confirmation['queryString'] ) ) {
-						$dynamic_query = trim( GFCommon::replace_variables( trim( $confirmation['queryString'] ), $form, $lead, true ) );
+				if ( $return_confirmation ) {
+					return $confirmation;
+				}
 
-						if ( ! empty( $dynamic_query ) ) {
-							if ( ! empty( $url_info['query'] ) ) {
-								$query_string .= '&';
-							}
+				if ( $confirmation['type'] == 'message' ) {
+					$default_anchor = GFCommon::has_pages( $form ) ? 1 : 0;
+					$anchor         = apply_filters( 'gform_confirmation_anchor_' . $form['id'], apply_filters( 'gform_confirmation_anchor', $default_anchor ) ) ? '<a id="gf_' . $form['id'] . '" name="gf_' . $form['id'] . '" class="gform_anchor" ></a>' : '';
+					$nl2br          = rgar( $confirmation, 'disableAutoformat' ) ? false : true;
+					$cssClass       = rgar( $form, 'cssClass' );
 
-							$query_string .= $dynamic_query;
+					if ( empty( $confirmation['message'] ) ) {
+						$confirmation = $anchor . ' ';
+					}
+					else {
+						$confirmation = $anchor
+							. '<div id="gform_confirmation_wrapper_' . $form['id'] . '" class="gform_confirmation_wrapper ' . $cssClass . '">'
+							. '<div id="gforms_confirmation_message" class="gform_confirmation_message_' . $form['id'] . '">'
+							. GFCommon::replace_variables( $confirmation['message'], $form, $lead, false, true, $nl2br )
+							. '</div></div>';
+					}
+				}
+				else {
+					if ( ! empty( $confirmation['pageId'] ) ) {
+						$url = get_permalink( $confirmation['pageId'] );
+					}
+					else {
+						$gf_to_pods_id = 0;
+
+						if ( ! empty( self::$gf_to_pods_id[ $form['id'] ] ) ) {
+							$gf_to_pods_id = self::$gf_to_pods_id[ $form['id'] ];
 						}
+
+						$confirmation['url'] = str_replace( '{@gf_to_pods_id}', $gf_to_pods_id, $confirmation['url'] );
+
+						$url          = trim( GFCommon::replace_variables( trim( $confirmation['url'] ), $form, $lead, false, true ) );
+						$url_info     = parse_url( $url );
+						$query_string = trim( $url_info['query'] );
+
+						if ( ! empty( $confirmation['queryString'] ) ) {
+							$dynamic_query = trim( GFCommon::replace_variables( trim( $confirmation['queryString'] ), $form, $lead, true ) );
+
+							if ( ! empty( $dynamic_query ) ) {
+								if ( ! empty( $url_info['query'] ) ) {
+									$query_string .= '&';
+								}
+
+								$query_string .= $dynamic_query;
+							}
+						}
+
+						if ( ! empty( $url_info['fragment'] ) ) {
+							$query_string .= '#' . $url_info['fragment'];
+						}
+
+						$url = $url_info['scheme'] . '://' . $url_info['host'];
+
+						if ( ! empty( $url_info['port'] ) ) {
+							$url .= ':' . $url_info['port'];
+						}
+
+						$url .= rgar( $url_info, 'path' );
+
+						if ( ! empty( $query_string ) ) {
+							$url .= '?' . $query_string;
+						}
+
 					}
 
-					if ( ! empty( $url_info['fragment'] ) ) {
-						$query_string .= '#' . $url_info['fragment'];
+					if ( headers_sent() || $ajax ) {
+						//Perform client side redirect for AJAX forms, of if headers have already been sent
+						$confirmation = self::gf_get_js_redirect_confirmation( $url, $ajax );
 					}
-
-					$url = $url_info['scheme'] . '://' . $url_info['host'];
-
-					if ( ! empty( $url_info['port'] ) ) {
-						$url .= ':' . $url_info['port'];
+					else {
+						$confirmation = array( 'redirect' => $url );
 					}
-
-					$url .= rgar( $url_info, 'path' );
-
-					if ( ! empty( $query_string ) ) {
-						$url .= '?' . $query_string;
-					}
-
-				}
-
-				if ( headers_sent() || $ajax ) {
-					//Perform client side redirect for AJAX forms, of if headers have already been sent
-					$confirmation = self::gf_get_js_redirect_confirmation( $url, $ajax );
-				}
-				else {
-					$confirmation = array( 'redirect' => $url );
 				}
 			}
 		}
