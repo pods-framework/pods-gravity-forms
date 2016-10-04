@@ -245,6 +245,9 @@ class Pods_GF {
 		if ( !has_filter( 'gform_entry_id_pre_save_lead' . $form_id, array( $this, '_gf_entry_pre_save_id' ) ) ) {
 			add_filter( 'gform_entry_id_pre_save_lead' . $form_id, array( $this, '_gf_entry_pre_save_id' ), 10, 2 );
 		}
+		if ( !has_filter( 'gform_entry_id_pre_save_lead_' . $form_id, array( $this, '_gf_entry_pre_save_id' ) ) ) {
+			add_filter( 'gform_entry_id_pre_save_lead_' . $form_id, array( $this, '_gf_entry_pre_save_id' ), 10, 2 );
+		}
 
 		// Saving
 		if ( !has_filter( 'gform_entry_post_save', array( $this, '_gf_entry_post_save' ) ) ) {
@@ -3207,7 +3210,7 @@ class Pods_GF {
 	}
 
 	/**
-	 * Action handler for Gravity Forms: gform_entry_id_pre_save_lead{$form_id}
+	 * Action handler for Gravity Forms: gform_entry_id_pre_save_lead_{$form_id}
 	 *
 	 * @param null|int $lead_id GF Entry ID
 	 * @param array $form  GF Form array
