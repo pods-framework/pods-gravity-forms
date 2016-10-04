@@ -447,6 +447,8 @@ class Pods_GF_UI {
 						'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ]
 					);
 				}
+			} elseif ( ! empty( $options['form'] ) && 'manage' !== $action ) {
+				$this->ui[ 'actions_custom' ][ $action ] = array( $this, '_action_custom' );
 			}
 			else {
 				$this->ui[ 'actions_custom' ][ $action ] = $action;
