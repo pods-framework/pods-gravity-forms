@@ -3,7 +3,7 @@ Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
 Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.0
-Tested up to: 4.5
+Tested up to: 4.6
 Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -18,7 +18,7 @@ Check out [pods.io](http://pods.io/) for our User Guide, Forums, and other resou
 
 Please report bugs or request featured on [GitHub](https://github.com/pods-framework/pods-gravity-forms/)
 
-Special thanks to Naomi C. Bush for her help
+Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bush for her help in the initial add-on UI work.
 
 == Screenshots ==
 
