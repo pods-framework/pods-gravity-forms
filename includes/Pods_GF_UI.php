@@ -396,6 +396,10 @@ class Pods_GF_UI {
 
 		$id = (int) pods_v( 'id' );
 
+		if ( 0 < $this->id ) {
+			$id = $this->id;
+		}
+
 		foreach ( $this->actions as $action => $options ) {
 			$this->actions[ $action ] = $options = array_merge( $defaults, $options );
 
