@@ -42,7 +42,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		);
 		foreach ( $all_pods as $name => $label ) {
 			$pod_choice_list[] = array(
-				'label' => $label,
+				'label' => $label . ' (' . $name . ')',
 				'value' => $name
 			);
 		}
@@ -111,13 +111,16 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 				$wp_object_fields[] = array(
 					'name'  => $name,
-					'label' => $field['label']
+					'label' => $field['label'],
 				);
 			}
 		}
 
 		if ( 'post_type' == $pod_type ) {
-			$wp_object_fields[] = array( 'name' => '_thumbnail_id', 'label' => 'Featured Image' );
+			$wp_object_fields[] = array(
+				'name' => '_thumbnail_id',
+				'label' => 'Featured Image',
+			);
 		}
 
 		$feed_field_wp_object_fields = array(
@@ -146,6 +149,18 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				$feed_field_wp_object_fields
 			)
 		);
+
+		foreach ( $settings['fields'] as $k => $field_set ) {
+			if ( empty( $field_set['field_map'] ) ) {
+				continue;
+			}
+
+			foreach ( $field_set['field_map'] as $kf => $field ) {
+				$field['label'] .= '<br /><small>(' . $field['name'] . ')</small>';
+
+				$settings['fields'][ $k ]['field_map'][ $kf ] = $field;
+			}
+		}
 
 		$settings['fields'][] = array(
 			'name'    => 'delete_entry',
