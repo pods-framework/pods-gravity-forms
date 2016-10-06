@@ -606,7 +606,7 @@ class Pods_GF_UI {
 		}
 		elseif ( !is_object( $this->pod ) && !empty( $this->pod ) ) {
 			$this->pod = pods( $this->pod, ( 0 < $id ? $id : null ) );
-			$this->id = $this->pod->id();
+			$this->id  = $this->pod->id();
 		}
 
 		if ( 0 < $this->id ) {
@@ -1049,18 +1049,27 @@ class Pods_GF_UI {
 	<?php
 		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
 
-		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
+		if ( ! empty( $this->actions[ $this->action ]['content'] ) ) {
+			/**
+			 * Filter content for page
+			 *
+			 * @param string     $content
+			 * @param Pods_GF_UI $pods_gf_ui
+			 */
+			$content = apply_filters( 'pods_gf_ui_content', $this->actions[ $this->action ]['content'], $this );
+			$content = apply_filters( 'the_content', $content, 0 );
+
+			echo $content;
+		} elseif ( isset( $this->actions[ $this->action ]['form'] ) && 0 < $this->actions[ $this->action ]['form'] ) {
+			gravity_form_enqueue_scripts( $this->actions[ $this->action ]['form'] );
 
 			wp_print_scripts();
 			wp_print_styles();
 
-			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
-		}
-		elseif ( is_object( $this->pod ) ) {
+			gravity_form( $this->actions[ $this->action ]['form'], false, false );
+		} elseif ( is_object( $this->pod ) ) {
 			$this->pod->form();
-		}
-		else {
+		} else {
 			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $obj, $this );
 		}
 
