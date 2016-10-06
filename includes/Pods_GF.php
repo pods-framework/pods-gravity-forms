@@ -2262,7 +2262,6 @@ class Pods_GF {
 						if ( ! empty( $query_string ) ) {
 							$url .= '?' . $query_string;
 						}
-
 					}
 
 					if ( headers_sent() || $ajax ) {
@@ -2273,6 +2272,14 @@ class Pods_GF {
 						$confirmation = array( 'redirect' => $url );
 					}
 				}
+			} elseif ( ! empty( $confirmation['redirect'] ) ) {
+				$gf_to_pods_id = 0;
+
+				if ( ! empty( self::$gf_to_pods_id[ $form['id'] ] ) ) {
+					$gf_to_pods_id = self::$gf_to_pods_id[ $form['id'] ];
+				}
+
+				$confirmation['redirect'] = str_replace( '{@gf_to_pods_id}', $gf_to_pods_id, $confirmation['redirect'] );
 			}
 		}
 
@@ -3421,11 +3428,27 @@ class Pods_GF {
 				if ( ! is_array( $confirmation ) || 'redirect' != $confirmation['type'] || ( ! isset( $confirmation['url'] ) && ! isset( $confirmation['redirect'] ) ) ) {
 					pods_redirect( pods_var_update( array( 'action' => 'edit', 'id' => $this->get_current_id() ) ) );
 				}
-				elseif ( isset( $confirmation['url'] ) ) {
-					pods_redirect( $confirmation['url'] );
-				}
-				elseif ( isset( $confirmation['redirect'] ) ) {
-					pods_redirect( $confirmation['redirect'] );
+				else {
+					$url = false;
+
+					if ( isset( $confirmation['url'] ) ) {
+						$url = $confirmation['url'];
+					}
+					elseif ( isset( $confirmation['redirect'] ) ) {
+						$url = $confirmation['redirect'];
+					}
+
+					if ( $url ) {
+						$gf_to_pods_id = 0;
+
+						if ( ! empty( self::$gf_to_pods_id[ $form['id'] ] ) ) {
+							$gf_to_pods_id = self::$gf_to_pods_id[ $form['id'] ];
+						}
+
+						$url = str_replace( '{@gf_to_pods_id}', $gf_to_pods_id, $url );
+
+						pods_redirect( $url );
+					}
 				}
 			}
 		}
