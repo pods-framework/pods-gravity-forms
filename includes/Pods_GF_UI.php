@@ -377,21 +377,22 @@ class Pods_GF_UI {
 	private function setup_ui() {
 
 		$defaults = array(
-			'heading' => '',
-			'header' => '',
-			'label' => '',
-			'label_alt' => '',
-			'form' => 0,
-			'edit' => false,
-			'fields' => array(),
-			'dynamic_select' => array(),
-			'callback' => null,
-			'callback_copy' => null,
+			'heading'         => '',
+			'header'          => '',
+			'label'           => '',
+			'label_alt'       => '',
+			'form'            => 0,
+			'edit'            => false,
+			'fields'          => array(),
+			'dynamic_select'  => array(),
+			'callback'        => null,
+			'callback_copy'   => null,
 			'access_callback' => null,
-			'action_data' => array(),
-			'disabled' => false,
-			'prepopulate' => true,
-			'save_for_later' => array()
+			'content'         => null,
+			'action_data'     => array(),
+			'disabled'        => false,
+			'prepopulate'     => true,
+			'save_for_later'  => array(),
 		);
 
 		$id = (int) pods_v( 'id' );
@@ -432,30 +433,40 @@ class Pods_GF_UI {
 
 			if ( !empty( $options[ 'callback' ] ) ) {
 				if ( in_array( $action, array( 'add', 'edit' ) ) ) {
-					$this->ui[ 'actions_custom' ][ $action ] = $options[ 'callback' ];
+					$this->ui[ 'actions_custom' ][ $action ] = array(
+						'callback' => $options[ 'callback' ],
+					);
 				}
 				else {
 					$this->ui[ 'actions_custom' ][ $action ] = array(
-						'callback' => $options[ 'callback' ]
+						'callback' => $options[ 'callback' ],
 					);
 				}
 			}
 			elseif ( !empty( $options[ 'callback_copy' ] ) ) {
 				if ( is_array( $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ] ) && isset( $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ][ 'callback' ] ) ) {
 					$this->ui[ 'actions_custom' ][ $action ] = array(
-						'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ][ 'callback' ]
+						'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ][ 'callback' ],
 					);
 				}
 				else {
 					$this->ui[ 'actions_custom' ][ $action ] = array(
-						'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ]
+						'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ],
 					);
 				}
-			} elseif ( ! empty( $options['form'] ) && 'manage' !== $action ) {
-				$this->ui[ 'actions_custom' ][ $action ] = array( $this, '_action_custom' );
+			} elseif ( ( ! empty( $options['form'] ) || ! empty( $options['content'] ) ) && 'manage' !== $action ) {
+				$this->ui[ 'actions_custom' ][ $action ] = array(
+					'callback' => array( $this, '_action_custom' ),
+				);
 			}
 			else {
-				$this->ui[ 'actions_custom' ][ $action ] = $action;
+				$this->ui['actions_custom'][ $action ] = array(
+					'label' => $action,
+				);
+			}
+
+			if ( ! empty( $options['content'] ) ) {
+				$this->ui[ 'actions_custom' ][ $action ]['content'] = $options['content'];
 			}
 
 			if ( !empty( $options[ 'action_data' ] ) ) {
