@@ -157,7 +157,7 @@ function pods_gf_ui_content( $content, $post_id = 0 ) {
 		$post_id = $post->ID;
 	}
 
-	if ( false === strpos( $content, '[pods-gf-ui' ) && !empty( $post_id ) && ( is_single( $post_id ) || is_page( $post_id ) ) ) {
+	if ( in_the_loop() && false === strpos( $content, '[pods-gf-ui' ) && !empty( $post_id ) && ( is_single( $post_id ) || is_page( $post_id ) ) ) {
 		$content .= "\n" . pods_gf_ui_shortcode( array(), '' );
 	}
 
