@@ -1412,7 +1412,7 @@ class Pods_GF {
 				if ( empty( $args[0]['post_author'] ) ) {
 					if ( ! empty( $form['useCurrentUserAsAuthor'] ) && is_user_logged_in() ) {
 						$args[0]['post_author'] = get_current_user_id();
-					} elseif ( ! empty( $form['postAuthor'] ) &&  ) {
+					} elseif ( ! empty( $form['postAuthor'] ) ) {
 						$args[0]['post_author'] = $form['postAuthor'];
 					}
 				}
