@@ -1409,8 +1409,12 @@ class Pods_GF {
 					$args[0]['post_status'] = $form['postStatus'];
 				}
 
-				if ( ! empty( $form['postAuthor'] ) && empty( $args[0]['post_author'] ) ) {
-					$args[0]['post_author'] = $form['postAuthor'];
+				if ( empty( $args[0]['post_author'] ) ) {
+					if ( ! empty( $form['useCurrentUserAsAuthor'] ) && is_user_logged_in() ) {
+						$args[0]['post_author'] = get_current_user_id();
+					} elseif ( ! empty( $form['postAuthor'] ) &&  ) {
+						$args[0]['post_author'] = $form['postAuthor'];
+					}
 				}
 
 				if ( ! empty( $form['postCategory'] ) && empty( $args[0]['category'] ) && ! empty( $this->pod->pod_data['object_fields']['category'] ) ) {
