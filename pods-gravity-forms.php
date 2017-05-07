@@ -104,3 +104,59 @@ function pods_gf_admin_nag () {
 	}
 
 }
+
+
+/**
+ * Add Advanced Related Objects
+ *
+ * @since 1.3
+ */
+function pods_gf_add_related_objects() {
+
+	PodsField_Pick::$related_objects['gf-forms'] = array(
+		'label'         => __( 'Forms', 'pods' ),
+		'group'         => __( 'Gravity Forms', 'pods' ),
+		'simple'        => true,
+		'data_callback' => 'pods_gf_add_related_objects_forms',
+	);
+
+}
+add_action( 'pods_form_ui_field_pick_related_objects_other', 'pods_gf_add_related_objects' );
+
+/**
+ * Pods related data callback for GF Forms
+ *
+ * @param string       $name    The name of the field
+ * @param string|array $value   The value of the field
+ * @param array        $options Field options
+ * @param array        $pod     Pod data
+ * @param int          $id      Item ID
+ *
+ * @return array
+ *
+ * @since 1.3
+ */
+function pods_gf_add_related_objects_forms( $name = null, $value = null, $options = null, $pod = null, $id = null ) {
+
+	$data = array();
+
+	// Get all forms.
+	$forms = RGFormsModel::get_forms( null, 'title' );
+
+	foreach ( $forms as $form ) {
+		$form_title = $form->title;
+
+		if ( 1 !== (int) $form->is_active ) {
+			$form_title = sprintf(
+				'%s (%s)',
+				$form_title,
+				__( 'inactive', 'pods-gravity-forms' )
+			);
+		}
+
+		$data[ $form->id ] = $form_title;
+	}
+
+	return apply_filters( 'pods_form_ui_field_pick_' . __FUNCTION__, $data, $name, $value, $options, $pod, $id );
+
+}
