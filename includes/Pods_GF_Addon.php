@@ -75,10 +75,10 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	public function feed_settings_fields() {
 
 		$feed_field_name = array(
-			'label'   => 'Name',
+			'label'   => __( 'Name', 'pods-gravity-forms' ),
 			'type'    => 'text',
 			'name'    => 'feedName',
-			'tooltip' => 'Name for this feed',
+			'tooltip' => __( 'Name for this feed', 'pods-gravity-forms' ),
 			'class'   => 'medium'
 		);
 
@@ -97,10 +97,10 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		}
 
 		$feed_field_pod = array(
-			'label'    => 'Pod',
+			'label'    => __( 'Pod', 'pods-gravity-forms' ),
 			'type'     => 'select',
 			'name'     => 'pod',
-			'tooltip'  => 'Select the pod',
+			'tooltip'  => __( 'Select the pod', 'pods-gravity-forms' ),
 			'choices'  => $pod_choice_list,
 			'onchange' => "jQuery(this).parents('form').submit();",
 			'required' => true
@@ -149,7 +149,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		$feed_field_pod_fields = array(
 			'name'       => 'pod_fields',
-			'label'      => 'Pod Fields',
+			'label'      => __( 'Pod Fields', 'pods-gravity-forms' ),
 			'type'       => 'field_map',
 			'dependency' => 'pod',
 			'field_map'  => $pod_fields
@@ -194,20 +194,20 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		if ( 'post_type' == $pod_type ) {
 			$wp_object_fields[] = array(
 				'name' => '_thumbnail_id',
-				'label' => 'Featured Image',
+				'label' => __( 'Featured Image', 'pods-gravity-forms' ),
 			);
 		}
 
 		$feed_field_wp_object_fields = array(
 			'name'       => 'wp_object_fields',
-			'label'      => 'WP Object Fields',
+			'label'      => __( 'WP Object Fields', 'pods-gravity-forms' ),
 			'type'       => 'field_map',
 			'dependency' => 'pod',
 			'field_map'  => $wp_object_fields
 		);
 
 		$settings = array(
-			'title'  => 'Pods Feed Settings',
+			'title'  => __( 'Pods Feed Settings', 'pods-gravity-forms' ),
 			'fields' => array(
 				$feed_field_name,
 				$feed_field_pod,
@@ -273,7 +273,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		$settings['fields'][] = array(
 			'name'    => 'delete_entry',
-			'label'   => 'Delete Gravity Form Entry on submission',
+			'label'   => __( 'Delete Gravity Form Entry on submission', 'pods-gravity-forms' ),
 			'type'    => 'checkbox',
 			'choices' => array(
 				array(
@@ -286,7 +286,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		$settings['fields'][] = array(
 			'name'    => 'enable_markdown',
-			'label'   => 'Enable Markdown',
+			'label'   => __( 'Enable Markdown', 'pods-gravity-forms' ),
 			'type'    => 'checkbox',
 			'choices' => array(
 				array(
