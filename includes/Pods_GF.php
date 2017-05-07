@@ -3473,7 +3473,7 @@ class Pods_GF {
 		$id = (int) $this->id;
 
 		if ( empty( $id ) ) {
-			if ( is_object( $this->pod ) ) {
+			if ( is_object( $this->pod ) && $this->pod->exists() ) {
 				// Pod object
 				$id = (int) $this->pod->id();
 			} elseif ( is_array( $this->pod ) ) {
