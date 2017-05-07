@@ -2966,6 +2966,8 @@ class Pods_GF {
 
 		if ( in_array( $gf_field->type, array( 'name' ) ) ) {
 			$value = implode( ' ', $value );
+		} elseif ( in_array( $gf_field->type, array( 'time' ) ) ) {
+			$value = sprintf( '%d:%d %s', $value[0], $value[1], $value[2] );
 		} elseif ( $handle_files && in_array( $gf_field->type, array( 'fileupload', 'post_image' ) ) ) {
 			$value = null;
 

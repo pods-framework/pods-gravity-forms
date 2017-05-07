@@ -42,6 +42,7 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 * Added: Ability to enable editing of post data using current post ID on singular templates (only for Post type pod feeds)
 * Added: Ability to define custom 'content' in Pods GF UI custom actions instead of including a form
 * Added: Ability to relate to GF forms using a relationship field (new option: Gravity Forms > Forms)
+* Fixed: Ensure time fields get mapped correctly (props @mmarvin1)
 * Fixed: Ensure default pods-gf-ui shortcode is only added/run on content within the loop (props @jamesgol)
 * Fixed: Empty id used for Pods GF UI
 * Fixed: Callback handling for Pods GF UI
