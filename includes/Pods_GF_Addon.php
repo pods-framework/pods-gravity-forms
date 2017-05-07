@@ -15,6 +15,55 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	protected $_capabilities = array( 'pods_gravityforms', 'pods_gravityforms_uninstall' );
 	protected $_capabilities_form_settings = array( 'pods_gravityforms', 'pods' );
 
+	/**
+	 * Contains an instance of this class, if available.
+	 *
+	 * @since  1.0
+	 * @access private
+	 *
+	 * @used-by Pods_GF_Addon::get_instance()
+	 *
+	 * @var object $_instance If available, contains an instance of this class.
+	 */
+	private static $_instance = null;
+
+	/**
+	 * Get an instance of this class.
+	 *
+	 * @since  1.0
+	 * @access public
+	 *
+	 * @uses Pods_GF_Addon
+	 * @uses Pods_GF_Addon::$_instance
+	 *
+	 * @return object Pods_GF_Addon
+	 */
+	public static function get_instance() {
+
+		if ( null === self::$_instance ) {
+			self::$_instance = new Pods_GF_Addon;
+		}
+
+		return self::$_instance;
+
+	}
+
+	public function scripts() {
+
+		$scripts = array(
+			array(
+				'handle'  => 'pods_gf_admin',
+				'enqueue' => array( array( 'admin_page' => array( 'form_settings' ) ) ),
+				'src'     => PODS_GF_URL . '/ui/pods-gf-admin.js',
+				'version' => $this->_version,
+				'deps'    => array( 'jquery' ),
+			),
+		);
+
+		return array_merge( parent::scripts(), $scripts );
+
+	}
+
 	/*public function plugin_page() {
 
 		?>
@@ -60,15 +109,39 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		$selected_pod = $this->get_setting( 'pod' );
 		$pod_fields   = array();
 		$pod_type     = '';
+
+		$custom_name = '_gaddon_setting_pod_fields_custom_override_%s';
+		$custom_value_name = 'pod_fields_custom_override_%s';
+
+		$after_select = '
+			<div class="pods-custom-override%%s">
+				<label for="%s">
+					%s:
+				</label>
+				<input type="text" name="%s" value="%%s" placeholder="%s" class="fieldwidth-3" id="%s" />
+			</div>
+		';
+
+		$after_select = sprintf(
+			$after_select,
+			esc_attr( $custom_name ),
+			esc_html__( 'Override value', 'pods-gravity-forms' ),
+			esc_attr( $custom_name ),
+			esc_attr__( 'Enter text here', 'pods-gravity-forms' ),
+			esc_attr( $custom_name )
+		);
+
 		if ( ! empty( $selected_pod ) ) {
 			$pod_object = $pods_api->load_pod( array( 'name' => $selected_pod ) );
+
 			if ( ! empty( $pod_object ) ) {
 				$pod_type = $pod_object['type'];
+
 				foreach ( $pod_object['fields'] as $name => $field ) {
 					$pod_fields[] = array(
-						'name'     => $name,
-						'label'    => $field['label'],
-						'required' => ( '0' == $field['options']['required'] ) ? false : true
+						'needs_process' => true,
+						'name'          => $name,
+						'field'         => $field,
 					);
 				}
 			}
@@ -103,6 +176,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		);
 
 		$wp_object_fields = array();
+
 		if ( ! empty( $pod_object ) ) {
 			foreach ( $pod_object['object_fields'] as $name => $field ) {
 				if ( in_array( $name, $ignore_object_fields ) ) {
@@ -110,8 +184,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				}
 
 				$wp_object_fields[] = array(
-					'name'  => $name,
-					'label' => $field['label'],
+					'needs_process' => true,
+					'name'          => $name,
+					'field'         => $field,
 				);
 			}
 		}
@@ -131,34 +206,68 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'field_map'  => $wp_object_fields
 		);
 
-		/*$feed_field_wp_object_fields = array(
-			'name'              => 'wp_object_fields',
-			'label'             => 'WP Object Fields',
-			'type'              => 'dynamic_field_map',
-			'dependency'        => 'pod',
-			'key_choices'       => $wp_object_fields,
-			'enable_custom_key' => false
-		);*/
-
 		$settings = array(
 			'title'  => 'Pods Feed Settings',
 			'fields' => array(
 				$feed_field_name,
 				$feed_field_pod,
 				$feed_field_pod_fields,
-				$feed_field_wp_object_fields
 			)
 		);
 
+		if ( ! empty( $feed_field_wp_object_fields['field_map'] ) ) {
+			$settings['fields'][] = $feed_field_wp_object_fields;
+		}
+
+		// Build field mapping data arrays
 		foreach ( $settings['fields'] as $k => $field_set ) {
 			if ( empty( $field_set['field_map'] ) ) {
 				continue;
 			}
 
-			foreach ( $field_set['field_map'] as $kf => $field ) {
-				$field['label'] .= '<br /><small>(' . $field['name'] . ')</small>';
+			foreach ( $field_set['field_map'] as $kf => $field_map ) {
+				if ( ! empty( $field_map['needs_process'] ) ) {
+					$name  = $field_map['name'];
+					$field = $field_map['field'];
 
-				$settings['fields'][ $k ]['field_map'][ $kf ] = $field;
+					$field_value        = $this->get_setting( $name );
+					$custom_field_value = $this->get_setting( sprintf( $custom_value_name, $name ) );
+
+					$field_required = false;
+
+					if ( isset( $field['options']['required'] ) && 1 === (int) $field['options']['required'] ) {
+						$field_required = true;
+					}
+
+					$container_class = ' hidden';
+
+					if ( '_pods_custom' === $field_value ) {
+						$container_class = '';
+					}
+
+					$field_map = array(
+						'name'         => $name,
+						'label'        => $field['label'],
+						'required'     => $field_required,
+						'after_select' => sprintf(
+							$after_select,
+							esc_attr( $container_class ),
+							esc_attr( $name ),
+							esc_attr( $name ),
+							esc_attr( $custom_field_value ),
+							esc_attr( $name )
+						),
+					);
+				}
+
+				// Add field names to labels
+				$field_map['label'] = sprintf(
+					'%s<br /><small>(%s)</small>',
+					esc_html( $field_map['label'] ),
+					esc_html( $field_map['name'] )
+				);
+
+				$settings['fields'][ $k ]['field_map'][ $kf ] = $field_map;
 			}
 		}
 
@@ -188,7 +297,22 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			),
 		);
 
+		$addon_slug = $this->get_slug();
+
+		add_filter( "gform_{$addon_slug}_field_map_choices", array( $this, 'add_field_map_choices' ) );
+
 		return array( $settings );
+
+	}
+
+	public function add_field_map_choices( $choices ) {
+
+		$choices[] = array(
+			'value' => '_pods_custom',
+			'label' => __( 'Custom override value', 'pods-gravity-forms' ),
+		);
+
+		return $choices;
 
 	}
 
@@ -291,10 +415,10 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				continue;
 			}
 
-			$pod_fields    = $this->get_field_map_fields( $feed, 'pod_fields' );
-			$object_fields = $this->get_field_map_fields( $feed, 'wp_object_fields' );
+			$pod_fields    = $this->get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
+			$object_fields = $this->get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
 
-			$pod_fields = array_flip( array_merge( $pod_fields, $object_fields ) );
+			$pod_fields = array_merge( $pod_fields, $object_fields );
 
 			$pod_name = $feed['meta']['pod'];
 
@@ -347,10 +471,10 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				// Block new post being created in GF
 				add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
 
-				$pod_fields    = $this->get_field_map_fields( $feed, 'pod_fields' );
-				$object_fields = $this->get_field_map_fields( $feed, 'wp_object_fields' );
+				$pod_fields    = $this->get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
+				$object_fields = $this->get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
 
-				$fields = array_flip( array_merge( $pod_fields, $object_fields ) );
+				$fields = array_merge( $pod_fields, $object_fields );
 
 				$options = array(
 					// array ( 'gf_field_id' => 'pod_field_name' )
@@ -379,15 +503,57 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 	}
 
-	public static function get_field_map_fields( $feed, $field_name ) {
+	/**
+	 * Get field map field values with support for custom override values.
+	 *
+	 * This differs from get_field_map_fields() in that it returns an array
+	 * that is already formatted for Pods GF field mapping usage.
+	 *
+	 * @param array  $feed
+	 * @param string $field_name
+	 *
+	 * @return array
+	 */
+	public static function get_field_map_fields_with_custom_values( $feed, $field_name ) {
+
+		$prefix        = $field_name . '_';
+		$custom_prefix = $prefix . 'override_custom_';
 
 		$fields = array();
-		$prefix = "{$field_name}_";
 
-		foreach ( $feed['meta'] as $name => $value ) {
-			if ( ( strpos( $name, $prefix ) === 0 ) && ! empty( $value ) ) {
-				$name            = str_replace( $prefix, '', $name );
-				$fields[ $name ] = $value;
+		foreach ( $feed['meta'] as $config_field_name => $value ) {
+			$config_field_name = (string) $config_field_name;
+
+			if ( 0 === strpos( $config_field_name, $custom_prefix ) ) {
+				// Skip override values
+				continue;
+			} elseif ( 0 === strpos( $config_field_name, $prefix ) ) {
+				// Get field name
+				$field_name = mb_substr( $config_field_name, 0, strlen( $prefix ) );
+
+				// Mapping value is the GF field ID
+				$gf_field = trim( $value );
+
+				// Mapping value
+				$mapping_value = $field_name;
+
+				// Support override value settings
+				if ( ! empty( $feed['meta'][ $custom_prefix ] ) ) {
+					$value = trim( $feed['meta'][ $custom_prefix ] );
+
+					if ( ! empty( $value ) ) {
+						$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
+
+						$mapping_value = array(
+							'field' => $field_name,
+							'value' => $value,
+						);
+					}
+				}
+
+				if ( ! empty( $gf_field ) ) {
+					$fields[ $gf_field ] = $mapping_value;
+				}
 			}
 		}
 
