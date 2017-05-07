@@ -484,17 +484,40 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					'gf_to_pods_priority' => 'submission',
 				);
 
-				$edit_id = (int) apply_filters( 'pods_gf_addon_edit_id', 0, $feed['meta']['pod'], $form['id'], $feed, $form, $options );
+				// Setup pod object
+				$pod = pods( $feed['meta']['pod'] );
+
+				$edit_id = 0;
+
+				/**
+				 * Allow filtering of which item ID to use when editing (default none, always add new items)
+				 *
+				 * @param int    $edit_id  Edit ID
+				 * @param string $pod_name Pod name
+				 * @param int    $form_id  GF Form ID
+				 * @param array  $feed     GF Form feed array
+				 * @param array  $form     GF Form array
+				 * @param array  $options  Pods GF options
+				 * @param Pods   $pod      Pods object
+				 */
+				$edit_id = (int) apply_filters( 'pods_gf_addon_edit_id', $edit_id, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
 
 				if ( 0 < $edit_id ) {
 					$options['edit'] = true;
 
-					// Setup pod object
-					$pod = pods( $feed['meta']['pod'], $edit_id );
-				} else {
-					$pod = pods( $feed['meta']['pod'] );
+					$pod->fetch( $edit_id );
 				}
 
+				/**
+				 * Allow filtering of Pods GF options to set custom settings apart from Pods GF add-on options
+				 *
+				 * @param array  $options  Pods GF options
+				 * @param string $pod_name Pod name
+				 * @param int    $form_id  GF Form ID
+				 * @param array  $feed     GF Form feed array
+				 * @param array  $form     GF Form array
+				 * @param Pods   $pod      Pods object
+				 */
 				$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
 
 				pods_gf( $pod, $form['id'], $options );
