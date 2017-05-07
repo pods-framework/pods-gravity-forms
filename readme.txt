@@ -3,8 +3,8 @@ Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
 Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.0
-Tested up to: 4.6
-Stable tag: 1.2
+Tested up to: 4.8
+Stable tag: 1.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,16 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 9. Form entries page showing Pod ID
 
 == Changelog ==
+
+= 1.3 - May 7th, 2017 =
+
+* Added: Field names to field mapping screen
+* Added: Ability to define a custom override value for each field mapping
+* Added: Ability to define custom 'content' in Pods GF UI custom actions instead of including a form
+* Fixed: Ensure default pods-gf-ui shortcode is only added/run on content within the loop (props @jamesgol)
+* Fixed: Empty id used for Pods GF UI
+* Fixed: Callback handling for Pods GF UI
+* Fixed: Default Post Author mapping
 
 = 1.2 - October 4th, 2016 =
 
