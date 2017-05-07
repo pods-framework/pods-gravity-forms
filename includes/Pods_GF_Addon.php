@@ -191,7 +191,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			}
 		}
 
-		if ( 'post_type' == $pod_type ) {
+		if ( 'post_type' === $pod_type ) {
 			$wp_object_fields[] = array(
 				'name' => '_thumbnail_id',
 				'label' => __( 'Featured Image', 'pods-gravity-forms' ),
@@ -297,6 +297,34 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			),
 		);
 
+		if ( 'user' === $pod_type ) {
+			$settings['fields'][] = array(
+				'name'    => 'enable_current_user',
+				'label'   => __( 'Enable editing with this form using logged in user', 'pods-gravity-forms' ),
+				'type'    => 'checkbox',
+				'choices' => array(
+					array(
+						'value' => 1,
+						'label' => __( 'Enable editing with this form using the logged in user data', 'pods-gravity-forms' ),
+						'name'  => 'enable_current_user',
+					),
+				),
+			);
+		} elseif ( 'post_type' === $pod_type ) {
+			$settings['fields'][] = array(
+				'name'    => 'enable_current_post',
+				'label'   => __( 'Enable editing with this form using current post', 'pods-gravity-forms' ),
+				'type'    => 'checkbox',
+				'choices' => array(
+					array(
+						'value' => 1,
+						'label' => __( 'Enable editing with this form using the current post ID (only works on singular template)', 'pods-gravity-forms' ),
+						'name'  => 'enable_current_post',
+					),
+				),
+			);
+		}
+
 		$addon_slug = $this->get_slug();
 
 		add_filter( "gform_{$addon_slug}_field_map_choices", array( $this, 'add_field_map_choices' ) );
@@ -349,7 +377,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 	public function populate_related_items_settings( $position, $form_id ) {
 
-	    if ( -1 == $position ) {
+	    if ( -1 === $position ) {
 	        ?>
 	        <li class="pods_populate_related_items_setting field_setting">
                 <?php _e( 'Pods', 'pods-gravity-forms' ); ?><br />
@@ -488,6 +516,18 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				$pod = pods( $feed['meta']['pod'] );
 
 				$edit_id = 0;
+
+				if ( 'user' === $pod->pod_data['type'] && is_user_logged_in() ) {
+					// Support user data editing
+					if ( 1 === (int) pods_v( 'enable_current_user', $feed['meta'], 0 ) ) {
+						$edit_id = get_current_user_id();
+					}
+				} elseif ( 'post_type' === $pod->pod_data['type'] && is_singular( $pod->pod ) ) {
+					// Support post data editing
+					if ( 1 === (int) pods_v( 'enable_current_post', $feed['meta'], 0 ) ) {
+						$edit_id = get_the_ID();
+					}
+				}
 
 				/**
 				 * Allow filtering of which item ID to use when editing (default none, always add new items)

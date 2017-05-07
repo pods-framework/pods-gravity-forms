@@ -38,6 +38,8 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 
 * Added: Field names to field mapping screen
 * Added: Ability to define a custom override value for each field mapping
+* Added: Ability to enable editing of user data using current logged in user ID (only for User pod feeds)
+* Added: Ability to enable editing of post data using current post ID on singular templates (only for Post type pod feeds)
 * Added: Ability to define custom 'content' in Pods GF UI custom actions instead of including a form
 * Fixed: Ensure default pods-gf-ui shortcode is only added/run on content within the loop (props @jamesgol)
 * Fixed: Empty id used for Pods GF UI
