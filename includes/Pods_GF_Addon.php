@@ -418,12 +418,14 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 	}
 
-	public function init_frontend() {
+	public function init() {
 
-		parent::init_frontend();
+		parent::init();
 
-		add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ) );
-		add_action( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
+		if ( $this->is_gravityforms_supported() ) {
+			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ) );
+			add_action( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
+		}
 
 	}
 
