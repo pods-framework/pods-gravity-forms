@@ -424,7 +424,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		if ( $this->is_gravityforms_supported() ) {
 			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ) );
-			add_action( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
+			add_filter( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
 		}
 
 	}
@@ -565,6 +565,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				pods_gf( $pod, $form['id'], $options );
 			}
 		}
+		
+		return $form;
 
 	}
 
