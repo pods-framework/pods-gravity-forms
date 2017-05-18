@@ -34,8 +34,9 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 
 == Changelog ==
 
-= 1.3 - May 7th, 2017 =
+= 1.3 - May X, 2017 =
 
+* Added: Support for feeds with submissions from the forms embedded on the dashboard and in the admin area (props @richardW8k)
 * Added: Field names to field mapping screen
 * Added: Ability to define a custom override value for each field mapping
 * Added: Ability to enable editing of user data using current logged in user ID (only for User pod feeds)
