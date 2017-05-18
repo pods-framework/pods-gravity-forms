@@ -1482,16 +1482,19 @@ class Pods_GF {
 
 			$field_options = array_merge(
 				array(
-					'field' => $field_options,
-					'value' => null
+					'gf_field' => $field,
+					'field'    => $field_options,
+					'value'    => null,
 				),
 				( is_array( $field_options ) ? $field_options : array() )
 			);
 
 			// No field set
-			if ( empty( $field_options['field'] ) || is_array( $field_options['field'] ) ) {
+			if ( empty( $field_options['gf_field'] ) || empty( $field_options['field'] ) || is_array( $field_options['field'] ) ) {
 				continue;
 			}
+
+			$field = $field_options['gf_field'];
 
 			// Get GF field object
 			$gf_field = null;

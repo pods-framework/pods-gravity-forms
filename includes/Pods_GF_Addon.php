@@ -438,7 +438,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		}
 
 		$pod_fields = array();
-		$pod_name = '';
+		$pod_name   = '';
 
 		foreach ( $feeds as $feed ) {
 			if ( 1 !== (int) $feed['is_active'] ) {
@@ -466,8 +466,20 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			 * @var GF_Field $gf_field
 			 */
 			foreach ( $form['fields'] as $gf_field ) {
-				if ( ! empty( $gf_field->pods_populate_related_items ) && ! empty( $pod_fields[ (string) $gf_field->id ] ) ) {
-					$data = $pod_obj->fields( $pod_fields[ (string) $gf_field->id ], 'data' );
+				if ( ! empty( $gf_field->pods_populate_related_items ) ) {
+					$pod_field = null;
+
+					foreach ( $pod_fields as $k => $field_options ) {
+						if ( (string) $gf_field->id === (string) $field_options['gf_field'] ) {
+							$pod_field = $field_options['field'];
+						}
+					}
+
+					if ( empty( $pod_field ) ) {
+						continue;
+					}
+
+					$data = $pod_obj->fields( $pod_field, 'data' );
 
 					if ( empty( $data ) ) {
 						continue;
@@ -477,7 +489,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						'options' => $data,
 					);
 
-					Pods_GF::dynamic_select( $form['id'], $gf_field->id, $options );
+					Pods_GF::dynamic_select( $form['id'], (string) $gf_field->id, $options );
 				}
 			}
 		}
@@ -565,7 +577,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				pods_gf( $pod, $form['id'], $options );
 			}
 		}
-		
+
 		return $form;
 
 	}
@@ -596,21 +608,25 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				continue;
 			} elseif ( 0 === strpos( $config_field_name, $prefix ) ) {
 				// Get field name
-				$field_name = mb_substr( $config_field_name, 0, strlen( $prefix ) );
+				$field_name = substr( $config_field_name, strlen( $prefix ) );
 
 				// Mapping value is the GF field ID
 				$gf_field = trim( $value );
 
 				// Mapping value
-				$mapping_value = $field_name;
+				$mapping_value = array(
+					'gf_field' => $gf_field,
+					'field'    => $field_name,
+				);
 
 				// Support override value settings
 				if ( '_pods_custom' === $gf_field ) {
 					$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
 
 					$mapping_value = array(
-						'field' => $field_name,
-						'value' => '',
+						'gf_field' => $gf_field,
+						'field'    => $field_name,
+						'value'    => '',
 					);
 
 					if ( ! empty( $feed['meta'][ $custom_prefix ] ) ) {
@@ -623,7 +639,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				}
 
 				if ( ! empty( $gf_field ) ) {
-					$fields[ $gf_field ] = $mapping_value;
+					$fields[] = $mapping_value;
 				}
 			}
 		}
