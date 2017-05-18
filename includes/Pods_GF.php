@@ -2959,7 +2959,11 @@ class Pods_GF {
 		}
 
 		if ( null === $value ) {
-			$value = GFFormsModel::get_field_value( $gf_field );
+			if ( ! empty( $options['entry'] ) ) {
+				$value = rgar( $options['entry'], $gf_field->id );
+			} else {
+				$value = GFFormsModel::get_field_value( $gf_field );
+			}
 		}
 
 		if ( in_array( $gf_field->type, array( 'post_category', 'post_title', 'post_content', 'post_excerpt', 'post_tags', 'post_custom_field', 'post_image' ) ) ) {
