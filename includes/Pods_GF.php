@@ -1504,13 +1504,27 @@ class Pods_GF {
 			 */
 			if ( isset( $gf_fields[ (string) $field ] ) ) {
 				$gf_field = $gf_fields[ (string) $field ];
+			} elseif ( false !== strpos( $field, '.' ) ) {
+				$gf_field_expanded = explode( '.', $field );
+
+				if ( isset( $gf_fields[ (string) $gf_field_expanded[0] ] ) ) {
+					$gf_field = $gf_fields[ (string) $gf_field_expanded[0] ];
+				}
 			}
 
 			// GF input field
 			$value = null;
 
 			if ( $gf_field ) {
-				$value = self::get_gf_field_value( null, $gf_field, $form, $options, true );
+				$gf_params = array(
+					'gf_field'     => $gf_field,
+					'field'        => $field,
+					'form'         => $form,
+					'options'      => $options,
+					'handle_files' => true,
+				);
+
+				$value = self::get_gf_field_value( $value, $gf_params );
 			}
 
 			// Manual value override
@@ -2931,15 +2945,29 @@ class Pods_GF {
 	/**
 	 * Get GF field value
 	 *
-	 * @param mixed    $value
-	 * @param array|GF_Field $gf_field
-	 * @param array    $form
-	 * @param array    $options
-	 * @param bool     $handle_files
+	 * @param mixed $value
+	 * @param array $params
 	 *
 	 * @return mixed
 	 */
-	public static function get_gf_field_value( $value, $gf_field, $form, $options, $handle_files = false ) {
+	public static function get_gf_field_value( $value, $params ) {
+
+		$params = array_merge(
+			array(
+				'gf_field'     => null,
+				'field'        => null,
+				'form'         => null,
+				'options'      => null,
+				'handle_files' => false,
+			),
+			$params
+		);
+
+		$gf_field     = $params['gf_field'];
+		$full_field   = $params['field'];
+		$form         = $params['form'];
+		$options      = $params['options'];
+		$handle_files = $params['handle_files'];
 
 		if ( is_array( $gf_field ) ) {
 			/**
@@ -2950,19 +2978,31 @@ class Pods_GF {
 			$gf_fields = array();
 
 			foreach ( $fields as $field ) {
-				if ( $field->id == $gf_field['id'] ) {
+				if ( (string) $field->id === (string) $gf_field['id'] ) {
 					$gf_field = $field;
 
 					break;
 				}
 			}
+
+			if ( is_array( $gf_field ) ) {
+				return $value;
+			}
+		}
+
+		if ( empty( $full_field ) ) {
+			$full_field = $gf_field->id;
 		}
 
 		if ( null === $value ) {
 			if ( ! empty( $options['entry'] ) ) {
-				$value = rgar( $options['entry'], $gf_field->id );
+				$value = rgar( $options['entry'], $full_field );
 			} else {
 				$value = GFFormsModel::get_field_value( $gf_field );
+
+				if ( is_array( $value ) && ! empty( $gf_field->inputs ) && isset( $value[ $full_field ] ) ) {
+					$value = $value[ $full_field ];
+				}
 			}
 		}
 
@@ -2971,13 +3011,21 @@ class Pods_GF {
 			add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
 		}
 
-		if ( in_array( $gf_field->type, array( 'name' ) ) ) {
+		if ( in_array( $gf_field->type, array( 'name' ), true ) && is_array( $value ) ) {
 			$value = implode( ' ', array_filter( $value ) );
-		} elseif ( in_array( $gf_field->type, array( 'address' ) ) ) {
+		} elseif ( in_array( $gf_field->type, array( 'checkbox' ), true ) && is_array( $value ) ) {
+			foreach ( $value as $k => $v ) {
+				if ( '' === $v ) {
+					unset( $value[ $k ] );
+				}
+			}
+
+			$value = array_values( $value );
+		} elseif ( in_array( $gf_field->type, array( 'address' ), true ) && is_array( $value ) ) {
 			$value = implode( ', ', array_filter( $value ) );
-		} elseif ( in_array( $gf_field->type, array( 'time' ) ) ) {
+		} elseif ( in_array( $gf_field->type, array( 'time' ), true ) ) {
 			$value = sprintf( '%d:%d %s', $value[0], $value[1], $value[2] );
-		} elseif ( $handle_files && in_array( $gf_field->type, array( 'fileupload', 'post_image' ) ) ) {
+		} elseif ( $handle_files && in_array( $gf_field->type, array( 'fileupload', 'post_image' ), true ) ) {
 			$value = null;
 
 			// Form already submitted
@@ -3085,20 +3133,43 @@ class Pods_GF {
 
 		$field_options = array();
 
+		$field_full = null;
+
 		foreach ( $this->options['fields'] as $gf_field => $field_data ) {
 			if ( is_array( $field_data ) && isset( $field_data['gf_field'] ) ) {
 				$gf_field = $field_data['gf_field'];
 			}
 
+			/**
+			 * @var $gf_field GF_Field
+			 */
 			if ( (string) $gf_field === (string) $field['id'] ) {
+				$field_full = $gf_field;
+
 				$field_options = $field_data;
+			} elseif ( false !== strpos( $gf_field, '.' ) ) {
+				$field_full = $gf_field;
+
+				$gf_field_expanded = explode( '.', $gf_field );
+
+				if ( (string) $gf_field_expanded[0] === (string) $field['id'] ) {
+					$field_options = $field_data;
+				}
 			}
+		}
+
+		if ( empty( $field_options ) ) {
+			return $validation_result;
 		}
 
 		if ( ! is_array( $field_options ) ) {
 			$field_options = array(
 				'field' => $field_options,
 			);
+
+			if ( ! empty( $field_full ) ) {
+				$field_full = $field_options;
+			}
 		}
 
 		$validate = true;
@@ -3115,7 +3186,14 @@ class Pods_GF {
 
 				$pods_api = pods_api();
 
-				$gf_value = self::get_gf_field_value( $value, $field, $form, $this->options );
+				$gf_params = array(
+					'gf_field' => $field,
+					'field'    => $field_full,
+					'form'     => $form,
+					'options'  => $this->options,
+				);
+
+				$gf_value = self::get_gf_field_value( $value, $gf_params );
 
 				$validate = $pods_api->handle_field_validation( $gf_value, $field_options['field'], $this->pod->pod_data['object_fields'], $this->pod->pod_data['fields'], $this->pod, null );
 			}
