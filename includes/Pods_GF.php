@@ -3085,16 +3085,19 @@ class Pods_GF {
 
 		$field_options = array();
 
-		if ( isset( $this->options['fields'][(string) $field['id']] ) ) {
-			$field_options = $this->options['fields'][(string) $field['id']];
-		}
-		elseif ( isset( $this->options['fields'][(int) $field['id']] ) ) {
-			$field_options = $this->options['fields'][(int) $field['id']];
+		foreach ( $this->options['fields'] as $gf_field => $field_data ) {
+			if ( is_array( $field_data ) && isset( $field_data['gf_field'] ) ) {
+				$gf_field = $field_data['gf_field'];
+			}
+
+			if ( (string) $gf_field === (string) $field['id'] ) {
+				$field_options = $field_data;
+			}
 		}
 
 		if ( ! is_array( $field_options ) ) {
 			$field_options = array(
-				'field' => $field_options
+				'field' => $field_options,
 			);
 		}
 
