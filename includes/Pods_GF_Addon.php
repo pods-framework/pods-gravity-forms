@@ -601,16 +601,20 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				$mapping_value = $field_name;
 
 				// Support override value settings
-				if ( ! empty( $feed['meta'][ $custom_prefix ] ) ) {
-					$value = trim( $feed['meta'][ $custom_prefix ] );
+				if ( '_pods_custom' === $gf_field ) {
+					$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
 
-					if ( ! empty( $value ) ) {
-						$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
+					$mapping_value = array(
+						'field' => $field_name,
+						'value' => '',
+					);
 
-						$mapping_value = array(
-							'field' => $field_name,
-							'value' => $value,
-						);
+					if ( ! empty( $feed['meta'][ $custom_prefix ] ) ) {
+						$value = trim( $feed['meta'][ $custom_prefix ] );
+
+						if ( ! empty( $value ) ) {
+							$mapping_value['value'] = $value;
+						}
 					}
 				}
 
