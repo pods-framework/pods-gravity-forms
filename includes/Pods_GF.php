@@ -3028,72 +3028,210 @@ class Pods_GF {
 		} elseif ( $handle_files && in_array( $gf_field->type, array( 'fileupload', 'post_image' ), true ) ) {
 			$value = null;
 
+			$attachments = array();
+
+			// The following uploader code was from David Smith from GF support
+			$input_name = sprintf( 'input_%s', $gf_field->id );
+
 			// Form already submitted
-			if ( ! empty( $options['gf_to_pods_priority'] ) && 'submission' == $options['gf_to_pods_priority'] ) {
-				$attachment_url = '';
+			if ( ! empty( $options['gf_to_pods_priority'] ) && 'submission' === $options['gf_to_pods_priority'] ) {
+				if ( empty( $attachments ) ) {
+					if ( ! empty( $options['entry'] ) ) {
+						$file_value = rgar( $options['entry'], $gf_field->id );
+						$file_value = trim( $file_value, '|' );
 
-				if ( ! empty( $options['entry'] ) && isset( $options['entry'][ $gf_field->id ] ) ) {
-					$attachment_url = $options['entry'][ $gf_field->id ];
-				} else {
-					$uploaded_file = null;
+						if ( ! empty( $file_value ) ) {
+							$file_urls = array(
+								$file_value
+							);
 
-					if ( ! empty( GFFormsModel::$uploaded_files[ $form['id'] ][ 'input_' . $gf_field->id ] ) ) {
-						$uploaded_file = GFFormsModel::$uploaded_files[ $form['id'] ][ 'input_' . $gf_field->id ];
-					}
+							if ( ! empty( $gf_field->multipleFiles ) ) {
+								$file_urls = json_decode( $file_value );
+							}
 
-					if ( ! empty( $uploaded_file ) ) {
-						$filepath = GFFormsModel::get_file_upload_path( $form['id'], $uploaded_file );
+							if ( is_array( $file_urls ) ) {
+								foreach ( $file_urls as $file_url ) {
+									$file_path = GFFormsModel::get_physical_file_path( $file_url );
 
-						if ( isset( $filepath['url'] ) ) {
-							$attachment_url = $filepath['url'];
+									if ( $file_path ) {
+										$attachments[] = $file_path;
+									}
+								}
+							}
 						}
 					}
 				}
 
-				if ( ! empty( $attachment_url ) ) {
-					$attachments = explode( '|', $attachment_url );
+				if ( empty( $attachments ) ) {
+					$uploaded_files = array();
 
-					$value = array();
-
-					foreach ( $attachments as $attachment ) {
-						if ( empty( $attachment ) || ':' == $attachment ) {
-							continue;
-						}
-
-						$attachment_id = pods_attachment_import( $attachment );
-
-						if ( $attachment_id ) {
-							$value[] = $attachment_id;
-						}
+					if ( ! empty( GFFormsModel::$uploaded_files[ $form['id'] ][ $input_name ] ) ) {
+						$uploaded_files = (array) GFFormsModel::$uploaded_files[ $form['id'] ][ $input_name ];
 					}
 
-					$value_count = count( $value );
+					if ( ! empty( $uploaded_files ) ) {
+						foreach ( $uploaded_files as $uploaded_file_data ) {
+							if ( is_array( $uploaded_file_data ) ) {
+								if ( empty( $uploaded_file_data['temp_filename'] ) || empty( $uploaded_file_data['uploaded_filename'] ) ) {
+									continue;
+								}
 
-					if ( 1 == $value_count ) {
-						$value = current( $value );
-					} elseif ( 0 == $value_count ) {
-						$value = null;
+								$uploaded_file_data['tmp_name'] = $uploaded_file_data['temp_filename'];
+								$uploaded_file_data['name']     = $uploaded_file_data['uploaded_filename'];
+
+								$uploaded_file = $uploaded_file_data['uploaded_filename'];
+							} else {
+								$uploaded_file = $uploaded_file_data;
+							}
+
+							$filepath = GFFormsModel::get_file_upload_path( $form['id'], $uploaded_file );
+
+							if ( $filepath && ! empty( $filepath['url'] ) ) {
+								$attachments[] = $filepath['url'];
+							}
+						}
 					}
+				}
+			} else {
+				$is_save_and_continue = false;
+
+				if ( false !== rgget( 'gf_token' ) ) {
+					$is_save_and_continue = true;
+				}
+
+				$is_gform_submit_set_manually = false;
+
+				// hack alert: force retrieval of unique ID for filenames when continuing from saved entry
+				if ( $is_save_and_continue && ! isset( $_POST['gform_submit'] ) ) {
+					$is_gform_submit_set_manually = true;
+
+					$_POST['gform_submit'] = $form['id'];
+				}
+
+				$uploaded_files = array();
+
+				$file_urls = array();
+
+				if ( isset( GFFormsModel::$uploaded_files[ $form['id'] ][ $input_name ] ) ) {
+					$uploaded_files = GFFormsModel::$uploaded_files[ $form['id'] ][ $input_name ];
+				}
+
+				$file_info = $uploaded_files;
+
+				if ( ! empty( $gf_field->multipleFiles ) || ! empty( $file_info ) ) {
+					foreach ( $file_info as $file_info_data ) {
+						$temp_file     = '';
+						$uploaded_file = '';
+
+						if ( is_array( $file_info_data ) ) {
+							$temp_file     = $file_info_data['temp_filename'];
+							$uploaded_file = $file_info_data['uploaded_filename'];
+						} else {
+							$uploaded_file = $file_info_data;
+						}
+
+						if ( $uploaded_file ) {
+							$filepath = GFFormsModel::get_file_upload_path( $form['id'], $uploaded_file );
+
+							if ( ! $filepath && empty( $filepath['url'] ) ) {
+								continue;
+							}
+
+							if ( in_array( $filepath['url'], $file_urls, true ) ) {
+								continue;
+							}
+
+							if ( $temp_file && $filepath && ! empty( $filepath['path'] ) && ! file_exists( $filepath['path'] ) ) {
+								$file_urls[] = $filepath['url'];
+
+								// @todo Support setting the file name so it's not the tmp name in pods_attachment_import
+
+								$filepath = array(
+									'path' => GFFormsModel::get_upload_path( $form['id'] ) . '/tmp/' . $temp_file,
+									'url'  => GFFormsModel::get_upload_url( $form['id'] ) . '/tmp/' . $temp_file,
+								);
+							}
+
+							$attachments[] = $filepath['url'];
+						}
+					}
+				} else {
+					$file_info_data = GFFormsModel::get_temp_filename( $form['id'], $input_name );
+
+					if ( $file_info_data ) {
+						$temp_file     = $file_info_data['temp_filename'];
+						$uploaded_file = $file_info_data['uploaded_filename'];
+
+						$filepath = GFFormsModel::get_file_upload_path( $form['id'], $uploaded_file );
+
+						if ( $filepath && ! empty( $filepath['url'] ) ) {
+							if ( $temp_file && ! empty( $filepath['path'] ) && ! file_exists( $filepath['path'] ) ) {
+								// @todo Support setting the file name so it's not the tmp name in pods_attachment_import
+
+								$filepath = array(
+									'path' => GFFormsModel::get_upload_path( $form['id'] ) . '/tmp/' . $temp_file,
+									'url'  => GFFormsModel::get_upload_url( $form['id'] ) . '/tmp/' . $temp_file,
+								);
+
+								if ( file_exists( $filepath['path'] ) ) {
+									if ( ! in_array( $filepath['url'], $attachments, true ) ) {
+										$attachments[] = $filepath['url'];
+									}
+								} elseif ( ! empty( $_FILES[ $input_name ]['tmp_name'] ) && empty( $_FILES[ $input_name ]['error'] ) ) {
+								    require_once( ABSPATH . 'wp-admin/includes/file.php' );
+								    require_once( ABSPATH . 'wp-admin/includes/image.php' );
+								    require_once( ABSPATH . 'wp-admin/includes/media.php' );
+
+									$attachment_id = media_handle_upload( $input_name, 0 );
+
+									if ( is_wp_error( $attachment_id ) ) {
+										$errors = $attachment_id->get_error_messages();
+
+										//throw new Exception( 'File field #' . $gf_field->id . ' error - ' . implode( '</div><div>', $errors ) );
+									} else {
+										$attachments[] = (int) $attachment_id;
+									}
+								}
+							} elseif ( file_exists( $filepath['path'] ) && ! in_array( $filepath['url'], $attachments, true ) ) {
+								$attachments[] = $filepath['url'];
+							}
+						}
+					}
+				}
+
+				if ( $is_save_and_continue && ! isset( $_POST['gform_submit'] ) ) {
+					$_POST['gform_submit'] = $form['id'];
+				}
+
+				// hack alert: force retrieval of unique ID for filenames when continuing from saved entry
+				if ( isset( $is_gform_submit_set_manually ) ) {
+					unset( $_POST['gform_submit'] );
 				}
 			}
 
-			if ( null === $value && ! empty( $_FILES[ 'input_' . $gf_field->id ]['tmp_name'] ) && empty( $_FILES[ 'input_' . $gf_field->id ]['error'] ) ) {
-				require_once( ABSPATH . 'wp-admin/includes/file.php' );
-				require_once( ABSPATH . 'wp-admin/includes/image.php' );
-				require_once( ABSPATH . 'wp-admin/includes/media.php' );
+			if ( ! empty( $attachments ) ) {
+				$value = array();
 
-				$attachment_id = media_handle_upload( 'input_' . $gf_field->id, 0 );
-
-				if ( is_object( $attachment_id ) ) {
-					$errors = array();
-
-					foreach ( $attachment_id->errors['upload_error'] as $error_code => $error_message ) {
-						$errors[] = '[' . $error_code . '] ' . $error_message;
+				foreach ( $attachments as $attachment ) {
+					if ( empty( $attachment ) || ':' === $attachment ) {
+						continue;
 					}
 
-					//throw new Exception( 'File field #' . $gf_field->id . ' error - ' . implode( '</div><div>', $errors ) );
-				} else {
-					$value = $attachment_id;
+					if ( is_string( $attachment ) ) {
+						$attachment_id = pods_attachment_import( $attachment );
+					}
+
+					if ( 0 < $attachment_id ) {
+						$value[] = $attachment_id;
+					}
+				}
+
+				$value_count = count( $value );
+
+				if ( 1 == $value_count ) {
+					$value = current( $value );
+				} elseif ( 0 == $value_count ) {
+					$value = null;
 				}
 			}
 		}
