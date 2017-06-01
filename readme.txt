@@ -34,17 +34,19 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 
 == Changelog ==
 
-= 1.3 - May X, 2017 =
+= 1.3 - June X, 2017 =
 
 * Added: Rewrote the whole File Upload field mapping logic and tested against Single/Multi file fields (props @mika31, @copperleaf, @zanematthew, @zorog, @chriswagoner for testing help, props @spivurno for official GF support code help)
 * Added: Support for feeds with submissions from the forms embedded on the dashboard and in the admin area (props @richardW8k)
 * Added: Field names to field mapping screen
+* Added: When creating new feeds mapping will automatically be detected based on matching field labels
 * Added: Ability to define a custom override value for each field mapping
 * Added: Ability to enable editing of user data using current logged in user ID (only for User pod feeds)
 * Added: Ability to enable editing of post data using current post ID on singular templates (only for Post type pod feeds)
 * Added: Ability to define custom 'content' in Pods GF UI custom actions instead of including a form
 * Added: Ability to relate to GF forms using a relationship field (new option: Gravity Forms > Forms)
 * Added: Ability to map Address and List fields
+* Added: Ability to map Category and Post Tag fields
 * Added: Ability to map sub fields to a pod field (Name [First Name], Address [Street Line 1], etc)
 * Fixed: Ensure time fields get mapped correctly (props @mmarvin1)
 * Fixed: Ensure default pods-gf-ui shortcode is only added/run on content within the loop (props @jamesgol)
