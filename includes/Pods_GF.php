@@ -2995,7 +2995,7 @@ class Pods_GF {
 		}
 
 		if ( null === $value ) {
-			if ( ! empty( $options['entry'] ) ) {
+			if ( ! empty( $options['entry'] ) && isset( $options['entry'][ $full_field ] ) ) {
 				$value = rgar( $options['entry'], $full_field );
 			} else {
 				$value = GFFormsModel::get_field_value( $gf_field );
@@ -3011,9 +3011,15 @@ class Pods_GF {
 			add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
 		}
 
+		if ( in_array( $gf_field->type, array( 'post_category', 'post_tags' ), true ) && ! is_array( $value ) ) {
+			$value = array(
+				$value,
+			);
+		}
+
 		if ( in_array( $gf_field->type, array( 'name' ), true ) && is_array( $value ) ) {
 			$value = implode( ' ', array_filter( $value ) );
-		} elseif ( in_array( $gf_field->type, array( 'checkbox' ), true ) && is_array( $value ) ) {
+		} elseif ( in_array( $gf_field->type, array( 'checkbox', 'post_category', 'post_tags' ), true ) && is_array( $value ) ) {
 			foreach ( $value as $k => $v ) {
 				if ( '' === $v ) {
 					unset( $value[ $k ] );
@@ -3021,6 +3027,16 @@ class Pods_GF {
 			}
 
 			$value = array_values( $value );
+
+			if ( in_array( $gf_field->type, array( 'post_category', 'post_tags' ), true ) ) {
+				foreach ( $value as $k => $v ) {
+					$v = explode( ':', $v );
+
+					if ( 2 == count( $v ) ) {
+						$value[ $k ] = $v[1];
+					}
+				}
+			}
 		} elseif ( in_array( $gf_field->type, array( 'address' ), true ) && is_array( $value ) ) {
 			$value = implode( ', ', array_filter( $value ) );
 		} elseif ( in_array( $gf_field->type, array( 'time' ), true ) ) {
