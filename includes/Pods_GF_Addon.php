@@ -79,20 +79,32 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'type'    => 'text',
 			'name'    => 'feedName',
 			'tooltip' => __( 'Name for this feed', 'pods-gravity-forms' ),
-			'class'   => 'medium'
+			'class'   => 'medium',
 		);
 
-		$pods_api          = pods_api();
-		$all_pods          = $pods_api->load_pods( array( 'names' => true ) );
+		$gf_fields = array();
+
+		if ( 0 === (int) pods_v( 'fid' ) ) {
+			$gf_form = GFAPI::get_form( pods_v( 'id' ) );
+
+			if ( ! empty( $gf_form ) && ! empty( $gf_form['fields'] ) ) {
+				$gf_fields = $gf_form['fields'];
+			}
+		}
+
+		$pods_api = pods_api();
+		$all_pods = $pods_api->load_pods( array( 'names' => true ) );
+
 		$pod_choice_list   = array();
 		$pod_choice_list[] = array(
 			'label' => __( 'Select a Pod', 'pods-gravity-forms' ),
-			'value' => ''
+			'value' => '',
 		);
+
 		foreach ( $all_pods as $name => $label ) {
 			$pod_choice_list[] = array(
 				'label' => $label . ' (' . $name . ')',
-				'value' => $name
+				'value' => $name,
 			);
 		}
 
@@ -103,7 +115,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'tooltip'  => __( 'Select the pod', 'pods-gravity-forms' ),
 			'choices'  => $pod_choice_list,
 			'onchange' => "jQuery(this).parents('form').submit();",
-			'required' => true
+			'required' => true,
 		);
 
 		$selected_pod = $this->get_setting( 'pod' );
@@ -152,7 +164,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'label'      => __( 'Pod Fields', 'pods-gravity-forms' ),
 			'type'       => 'field_map',
 			'dependency' => 'pod',
-			'field_map'  => $pod_fields
+			'field_map'  => $pod_fields,
 		);
 
 		$ignore_object_fields = array(
@@ -179,7 +191,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		if ( ! empty( $pod_object ) ) {
 			foreach ( $pod_object['object_fields'] as $name => $field ) {
-				if ( in_array( $name, $ignore_object_fields ) ) {
+				if ( in_array( $name, $ignore_object_fields, true ) ) {
 					continue;
 				}
 
@@ -203,7 +215,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'label'      => __( 'WP Object Fields', 'pods-gravity-forms' ),
 			'type'       => 'field_map',
 			'dependency' => 'pod',
-			'field_map'  => $wp_object_fields
+			'field_map'  => $wp_object_fields,
 		);
 
 		$settings = array(
@@ -212,7 +224,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				$feed_field_name,
 				$feed_field_pod,
 				$feed_field_pod_fields,
-			)
+			),
 		);
 
 		if ( ! empty( $feed_field_wp_object_fields['field_map'] ) ) {
@@ -258,6 +270,12 @@ class Pods_GF_Addon extends GFFeedAddOn {
 							esc_attr( $name )
 						),
 					);
+
+					foreach ( $gf_fields as $gf_field ) {
+						if ( $field['label'] === $gf_field['label'] ) {
+							$field_map['default_value'] = $gf_field['id'];
+						}
+					}
 				}
 
 				// Add field names to labels
@@ -329,7 +347,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		add_filter( "gform_{$addon_slug}_field_map_choices", array( $this, 'add_field_map_choices' ) );
 
-		return array( $settings );
+		$setting_fields = array(
+			$settings,
+		);
+
+		return $setting_fields;
 
 	}
 
