@@ -36,10 +36,11 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 
 = 1.3 - June X, 2017 =
 
+* Added: When creating new feeds mapping will automatically be detected based on matching field labels
+* Added: New option to prepopulate the form fields with data based on the field mapping in the feed (same type of logic as edit)
 * Added: Rewrote the whole File Upload field mapping logic and tested against Single/Multi file fields (props @mika31, @copperleaf, @zanematthew, @zorog, @chriswagoner for testing help, props @spivurno for official GF support code help)
 * Added: Support for feeds with submissions from the forms embedded on the dashboard and in the admin area (props @richardW8k)
 * Added: Field names to field mapping screen
-* Added: When creating new feeds mapping will automatically be detected based on matching field labels
 * Added: Ability to define a custom override value for each field mapping
 * Added: Ability to enable editing of user data using current logged in user ID (only for User pod feeds)
 * Added: Ability to enable editing of post data using current post ID on singular templates (only for Post type pod feeds)

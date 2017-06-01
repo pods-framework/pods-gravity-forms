@@ -3015,6 +3015,12 @@ class Pods_GF {
 			$value = array(
 				$value,
 			);
+		} elseif ( ! empty( $gf_field->enableEnhancedUI ) && is_string( $value ) ) {
+			$json_test = json_decode( $value );
+
+			if ( is_array( $json_test ) ) {
+				$value = $json_test;
+			}
 		}
 
 		if ( in_array( $gf_field->type, array( 'name' ), true ) && is_array( $value ) ) {
@@ -3039,7 +3045,7 @@ class Pods_GF {
 			}
 		} elseif ( in_array( $gf_field->type, array( 'address' ), true ) && is_array( $value ) ) {
 			$value = implode( ', ', array_filter( $value ) );
-		} elseif ( in_array( $gf_field->type, array( 'time' ), true ) ) {
+		} elseif ( in_array( $gf_field->type, array( 'time' ), true ) && is_array( $value ) ) {
 			$value = sprintf( '%d:%d %s', $value[0], $value[1], $value[2] );
 		} elseif ( $handle_files && in_array( $gf_field->type, array( 'fileupload', 'post_image' ), true ) ) {
 			$value = null;
