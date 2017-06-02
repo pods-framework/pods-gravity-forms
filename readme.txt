@@ -34,7 +34,7 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 
 == Changelog ==
 
-= 1.3 - June X, 2017 =
+= 1.3 - June 2nd, 2017 =
 
 * Added: When creating new feeds mapping will automatically be detected based on matching field labels
 * Added: New option to prepopulate the form fields with data based on the field mapping in the feed (same type of logic as edit). Limitations with certain field types, please submit issues with problems you find here.
