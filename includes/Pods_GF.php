@@ -785,7 +785,7 @@ class Pods_GF {
 				);
 			}
 
-			if ( 1 == pods_v( 'isSelected', $choice ) || '' === $current_value || ( ! isset( $choice['isSelected'] ) && (string) $choice['value'] === (string) $current_value ) ) {
+			if ( 1 === (int) pods_v( 'isSelected', $choice ) || '' === $current_value || ( ! isset( $choice['isSelected'] ) && (string) $choice['value'] === (string) $current_value ) ) {
 				$selected               = $choice;
 				$selected['isSelected'] = true;
 
@@ -1374,11 +1374,13 @@ class Pods_GF {
 			$save_action = $this->options['save_action'];
 		}
 
-		if ( empty( $id ) || ! in_array( $save_action, array( 'add', 'save', 'bypass' ) ) ) {
-			$save_action = 'add';
+		if ( 'bypass' !== $save_action ) {
+			if ( empty( $id ) || ! in_array( $save_action, array( 'add', 'save' ), true ) ) {
+				$save_action = 'add';
+			}
 		}
 
-		if ( 'bypass' == $save_action ) {
+		if ( 'bypass' === $save_action ) {
 			return $id;
 		}
 
@@ -1388,7 +1390,7 @@ class Pods_GF {
 			$data // Data
 		);
 
-		if ( 'save' == $save_action ) {
+		if ( 'save' === $save_action ) {
 			$args[1] = null; // Value
 			$args[2] = $id; // ID
 		}
@@ -1404,7 +1406,7 @@ class Pods_GF {
 				unset( $data[ $this->pod->data->field_id ] );
 			}
 
-			if ( 'post_type' == $this->pod->pod_data['type'] ) {
+			if ( 'post_type' === $this->pod->pod_data['type'] ) {
 				if ( ! empty( $form['postStatus'] ) && empty( $args[0]['post_status'] ) ) {
 					$args[0]['post_status'] = $form['postStatus'];
 				}
@@ -1801,7 +1803,21 @@ class Pods_GF {
 			$choices = false;
 
 			if ( is_array( $dynamic_select['options'] ) && ! empty( $dynamic_select['options'] ) ) {
-				$choices = self::build_choices( $dynamic_select['options'] );
+				$current_value = '';
+
+				if ( ! empty( $_POST[ 'input_' . $field ] ) ) {
+					$current_value = $_POST[ 'input_' . $field ];
+				} elseif ( ! empty( $_GET[ 'pods_gf_field_' . $field ] ) ) {
+					$current_value = $_GET[ 'pods_gf_field_' . $field ];
+				}
+
+				$default_value = '';
+
+				if ( null !== $dynamic_select['default'] ) {
+					$default_value = $dynamic_select['default'];
+				}
+
+				$choices = self::build_choices( $dynamic_select['options'], $current_value, $default_value );
 			}
 			elseif ( ! empty( $dynamic_select['pod'] ) ) {
 				if ( ! is_object( $dynamic_select['pod'] ) ) {
@@ -2052,14 +2068,34 @@ class Pods_GF {
 				$value = $value_override;
 
 				if ( is_object( $pod ) ) {
-					$value_override = $pod->field( $field_options['field'] );
+					$pod_field_type = $pod->fields( $field_options['field'], 'type' );
+
+					if ( $pod_field_type ) {
+						$value_override = $pod->field( $field_options['field'] );
+
+						$date_time_types = array(
+							'date',
+							'datetime',
+							'time',
+						);
+
+						$empty_values = array(
+							'0000-00-00',
+							'0000-00-00 00:00:00',
+							'00:00:00',
+						);
+
+						if ( in_array( $pod_field_type, $date_time_types ) && in_array( $value_override, $empty_values, true ) ) {
+							$value_override = '';
+						}
+					}
 				}
 				elseif ( ! empty( $pod ) ) {
 					if ( isset( $pod[$field_options['field']] ) ) {
 						$value_override = maybe_unserialize( $pod[$field_options['field']] );
 
 						if ( ! empty( $value_override ) ) {
-							if ( 'list' == $form['fields'][$field_key]['type'] ) {
+							if ( 'list' === $form['fields'][$field_key]['type'] ) {
 								$list = $value_override;
 
 								$value_override = array();
@@ -2068,7 +2104,7 @@ class Pods_GF {
 									$value_override = array_merge( $value_override, array_values( $list_row ) );
 								}
 							}
-							elseif ( 'checkbox' == $form['fields'][$field_key]['type'] ) {
+							elseif ( 'checkbox' === $form['fields'][$field_key]['type'] ) {
 								$values = $value_override;
 
 								$value_override = array();
@@ -2076,7 +2112,8 @@ class Pods_GF {
 								foreach ( $form['fields'][$field_key]['choices'] as $k => $choice ) {
 									$form['fields'][$field_key]['choices'][$k]['isSelected'] = false;
 
-									if ( ( ! is_array( $values ) && $choice['value'] == $values ) || ( is_array( $values ) && in_array( $choice['value'], $values ) ) ) {
+									if ( ( ! is_array( $values ) && (string) $choice['value'] === (string) $values )
+										|| ( is_array( $values ) && in_array( $choice['value'], $values, true ) ) ) {
 										$form['fields'][$field_key]['choices'][$k]['isSelected'] = true;
 
 										$value_override['input_' . $choice['id']] = $choice['value'];
@@ -2087,7 +2124,7 @@ class Pods_GF {
 							}
 						}
 					}
-					elseif ( null !== $field_key && 'checkbox' == $form['fields'][$field_key]['type'] ) {
+					elseif ( null !== $field_key && 'checkbox' === $form['fields'][$field_key]['type'] ) {
 						$value_override = array();
 
 						$items   = 0;
@@ -2096,13 +2133,13 @@ class Pods_GF {
 						$total_choices = count( $form['fields'][$field_key]['choices'] );
 
 						while ( $items < $total_choices ) {
-							if ( isset( $pod[$field_options['field'] . '.' . $counter] ) ) {
+							if ( isset( $pod[ $field_options['field'] . '.' . $counter ] ) ) {
 								$choice_counter = 1;
 
 								foreach ( $form['fields'][$field_key]['choices'] as $k => $choice ) {
 									$form['fields'][$field_key]['choices'][$k]['isSelected'] = false;
 
-									if ( $choice['value'] == $pod[$field_options['field'] . '.' . $counter] || $counter == $choice_counter ) {
+									if ( (string) $choice['value'] === (string) $pod[$field_options['field'] . '.' . $counter] || $counter == $choice_counter ) {
 										$form['fields'][$field_key]['choices'][$k]['isSelected'] = true;
 
 										$value_override['input_' . pods_v( 'id', $choice, $field_options['field'] . '.1', true )] = $choice['value'];
@@ -3025,6 +3062,8 @@ class Pods_GF {
 
 		if ( in_array( $gf_field->type, array( 'name' ), true ) && is_array( $value ) ) {
 			$value = implode( ' ', array_filter( $value ) );
+		} elseif ( in_array( $gf_field->type, array( 'email' ), true ) && is_array( $value ) ) {
+			$value = current( $value );
 		} elseif ( in_array( $gf_field->type, array( 'checkbox', 'post_category', 'post_tags' ), true ) && is_array( $value ) ) {
 			foreach ( $value as $k => $v ) {
 				if ( '' === $v ) {
@@ -3045,6 +3084,16 @@ class Pods_GF {
 			}
 		} elseif ( in_array( $gf_field->type, array( 'address' ), true ) && is_array( $value ) ) {
 			$value = implode( ', ', array_filter( $value ) );
+		} elseif ( in_array( $gf_field->type, array( 'date' ), true ) && is_array( $value ) && ! empty( $gf_field->dateType ) && in_array( $gf_field->dateType, array( 'datefield', 'datedropdown' ), true )) {
+			if ( $value[1] < 10 ) {
+				$value[1] = '0' . $value[1];
+			}
+
+			if ( $value[2] < 10 ) {
+				$value[2] = '0' . $value[2];
+			}
+
+			$value = sprintf( '%d-%s-%s', $value[0], $value[1], $value[2] );
 		} elseif ( in_array( $gf_field->type, array( 'time' ), true ) && is_array( $value ) ) {
 			$value = sprintf( '%d:%d %s', $value[0], $value[1], $value[2] );
 		} elseif ( $handle_files && in_array( $gf_field->type, array( 'fileupload', 'post_image' ), true ) ) {
@@ -3241,6 +3290,8 @@ class Pods_GF {
 
 					if ( is_string( $attachment ) ) {
 						$attachment_id = pods_attachment_import( $attachment );
+					} else {
+						$attachment_id = (int) $attachment;
 					}
 
 					if ( 0 < $attachment_id ) {
