@@ -118,7 +118,10 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'required' => true,
 		);
 
-		$selected_pod = $this->get_setting( 'pod' );
+		$selected_pod        = $this->get_setting( 'pod' );
+		$enable_current_post = $this->get_setting( 'enable_current_post' );
+		$enable_current_user = $this->get_setting( 'enable_current_user' );
+
 		$pod_fields   = array();
 		$pod_type     = '';
 
@@ -195,7 +198,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					continue;
 				}
 
-				$wp_object_fields[] = array(
+				$wp_object_fields[ $name ] = array(
 					'needs_process' => true,
 					'name'          => $name,
 					'field'         => $field,
@@ -204,7 +207,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		}
 
 		if ( 'post_type' === $pod_type ) {
-			$wp_object_fields[] = array(
+			$wp_object_fields['_thumbnail_id'] = array(
 				'name' => '_thumbnail_id',
 				'label' => __( 'Featured Image', 'pods-gravity-forms' ),
 			);
@@ -215,7 +218,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'label'      => __( 'WP Object Fields', 'pods-gravity-forms' ),
 			'type'       => 'field_map',
 			'dependency' => 'pod',
-			'field_map'  => $wp_object_fields,
+			'field_map'  => array_values( $wp_object_fields ),
 		);
 
 		$settings = array(
@@ -249,6 +252,14 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 					if ( isset( $field['options']['required'] ) && 1 === (int) $field['options']['required'] ) {
 						$field_required = true;
+
+						if ( isset( $wp_object_fields[ $name ] ) ) {
+							if ( 'post' === $pod_type && 1 === (int) $enable_current_post ) {
+								$field_required = false;
+							} elseif ( 'user' === $pod_type && 1 === (int) $enable_current_user ) {
+								$field_required = false;
+							}
+						}
 					}
 
 					$container_class = ' hidden';
