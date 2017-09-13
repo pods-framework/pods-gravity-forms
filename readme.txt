@@ -2,9 +2,9 @@
 Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
 Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
-Requires at least: 4.0
+Requires at least: 4.6
 Tested up to: 4.8
-Stable tag: 1.3
+Stable tag: 1.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,6 +37,7 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 = 1.4 - September Xnd, 2016 =
 
 * Changed: Backwards compatibility issue -- You can now more easily set custom override values, however the old style was not able to be brought over -- you'll want to update your feeds when possible, the old values will not show up and you'll have to select the custom override value option once more, then fill it in
+* Changed: Backwards compatibility issue -- Now requiring WordPress 4.6+
 * Added: New Custom fields section added for Pods that support meta (Posts, Terms, Users, Media, and Comments), you can set additional custom fields including ability to set custom values there too
 * Added: Ability to set conditional processing per feed, based on specific values submitted
 * Added: Custom override values now support GF merge tags by default (no insert UI yet) like `{form_id}` and any other merge tag
@@ -50,6 +51,7 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 * Fixed: Date/time fields shouldn't auto populate with empty dates such as 0000-00-00 anymore
 * Fixed: Additional attachment processing fixes
 * Fixed: Lots of Pods GF UI issues resolved
+* Fixed: Removed Autocomplete limit (was 30) that was being enforced, now all data from related field will show
 
 = 1.3 - June 2nd, 2017 =
 

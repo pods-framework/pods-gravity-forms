@@ -811,7 +811,14 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						continue;
 					}
 
-					$data = $pod_obj->fields( $pod_field, 'data' );
+					$pod_field_options = $pod_obj->fields( $pod_field );
+
+					// Override limit for autocomplete
+					$object_params = array(
+						'limit' => -1,
+					);
+
+					$data = PodsForm::field_method( 'pick', 'get_field_data', $pod_field_options, array(), $object_params );
 
 					if ( empty( $data ) ) {
 						continue;
