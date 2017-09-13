@@ -1479,6 +1479,8 @@ class Pods_GF {
 			$gf_fields[ (string) $gf_field->id ] = $gf_field;
 		}
 
+		$entry = GFFormsModel::get_current_lead();
+
 		foreach ( $options['fields'] as $field => $field_options ) {
 			$field = (string) $field;
 
@@ -1519,11 +1521,12 @@ class Pods_GF {
 
 			if ( $gf_field ) {
 				$gf_params = array(
-					'gf_field'     => $gf_field,
-					'field'        => $field,
-					'form'         => $form,
-					'options'      => $options,
-					'handle_files' => true,
+					'gf_field'         => $gf_field,
+					'gf_field_options' => $field_options,
+					'form'             => $form,
+					'entry'            => $entry,
+					'options'          => $options,
+					'handle_files'     => true,
 				);
 
 				$value = self::get_gf_field_value( $value, $gf_params );
@@ -1532,6 +1535,10 @@ class Pods_GF {
 			// Manual value override
 			if ( null !== $field_options['value'] ) {
 				$value = $field_options['value'];
+
+				if ( is_string( $value ) && ! empty( $field_options['gf_merge_tags'] ) ) {
+					$value = GFCommon::replace_variables( $value, $form, $entry );
+				}
 			}
 
 			$value = apply_filters( 'pods_gf_to_pods_value_' . $form['id'] . '_' . $field, $value, $field, $field_options, $form, $gf_field, $data, $options );
@@ -2989,22 +2996,27 @@ class Pods_GF {
 	 */
 	public static function get_gf_field_value( $value, $params ) {
 
-		$params = array_merge(
-			array(
-				'gf_field'     => null,
-				'field'        => null,
-				'form'         => null,
-				'options'      => null,
-				'handle_files' => false,
-			),
-			$params
-		);
+		$params = array_merge( array(
+			'gf_field'         => null,
+			'gf_field_options' => array(),
+			'field'            => null,
+			'form'             => null,
+			'entry'            => null,
+			'options'          => array(),
+			'handle_files'     => false,
+		), $params );
 
-		$gf_field     = $params['gf_field'];
-		$full_field   = $params['field'];
-		$form         = $params['form'];
-		$options      = $params['options'];
-		$handle_files = $params['handle_files'];
+		$gf_field         = $params['gf_field'];
+		$gf_field_options = $params['gf_field_options'];
+		$full_field       = $params['field'];
+		$form             = $params['form'];
+		$entry            = $params['entry'];
+		$options          = $params['options'];
+		$handle_files     = $params['handle_files'];
+
+		if ( empty( $entry ) && ! empty( $options['entry'] ) ) {
+			$entry = $options['entry'];
+		}
 
 		if ( is_array( $gf_field ) ) {
 			/**
@@ -3032,8 +3044,8 @@ class Pods_GF {
 		}
 
 		if ( null === $value ) {
-			if ( ! empty( $options['entry'] ) && isset( $options['entry'][ $full_field ] ) ) {
-				$value = rgar( $options['entry'], $full_field );
+			if ( ! empty( $entry ) && isset( $entry[ $full_field ] ) ) {
+				$value = rgar( $entry, $full_field );
 			} else {
 				$value = GFFormsModel::get_field_value( $gf_field );
 
@@ -3107,8 +3119,8 @@ class Pods_GF {
 			// Form already submitted
 			if ( ! empty( $options['gf_to_pods_priority'] ) && 'submission' === $options['gf_to_pods_priority'] ) {
 				if ( empty( $attachments ) ) {
-					if ( ! empty( $options['entry'] ) ) {
-						$file_value = rgar( $options['entry'], $gf_field->id );
+					if ( ! empty( $entry ) ) {
+						$file_value = rgar( $entry, $gf_field->id );
 						$file_value = trim( $file_value, '|' );
 
 						if ( ! empty( $file_value ) ) {
@@ -3309,6 +3321,10 @@ class Pods_GF {
 			}
 		}
 
+		if ( is_string( $value ) && ! empty( $gf_field_options['gf_merge_tags'] ) ) {
+			$value = GFCommon::replace_variables( $value, $form, $entry );
+		}
+
 		return $value;
 
 	}
@@ -3398,10 +3414,12 @@ class Pods_GF {
 				$pods_api = pods_api();
 
 				$gf_params = array(
-					'gf_field' => $field,
-					'field'    => $field_full,
-					'form'     => $form,
-					'options'  => $this->options,
+					'gf_field'         => $field,
+					'gf_field_options' => $field_options,
+					'field'            => $field_full,
+					'form'             => $form,
+					'entry'            => GFFormsModel::get_current_lead(),
+					'options'          => $this->options,
 				);
 
 				$gf_value = self::get_gf_field_value( $value, $gf_params );
