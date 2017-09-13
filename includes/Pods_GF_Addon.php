@@ -302,7 +302,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						$field_required = true;
 
 						if ( isset( $wp_object_fields[ $name ] ) ) {
-							if ( 'post_type' === $pod_type && 1 === $enable_current_post ) {
+							if ( in_array( $pod_type, array( 'post_type', 'media' ), true ) && 1 === $enable_current_post ) {
 								$field_required = false;
 							} elseif ( 'user' === $pod_type && 1 === $enable_current_user ) {
 								$field_required = false;
@@ -421,7 +421,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					),
 				),
 			);
-		} elseif ( 'post_type' === $pod_type ) {
+		} elseif ( in_array( $pod_type, array( 'post_type', 'media' ), true ) ) {
 			$settings['advanced']['fields'][] = array(
 				'name'    => 'enable_current_post',
 				'label'   => __( 'Enable editing with this form using current post', 'pods-gravity-forms' ),
