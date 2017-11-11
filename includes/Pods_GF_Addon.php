@@ -48,6 +48,19 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 	}
 
+	/**
+	 * Override this function to allow the feed to being duplicated.
+	 *
+	 * @param int|array $id The ID of the feed to be duplicated or the feed object when duplicating a form.
+	 *
+	 * @return boolean|true
+	 */
+	public function can_duplicate_feed( $id ) {
+
+		return true;
+
+	}
+
 	public function scripts() {
 
 		$scripts = array(
