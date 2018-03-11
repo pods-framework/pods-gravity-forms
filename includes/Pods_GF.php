@@ -744,10 +744,13 @@ class Pods_GF {
 			if ( is_array( $label ) ) {
 				$choices[] = $label;
 			} else {
+
+				$isSelected = ( (string) $value === $current_value ) || ( is_array( $current_value ) && in_array( $value, $current_value ) );
+
 				$choices[] = array(
 					'text'       => $label,
 					'value'      => $value,
-					'isSelected' => ( (string) $value === (string) $current_value )
+					'isSelected' => $isSelected
 				);
 			}
 		}
