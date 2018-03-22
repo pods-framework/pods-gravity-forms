@@ -25,22 +25,22 @@
 <!-- Not required, but it would help us troubleshoot. -->
 <!-- Please provide us an Export of your Form from Gravity Forms, Import/Export, Export Forms. -->
 <!-- You can upload the JSON created here or cut and paste it in the section provided -->
-<form_upload>
+<details>
 ```
 Upload Gravity Form JSON or Copy and Paste it Here.
 ```
-</form_upload>
+</details>
 
 ## Pods Package Export
 <!-- Not obligatory, but it would help us troubleshoot -->
 <!-- Under Pods Admin, Components, select Migrate: Packages and Enable. -->
 <!-- Select Pods Admin, Migrate Packages, Export, Copy and Paste the contents of that JSON -->
 <!-- Export into the Section provided below -->
-<package_export>
+<details>
 ```
 Copy and Paste the JSON Export from Pods Migrate: Packages, Export and Paste it Here
 ```
-</package_export>
+</details>
 
 ## Related Issues and/or PRs
 <!-- List related issues or PRs against other branches:  -->
