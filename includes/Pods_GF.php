@@ -3550,7 +3550,13 @@ class Pods_GF {
 
 			$lead_detail_table = pods_gf_get_gf_table_name( 'entry_details' );
 
-			$current_fields = $wpdb->get_results( $wpdb->prepare( "SELECT id, field_number FROM {$lead_detail_table} WHERE lead_id = %d", $lead["id"] ) );
+			$old_schema = version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' );
+
+			$lead_id_column_name = $old_schema ? 'lead_id' : 'entry_id';
+
+			$field_id_column = $old_schema ? 'field_number' : 'meta_key';
+
+			$current_fields = $wpdb->get_results( $wpdb->prepare( "SELECT id, {$field_id_column} FROM {$lead_detail_table} WHERE {$lead_id_column_name} = %d", $lead["id"] ) );
 
 			foreach ( $form['fields'] as $field ) {
 				$value = $original_value = null;
