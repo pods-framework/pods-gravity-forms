@@ -3548,7 +3548,7 @@ class Pods_GF {
 
 			$changed = array();
 
-			$lead_detail_table = GFFormsModel::get_lead_details_table_name();
+			$lead_detail_table = pods_gf_get_gf_table_name( 'entry_details' );
 
 			$current_fields = $wpdb->get_results( $wpdb->prepare( "SELECT id, field_number FROM {$lead_detail_table} WHERE lead_id = %d", $lead["id"] ) );
 
