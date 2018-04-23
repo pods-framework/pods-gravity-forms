@@ -8,6 +8,7 @@ Author: Pods Framework Team
 Author URI: http://pods.io/about/
 Text Domain: pods-gravity-forms
 Domain Path: /languages/
+GitHub Plugin URI: https://github.com/pods-framework/pods-gravity-forms
 
 Copyright 2013-2017  Pods Foundation, Inc  (email : contact@podsfoundation.org)
 
