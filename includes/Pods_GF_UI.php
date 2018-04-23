@@ -498,9 +498,13 @@ class Pods_GF_UI {
 					// @todo Replace the below code when GF adds functionality to get all lead meta
 					global $wpdb, $_gform_lead_meta;
 
-					$gf_meta_table = GFFormsModel::get_lead_meta_table_name();
+					$gf_meta_table = pods_gf_get_gf_table_name( 'entry_meta' );
 
-					$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE lead_id = %d", $lead[ 'id' ] ) );
+					$old_schema = version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' );
+
+					$lead_id_column_name = $old_schema ? 'lead_id' : 'entry_id';
+
+					$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE {$lead_id_column_name} = %d", $lead[ 'id' ] ) );
 
 					foreach ( $gf_meta as $gf_meta_value ) {
 						$meta_value = maybe_unserialize( $gf_meta_value->meta_value );
@@ -540,9 +544,13 @@ class Pods_GF_UI {
 					// @todo Replace the below code when GF adds functionality to get all lead meta
 					global $wpdb, $_gform_lead_meta;
 
-					$gf_meta_table = GFFormsModel::get_lead_meta_table_name();
+					$gf_meta_table = pods_gf_get_gf_table_name( 'entry_meta' );
 
-					$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE lead_id = %d", $lead[ 'id' ] ) );
+					$old_schema = version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' );
+
+					$lead_id_column_name = $old_schema ? 'lead_id' : 'entry_id';
+
+					$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE {$lead_id_column_name} = %d", $lead[ 'id' ] ) );
 
 					foreach ( $gf_meta as $gf_meta_value ) {
 						$meta_value = maybe_unserialize( $gf_meta_value->meta_value );

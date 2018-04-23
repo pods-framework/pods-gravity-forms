@@ -205,3 +205,45 @@ function pods_gf_save_for_later_ajax() {
 	Pods_GF::gf_save_for_later_ajax();
 
 }
+
+/**
+ * Backwards-compatible method for retrieving GF table name
+ *
+ * @since
+ *
+ * @param $table_type
+ *
+ * @return string
+ */
+function pods_gf_get_gf_table_name( $table_type ){
+
+	$table_name = '';
+
+	$old_schema = version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' );
+
+
+	switch( $table_type ) {
+
+		case 'entry':
+
+			$table_name = $old_schema ? GFFormsModel::get_lead_table_name() : GFFormsModel::get_entry_table_name();
+
+			break;
+
+		case 'entry_details':
+
+			$table_name = $old_schema ? GFFormsModel::get_lead_details_table_name() : GFFormsModel::get_entry_meta_table_name();
+
+			break;
+
+		case 'entry_meta':
+
+			$table_name = $old_schema ? GFFormsModel::get_lead_meta_table_name() : GFFormsModel::get_entry_meta_table_name();
+
+			break;
+
+	}
+
+
+	return $table_name;
+}
