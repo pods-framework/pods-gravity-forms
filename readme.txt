@@ -34,8 +34,9 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 
 == Changelog ==
 
-= 1.4 - September Xnd, 2016 =
+= 1.4 - April 23rd, 2018 =
 
+* Support: Added support for Gravity Forms 2.3 database tables changes
 * Changed: Backwards compatibility issue -- You can now more easily set custom override values, however the old style was not able to be brought over -- you'll want to update your feeds when possible, the old values will not show up and you'll have to select the custom override value option once more, then fill it in
 * Changed: Backwards compatibility issue -- Now requiring WordPress 4.6+
 * Added: New Custom fields section added for Pods that support meta (Posts, Terms, Users, Media, and Comments), you can set additional custom fields including ability to set custom values there too
@@ -52,6 +53,7 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 * Fixed: Additional attachment processing fixes
 * Fixed: Lots of Pods GF UI issues resolved
 * Fixed: Removed Autocomplete limit (was 30) that was being enforced, now all data from related field will show
+* Fixed: Dynamic mapping value checking to support arrays of values
 
 = 1.3 - June 2nd, 2017 =
 
