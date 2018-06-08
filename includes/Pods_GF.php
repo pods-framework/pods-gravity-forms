@@ -206,6 +206,7 @@ class Pods_GF {
 
 		if ( ! has_filter( 'gform_pre_render_' . $form_id, array( $this, '_gf_pre_render' ) ) ) {
 			add_filter( 'gform_pre_render_' . $form_id, array( $this, '_gf_pre_render' ), 10, 2 );
+			add_filter( 'gform_pre_validation_' . $form_id, array( $this, '_gf_pre_render' ), 10, 1 );
 
 			add_filter( 'gform_get_form_filter_' . $form_id, array( $this, '_gf_get_form_filter' ), 10, 2 );
 
@@ -2998,7 +2999,7 @@ class Pods_GF {
 	 *
 	 * @return array $form GF Form array
 	 */
-	public function _gf_pre_render ( $form, $ajax ) {
+	public function _gf_pre_render ( $form, $ajax = false ) {
 
 		if ( empty( $this->options ) ) {
 			return $form;
