@@ -46,6 +46,7 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 * Added: Support for E-mail field mappings with 'Confirm E-mail' enabled
 * Added: Support for Date fields with multiple inputs (date dropdown / text fields)
 * Added: Smarter requirement handling for WP object fields based on object type (only require what the WP insert API requires)
+* Added: Support for List field mapping to a Pod field which ends up serializing the value, but can be prepopulated back into the Gravity Form
 * Improved: Added headings to each group of feed options so they are easier to work with
 * Fixed: Issues with using 'bypass' as a save action
 * Fixed: Dynamic select options should set the current value (as posted in form) properly
@@ -54,6 +55,8 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 * Fixed: Lots of Pods GF UI issues resolved
 * Fixed: Removed Autocomplete limit (was 30) that was being enforced, now all data from related field will show
 * Fixed: Dynamic mapping value checking to support arrays of values
+* Fixed: Lots of Prepopulating fixes
+* Fixed: Now supports multi page form validation and prepopulating
 
 = 1.3 - June 2nd, 2017 =
 
