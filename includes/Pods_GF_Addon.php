@@ -830,14 +830,15 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						'limit' => -1,
 					);
 
-					$data = PodsForm::field_method( 'pick', 'get_field_data', $pod_field_options, array(), $object_params );
+					$data = PodsForm::field_method( $pod_field_options['type'], 'get_field_data', $pod_field_options, array(), $object_params );
 
 					if ( empty( $data ) ) {
 						continue;
 					}
 
 					$options = array(
-						'options' => $data,
+						'options'     => $data,
+						'select_text' => pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options['options'] ),
 					);
 
 					Pods_GF::dynamic_select( $form['id'], (string) $gf_field->id, $options );
