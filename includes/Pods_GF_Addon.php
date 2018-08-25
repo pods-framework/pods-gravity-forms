@@ -380,19 +380,6 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		);
 
 		$settings['advanced']['fields'][] = array(
-			'name'    => 'delete_entry',
-			'label'   => __( 'Delete Gravity Form Entry on submission', 'pods-gravity-forms' ),
-			'type'    => 'checkbox',
-			'choices' => array(
-				array(
-					'value' => 1,
-					'label' => __( 'Delete entry after processing', 'pods-gravity-forms' ),
-					'name'  => 'delete_entry',
-				),
-			),
-		);
-
-		$settings['advanced']['fields'][] = array(
 			'name'    => 'update_pod_item',
 			'label'   => __( 'Support entry updates', 'pods-gravity-forms' ),
 			'type'    => 'checkbox',
@@ -472,6 +459,19 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			);
 		}
 
+		$settings['advanced']['fields'][] = array(
+			'name'    => 'delete_entry',
+			'label'   => __( 'Delete Gravity Form Entry on submission', 'pods-gravity-forms' ),
+			'type'    => 'checkbox',
+			'choices' => array(
+				array(
+					'value' => 1,
+					'label' => __( 'Delete entry after processing', 'pods-gravity-forms' ),
+					'name'  => 'delete_entry',
+				),
+			),
+		);
+
 		$addon_slug = $this->get_slug();
 
 		add_filter( "gform_{$addon_slug}_field_map_choices", array( $this, 'add_field_map_choices' ) );
@@ -484,53 +484,6 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		);
 
 		return $settings;
-
-	}
-
-	/**
-	 * Get field map choices for specific form.
-	 *
-	 * @since  unknown
-	 * @access public
-	 *
-	 * @uses GFCommon::get_label()
-	 * @uses GFFormsModel::get_entry_meta()
-	 * @uses GFFormsModel::get_form_meta()
-	 * @uses GF_Field::get_entry_inputs()
-	 * @uses GF_Field::get_form_editor_field_title()
-	 * @uses GF_Field::get_input_type()
-	 *
-	 * @param int          $form_id             Form ID to display fields for.
-	 * @param array|string $field_type          Field types to only include as choices. Defaults to null.
-	 * @param array|string $exclude_field_types Field types to exclude from choices. Defaults to null.
-	 *
-	 * @return array
-	 */
-	public static function get_field_map_choices( $form_id, $field_type = null, $exclude_field_types = null ) {
-
-		$choices = parent::get_field_map_choices( $form_id, $field_type, $exclude_field_types );
-
-		$choices[] = array(
-			'value' => 'transaction_id',
-			'label' => 'Transaction ID',
-		);
-
-		$choices[] = array(
-			'value' => 'payment_amount',
-			'label' => 'Payment Amount',
-		);
-
-		$choices[] = array(
-			'value' => 'payment_date',
-			'label' => 'Payment Date',
-		);
-
-		$choices[] = array(
-			'value' => 'payment_status',
-			'label' => 'Payment Status',
-		);
-
-		return $choices;
 
 	}
 
@@ -704,7 +657,25 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					'label' => __( 'Custom override value', 'pods-gravity-forms' ),
 				),
 			),
-			$choices
+			$choices,
+			array(
+				array(
+					'value' => 'transaction_id',
+					'label' => 'Transaction ID',
+				),
+				array(
+					'value' => 'payment_amount',
+					'label' => 'Payment Amount',
+				),
+				array(
+					'value' => 'payment_date',
+					'label' => 'Payment Date',
+				),
+				array(
+					'value' => 'payment_status',
+					'label' => 'Payment Status',
+				),
+			)
 		);
 
 		return $choices;
@@ -948,9 +919,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				$options = array(
 					// array ( 'gf_field_id' => 'pod_field_name' )
 					'fields'              => $fields,
-					'auto_delete'         => (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
 					'update_pod_item'     => (int) pods_v( 'update_pod_item', $feed['meta'], 0 ),
 					'markdown'            => (int) pods_v( 'enable_markdown', $feed['meta'], 0 ),
+					'auto_delete'         => (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
 					'gf_to_pods_priority' => 'submission',
 				);
 
