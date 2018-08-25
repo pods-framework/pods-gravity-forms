@@ -1371,6 +1371,15 @@ class Pods_GF {
 
 		$save_action = 'add';
 
+		if ( empty( $id ) && ! empty( $this->options['update_pod_item'] ) ) {
+			$item_id  = (int) gform_get_meta( $entry['id'], '_pods_item_id' );
+			$item_pod = gform_get_meta( $entry['id'], '_pods_item_pod' );
+
+			if ( $item_id && $item_pod && is_object( $this->pod ) && $item_pod === $this->pod->pod ) {
+				$id = $item_id;
+			}
+		}
+
 		if ( ! empty( $id ) ) {
 			$save_action = 'save';
 		}
@@ -3953,6 +3962,13 @@ class Pods_GF {
 
 			if ( pods_v( 'auto_delete', $this->options, false ) ) {
 				self::gf_delete_entry( $entry );
+			} else {
+				// Save the pod item ID for future reference.
+				gform_update_meta( $entry['id'], '_pods_item_id', self::$gf_to_pods_id[ $form['id'] ] );
+
+				if ( is_object( $this->pod ) ) {
+					gform_update_meta( $entry['id'], '_pods_item_pod', $this->pod->pod );
+				}
 			}
 
 			do_action( 'pods_gf_after_submission_' . $form['id'], $entry, $form );

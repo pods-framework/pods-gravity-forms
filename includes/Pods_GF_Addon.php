@@ -393,6 +393,19 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		);
 
 		$settings['advanced']['fields'][] = array(
+			'name'    => 'update_pod_item',
+			'label'   => __( 'Support entry updates', 'pods-gravity-forms' ),
+			'type'    => 'checkbox',
+			'choices' => array(
+				array(
+					'value' => 1,
+					'label' => __( 'Update pod item if it has been submitted before', 'pods-gravity-forms' ),
+					'name'  => 'update_pod_item',
+				),
+			),
+		);
+
+		$settings['advanced']['fields'][] = array(
 			'name'    => 'enable_markdown',
 			'label'   => __( 'Enable Markdown', 'pods-gravity-forms' ),
 			'type'    => 'checkbox',
@@ -889,6 +902,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					// array ( 'gf_field_id' => 'pod_field_name' )
 					'fields'              => $fields,
 					'auto_delete'         => (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
+					'update_pod_item'     => (int) pods_v( 'update_pod_item', $feed['meta'], 0 ),
 					'markdown'            => (int) pods_v( 'enable_markdown', $feed['meta'], 0 ),
 					'gf_to_pods_priority' => 'submission',
 				);
