@@ -1509,9 +1509,12 @@ class Pods_GF {
 		);
 
 		$basic_gf_field_data = array(
-			'id'    => '',
-			'label' => '',
-			'type'  => 'text',
+			'id'         => '',
+			'label'      => '',
+			'type'       => 'text',
+			'isRequired' => false,
+			'visibility' => 'visible',
+			'formId'     => $form['id'],
 		);
 
 		foreach ( $extra_gf_fields as $extra_gf_field ) {
@@ -3314,8 +3317,6 @@ class Pods_GF {
 							$value = $value_check;
 						}
 					}
-
-					var_dump( $provinces );
 				}
 			}
 		} elseif ( in_array( $gf_field->type, array( 'date' ), true ) ) {

@@ -239,11 +239,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						$field['options']['required'] = 1;
 					}
 				} elseif ( 'taxonomy' === $pod_type ) {
-					if ( in_array( $name, array( 'name' ), true ) ) {
+					if ( 'name' === $name ) {
 						$field['options']['required'] = 1;
 					}
 				} elseif ( 'user' === $pod_type ) {
-					if ( in_array( $name, array( 'user_login' ), true ) ) {
+					if ( 'user_login' === $name ) {
 						$field['options']['required'] = 1;
 					}
 				}
@@ -678,7 +678,55 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			)
 		);
 
+		foreach ( $choices as $k => $choice ) {
+			if ( '_pods_item_id' === $choice['value'] ) {
+				unset( $choices[ $k ] );
+
+				$choices = array_values( $choices );
+
+				break;
+			}
+		}
+
 		return $choices;
+
+	}
+
+	/***
+	 * Renders and initializes a drop down field based on the $field array
+	 *
+	 * @param array $field - Field array containing the configuration options of this field
+	 * @param bool  $echo  = true - true to echo the output to the screen, false to simply return the contents as a string
+	 *
+	 * @return string The HTML for the field
+	 */
+	public function settings_select( $field, $echo = true ) {
+
+		$has_gf_custom = false;
+
+		if ( ! empty( $field['choices'] ) ) {
+			foreach ( $field['choices'] as $choice ) {
+				if ( isset( $choice['value'] ) && 'gf_custom' === $choice['value'] ) {
+					$has_gf_custom = true;
+
+					break;
+				}
+			}
+		}
+
+		// Select has no custom choice or we already took over the first select.
+		if ( empty( $field['choices'] ) || ! $has_gf_custom || ! empty( $field['_pods_custom_select'] ) ) {
+			return parent::settings_select( $field, $echo );
+		}
+
+		// Already doing custom select.
+		if ( ! empty( $field['type'] ) && 'generic_map' === $field['type'] ) {
+			return parent::settings_select( $field, $echo );
+		}
+
+		$field['_pods_custom_select'] = true;
+
+		return parent::settings_select_custom( $field, $echo );
 
 	}
 
@@ -820,8 +868,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				continue;
 			}
 
-			$pod_fields    = $this->get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
-			$object_fields = $this->get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
+			$pod_fields    = self::get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
+			$object_fields = self::get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
 
 			$pod_fields = array_merge( $pod_fields, $object_fields );
 
@@ -910,9 +958,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				// Block new post being created in GF
 				add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
 
-				$pod_fields    = $this->get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
-				$object_fields = $this->get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
-				$custom_fields = $this->get_field_map_fields_with_custom_values( $feed, 'custom_fields' );
+				$pod_fields    = self::get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
+				$object_fields = self::get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
+				$custom_fields = self::get_field_map_custom_fields_with_custom_values( $feed );
 
 				$fields = array_merge( $pod_fields, $object_fields, $custom_fields );
 
@@ -1048,69 +1096,135 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 */
 	public static function get_field_map_fields_with_custom_values( $feed, $field_name ) {
 
-		$prefix        = $field_name . '_';
-		$custom_prefix = $prefix . 'override_custom_';
+		$prefix = $field_name . '_';
+
+		$old_custom_prefix = $prefix . 'override_custom_';
 
 		$fields = array();
 
-		foreach ( $feed['meta'] as $config_field_name => $value ) {
-			$config_field_name = (string) $config_field_name;
+		$skip = array();
 
-			if ( 0 === strpos( $config_field_name, $custom_prefix ) ) {
+		foreach ( $feed['meta'] as $config_field_name => $config ) {
+			$config_field_name = (string) $config_field_name;
+			$gf_field_custom   = sprintf( '%s_custom', $config_field_name );
+
+			if ( in_array( $config_field_name, $skip, true ) ) {
+				continue;
+			}
+
+			if ( 0 === strpos( $config_field_name, $old_custom_prefix ) ) {
 				// Skip override values (old way)
 				continue;
-			} elseif ( 0 === strpos( $config_field_name, $prefix ) ) {
-				// Get field name
-				$field_name = substr( $config_field_name, strlen( $prefix ) );
+			}
 
-				// Mapping value is the GF field ID
-				$gf_field = trim( $value );
+			if ( 0 !== strpos( $config_field_name, $prefix ) && $field_name !== $config_field_name ) {
+				continue;
+			}
 
-				// Mapping value
-				$mapping_value = array(
-					'gf_field'      => $gf_field,
-					'field'         => $field_name,
-				);
+			// Get field name
+			$field_name = substr( $config_field_name, strlen( $prefix ) );
 
-				if ( 'gf_custom' === $gf_field ) {
-					// Support override value settings (new way)
-					$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
-					$gf_field_custom = sprintf( '%s_custom', $field_name );
+			// Mapping value is the GF field ID
+			$gf_field = trim( $config );
 
-					$mapping_value['gf_field'] = $gf_field;
-					$mapping_value['value']    = '';
+			// Mapping value
+			$mapping_value = array(
+				'gf_field' => $gf_field,
+				'field'    => $field_name,
+			);
 
-					if ( ! empty( $feed['meta'][ $gf_field_custom ] ) ) {
-						$value = trim( $feed['meta'][ $gf_field_custom ] );
+			if ( 'gf_custom' === $gf_field ) {
+				// Support override value settings (new way)
+				$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
 
-						if ( ! empty( $value ) ) {
-							$mapping_value['value'] = $value;
+				$mapping_value['gf_field'] = $gf_field;
+				$mapping_value['value']    = '';
 
-							$mapping_value['gf_merge_tags'] = true;
-						}
-					}
-				} elseif ( '_pods_custom' === $gf_field ) {
-					// Support override value settings (old way)
-					$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
+				if ( ! empty( $feed['meta'][ $gf_field_custom ] ) ) {
+					$value = trim( $feed['meta'][ $gf_field_custom ] );
 
-					$mapping_value['gf_field'] = $gf_field;
-					$mapping_value['value']    = '';
+					if ( ! empty( $value ) ) {
+						$mapping_value['value'] = $value;
 
-					if ( ! empty( $feed['meta'][ $custom_prefix ] ) ) {
-						$value = trim( $feed['meta'][ $custom_prefix ] );
-
-						if ( ! empty( $value ) ) {
-							$mapping_value['value'] = $value;
-
-							$mapping_value['gf_merge_tags'] = true;
-						}
+						$mapping_value['gf_merge_tags'] = true;
 					}
 				}
+			} elseif ( '_pods_custom' === $gf_field ) {
+				// Support override value settings (old way)
+				$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
 
-				if ( ! empty( $gf_field ) ) {
-					$fields[] = $mapping_value;
+				$mapping_value['gf_field'] = $gf_field;
+				$mapping_value['value']    = '';
+
+				if ( ! empty( $feed['meta'][ $old_custom_prefix ] ) ) {
+					$value = trim( $feed['meta'][ $old_custom_prefix ] );
+
+					if ( ! empty( $value ) ) {
+						$mapping_value['value'] = $value;
+
+						$mapping_value['gf_merge_tags'] = true;
+					}
 				}
 			}
+
+			$skip[] = $gf_field_custom;
+
+			if ( ! empty( $gf_field ) ) {
+				$fields[] = $mapping_value;
+			}
+		}
+
+		return $fields;
+
+	}
+
+	/**
+	 * Get field map field values with support for custom override values.
+	 *
+	 * This differs from get_field_map_fields() in that it returns an array
+	 * that is already formatted for Pods GF field mapping usage.
+	 *
+	 * @param array $feed
+	 *
+	 * @return array
+	 */
+	public static function get_field_map_custom_fields_with_custom_values( $feed ) {
+
+		if ( empty( $feed['meta']['custom_fields'] ) ) {
+			return array();
+		}
+
+		$configs = $feed['meta']['custom_fields'];
+
+		$fields = array();
+
+		foreach ( $configs as $config ) {
+			$config = array_map( 'trim', $config );
+
+			$gf_field   = $config['value'];
+			$field_name = $config['key'];
+
+			if ( in_array( $field_name, array( 'gf_custom', '' ), true ) ) {
+				$field_name = $config['custom_key'];
+			}
+
+			// Mapping value
+			$mapping_value = array(
+				'gf_field' => $gf_field,
+				'field'    => $field_name,
+			);
+
+			if ( in_array( $gf_field, array( 'gf_custom', '' ), true ) && ! empty( $config['custom_value'] ) ) {
+				$mapping_value['gf_field']      = sprintf( '_pods_gf_custom_%s', $field_name );
+				$mapping_value['value']         = $config['custom_value'];
+				$mapping_value['gf_merge_tags'] = true;
+			}
+
+			if ( '' === $mapping_value['gf_field'] || '' === $mapping_value['field'] ) {
+				continue;
+			}
+
+			$fields[] = $mapping_value;
 		}
 
 		return $fields;
@@ -1126,8 +1240,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	public function get_entry_meta( $entry_meta, $form_id ) {
 
 		if ( $this->has_feed( $form_id ) ) {
-			$entry_meta['pod_id'] = array(
-				'label'                      => 'Pod ID',
+			$entry_meta['_pods_item_id'] = array(
+				'label'                      => 'Pod Item ID',
 				'is_numeric'                 => true,
 				'is_default_column'          => true,
 				'update_entry_meta_callback' => array( $this, 'update_entry_meta_pod_id' ),
