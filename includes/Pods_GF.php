@@ -682,7 +682,7 @@ class Pods_GF {
 
 		$form = ( ! empty( $form_id ) ? '_' . (int) $form_id : '' );
 
-		add_action( 'gform_post_submission' . $form, array( get_class(), 'delete_entry' ), 20, 1 );
+		add_action( 'gform_post_submission' . $form, array( get_class(), 'gf_delete_entry' ), 20, 1 );
 
 	}
 
