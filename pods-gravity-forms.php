@@ -56,8 +56,6 @@ function pods_gf_include_gf_addon() {
 	// Include GF Add-On
 	if ( class_exists( 'GFForms' ) && defined( 'PODS_VERSION' ) ) {
 		require_once( PODS_GF_DIR . 'includes/Pods_GF_Addon.php' );
-
-		include_once 'vendor/autoload.php';
 	}
 
 }
