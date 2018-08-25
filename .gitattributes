@@ -1,9 +1,16 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Ignore other files
+/.env.* export-ignore
+/codeception.* export-ignore
+/composer.* export-ignore
+/docs export-ignore
+/phpcs.xml export-ignore
+/README.md export-ignore
 /tests export-ignore
-/sources export-ignore
-kill-travis.php export-ignore
-/assets export-ignore
+/TESTS.md export-ignore
+/vendor export-ignore
 
 # Custom for Visual Studio
 *.cs     diff=csharp

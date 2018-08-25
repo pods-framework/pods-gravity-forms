@@ -1,0 +1,12 @@
+vendor/
+composer.lock
+
+# Codeception stuff
+codeception.yml
+!tests/_data/dump.sql
+!tests/_data/test-data.sql
+tests/_output/*
+tests/*.suite.yml
+tests/*.pem
+tests/*.cert
+tests/*.key

@@ -133,12 +133,10 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		$gf_fields = array();
 
-		if ( 0 === (int) pods_v( 'fid' ) ) {
-			$gf_form = GFAPI::get_form( pods_v( 'id' ) );
+		$gf_form = GFAPI::get_form( pods_v( 'id' ) );
 
-			if ( ! empty( $gf_form ) && ! empty( $gf_form['fields'] ) ) {
-				$gf_fields = $gf_form['fields'];
-			}
+		if ( ! empty( $gf_form ) && ! empty( $gf_form['fields'] ) ) {
+			$gf_fields = $gf_form['fields'];
 		}
 
 		$pods_api = pods_api();
@@ -181,8 +179,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			$enable_current_user = (int) $posted_settings['enable_current_user'];
 		}
 
-		$pod_fields   = array();
-		$pod_type     = '';
+		$pod_fields = array();
+		$pod_type   = '';
 
 		if ( ! empty( $selected_pod ) ) {
 			$pod_object = $pods_api->load_pod( array( 'name' => $selected_pod ) );
@@ -326,9 +324,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						'required'     => $field_required,
 					);
 
-					foreach ( $gf_fields as $gf_field ) {
-						if ( $field['label'] === $gf_field['label'] ) {
-							$field_map['default_value'] = $gf_field['id'];
+					if ( 0 === (int) pods_v( 'fid' ) ) {
+						foreach ( $gf_fields as $gf_field ) {
+							if ( strtolower( $field['label'] ) === strtolower( $gf_field['label'] ) ) {
+								$field_map['default_value'] = $gf_field['id'];
+							}
 						}
 					}
 				}
@@ -399,7 +399,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'choices' => array(
 				array(
 					'value' => 1,
-					'label' => __( 'Update pod item if it has been submitted before', 'pods-gravity-forms' ),
+					'label' => __( 'Update pod item if the entry is updated', 'pods-gravity-forms' ),
 					'name'  => 'update_pod_item',
 				),
 			),
@@ -484,6 +484,53 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		);
 
 		return $settings;
+
+	}
+
+	/**
+	 * Get field map choices for specific form.
+	 *
+	 * @since  unknown
+	 * @access public
+	 *
+	 * @uses GFCommon::get_label()
+	 * @uses GFFormsModel::get_entry_meta()
+	 * @uses GFFormsModel::get_form_meta()
+	 * @uses GF_Field::get_entry_inputs()
+	 * @uses GF_Field::get_form_editor_field_title()
+	 * @uses GF_Field::get_input_type()
+	 *
+	 * @param int          $form_id             Form ID to display fields for.
+	 * @param array|string $field_type          Field types to only include as choices. Defaults to null.
+	 * @param array|string $exclude_field_types Field types to exclude from choices. Defaults to null.
+	 *
+	 * @return array
+	 */
+	public static function get_field_map_choices( $form_id, $field_type = null, $exclude_field_types = null ) {
+
+		$choices = parent::get_field_map_choices( $form_id, $field_type, $exclude_field_types );
+
+		$choices[] = array(
+			'value' => 'transaction_id',
+			'label' => 'Transaction ID',
+		);
+
+		$choices[] = array(
+			'value' => 'payment_amount',
+			'label' => 'Payment Amount',
+		);
+
+		$choices[] = array(
+			'value' => 'payment_date',
+			'label' => 'Payment Date',
+		);
+
+		$choices[] = array(
+			'value' => 'payment_status',
+			'label' => 'Payment Status',
+		);
+
+		return $choices;
 
 	}
 
