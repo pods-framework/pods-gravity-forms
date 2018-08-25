@@ -1352,11 +1352,12 @@ class Pods_GF {
 	/**
 	 * Map GF form fields to Pods fields
 	 *
-	 * @param array $form GF Form array
+	 * @param array $form  GF Form array
+	 * @param array $entry GF Entry array
 	 *
 	 * @return int Pod item ID
 	 */
-	public function _gf_to_pods_handler( $form ) {
+	public function _gf_to_pods_handler( $form, $entry = array() ) {
 
 		$id = 0;
 
@@ -1388,7 +1389,7 @@ class Pods_GF {
 			return $id;
 		}
 
-		$data = self::gf_to_pods( $form, $this->options, $this->pod );
+		$data = self::gf_to_pods( $form, $this->options, $this->pod, $entry );
 
 		$args = array(
 			$data // Data
@@ -1462,10 +1463,11 @@ class Pods_GF {
 	 * @param array      $form    GF Form array
 	 * @param array      $options Form config
 	 * @param Pods|array $pod     Pod object or entry array
+	 * @param array      $entry   GF Entry array
 	 *
 	 * @return array Data array for saving
 	 */
-	public static function gf_to_pods ( $form, $options, $pod = array() ) {
+	public static function gf_to_pods ( $form, $options, $pod = array(), $entry = array() ) {
 
 		$data = array();
 
@@ -1484,7 +1486,13 @@ class Pods_GF {
 			$gf_fields[ (string) $gf_field->id ] = $gf_field;
 		}
 
-		$entry = GFFormsModel::get_current_lead();
+		if ( empty( $entry ) ) {
+			if ( ! empty( $options['entry'] ) ) {
+				$entry = $options['entry'];
+			} else {
+				$entry = GFFormsModel::get_current_lead();
+			}
+		}
 
 		foreach ( $options['fields'] as $field => $field_options ) {
 			$field = (string) $field;
@@ -3933,7 +3941,7 @@ class Pods_GF {
 				try {
 					$this->options['entry'] = $entry;
 
-					$this->_gf_to_pods_handler( $form );
+					$this->_gf_to_pods_handler( $form, $entry );
 				}
 				catch ( Exception $e ) {
 					// @todo Log something to the form entry
