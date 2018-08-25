@@ -1492,7 +1492,16 @@ class Pods_GF {
 
 		$gf_fields = array();
 
+		if ( ! empty( $entry ) ) {
+			$entry['form_title'] = $form['title'];
+		}
+
 		$extra_gf_fields = array(
+			'id',
+			'date_created',
+			'ip',
+			'source_url',
+			'form_title',
 			'transaction_id',
 			'payment_amount',
 			'payment_date',
