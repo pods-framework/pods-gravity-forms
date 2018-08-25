@@ -212,6 +212,7 @@ class Pods_GF {
 
 			add_filter( 'gform_pre_submission_filter_' . $form_id, array( $this, '_gf_pre_submission_filter' ), 9, 1 );
 			add_action( 'gform_after_submission_' . $form_id, array( $this, '_gf_after_submission' ), 10, 2 );
+			add_action( 'gform_post_update_entry_' . $form_id, array( $this, '_gf_post_update_entry' ), 10, 2 );
 
 			// Hook into validation
 			add_filter( 'gform_validation_' . $form_id, array( $this, '_gf_validation' ), 11, 1 );
@@ -4042,6 +4043,68 @@ class Pods_GF {
 					}
 				}
 			}
+		}
+
+		return $entry;
+
+	}
+
+	/**
+	 * Action handler for Gravity Forms: gform_post_update_entry_{$form_id}
+	 *
+	 * @param array $entry          GF Entry array
+	 * @param array $original_entry Original GF Entry array
+	 */
+	public function _gf_post_update_entry ( $entry, $original_entry ) {
+
+		if ( empty( $this->options['update_pod_item'] ) ) {
+			return $entry;
+		}
+
+		$form_id = $entry['form_id'];
+
+		$form = GFAPI::get_form( $form_id );
+
+		if ( empty( $this->gf_validation_message ) ) {
+			remove_action( 'gform_post_update_entry_' . $form['id'], array( $this, '_gf_post_update_entry' ), 10 );
+
+			if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
+				return $entry;
+			}
+			elseif ( ! isset( self::$actioned[$form['id']] ) ) {
+				self::$actioned[$form['id']] = array();
+			}
+
+			self::$actioned[$form['id']][] = __FUNCTION__;
+
+			if ( is_array( $this->pod ) ) {
+				$this->id = $entry['id'];
+			}
+
+			$this->entry_id = $entry['id'];
+
+			if ( empty( $this->options ) ) {
+				return $entry;
+			}
+
+			try {
+				$this->options['entry'] = $entry;
+
+				$this->_gf_to_pods_handler( $form, $entry );
+			}
+			catch ( Exception $e ) {
+				// @todo Log something to the form entry
+			}
+
+			// Save the pod item ID for future reference.
+			gform_update_meta( $entry['id'], '_pods_item_id', self::$gf_to_pods_id[ $form['id'] ] );
+
+			if ( is_object( $this->pod ) ) {
+				gform_update_meta( $entry['id'], '_pods_item_pod', $this->pod->pod );
+			}
+
+			do_action( 'pods_gf_post_update_entry_' . $form['id'], $entry, $form );
+			do_action( 'pods_gf_post_update_entry', $entry, $form );
 		}
 
 		return $entry;
