@@ -1492,6 +1492,26 @@ class Pods_GF {
 
 		$gf_fields = array();
 
+		$extra_gf_fields = array(
+			'transaction_id',
+			'payment_amount',
+			'payment_date',
+			'payment_status',
+		);
+
+		$basic_gf_field_data = array(
+			'id'    => '',
+			'label' => '',
+			'type'  => 'text',
+		);
+
+		foreach ( $extra_gf_fields as $extra_gf_field ) {
+			$basic_gf_field_data['id']    = $extra_gf_field;
+			$basic_gf_field_data['label'] = $extra_gf_field;
+
+			$gf_fields[ $extra_gf_field ] = GF_Fields::create( $basic_gf_field_data );
+		}
+
 		foreach ( $fields as $gf_field ) {
 			$gf_fields[ (string) $gf_field->id ] = $gf_field;
 		}
