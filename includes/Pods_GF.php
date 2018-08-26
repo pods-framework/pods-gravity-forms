@@ -201,6 +201,11 @@ class Pods_GF {
 		}
 
 		if ( ! pods_v( 'admin', $options, 0 ) && ( is_admin() && RGForms::is_gravity_page() ) ) {
+			if ( ! has_action( 'gform_post_update_entry_' . $form_id, array( $this, '_gf_post_update_entry' ) ) ) {
+				add_action( 'gform_post_update_entry_' . $form_id, array( $this, '_gf_post_update_entry' ), 10, 2 );
+				add_action( 'gform_after_update_entry_' . $form_id, array( $this, '_gf_after_update_entry' ), 10, 3 );
+			}
+
 			return;
 		}
 
@@ -213,6 +218,7 @@ class Pods_GF {
 			add_filter( 'gform_pre_submission_filter_' . $form_id, array( $this, '_gf_pre_submission_filter' ), 9, 1 );
 			add_action( 'gform_after_submission_' . $form_id, array( $this, '_gf_after_submission' ), 10, 2 );
 			add_action( 'gform_post_update_entry_' . $form_id, array( $this, '_gf_post_update_entry' ), 10, 2 );
+			add_action( 'gform_after_update_entry_' . $form_id, array( $this, '_gf_after_update_entry' ), 10, 3 );
 
 			// Hook into validation
 			add_filter( 'gform_validation_' . $form_id, array( $this, '_gf_validation' ), 11, 1 );
@@ -246,9 +252,6 @@ class Pods_GF {
 		// Editing
 		if ( !has_filter( 'gform_entry_id_pre_save_lead' . $form_id, array( $this, '_gf_entry_pre_save_id' ) ) ) {
 			add_filter( 'gform_entry_id_pre_save_lead' . $form_id, array( $this, '_gf_entry_pre_save_id' ), 10, 2 );
-		}
-		if ( !has_filter( 'gform_entry_id_pre_save_lead_' . $form_id, array( $this, '_gf_entry_pre_save_id' ) ) ) {
-			add_filter( 'gform_entry_id_pre_save_lead_' . $form_id, array( $this, '_gf_entry_pre_save_id' ), 10, 2 );
 		}
 
 		// Saving
@@ -4095,8 +4098,41 @@ class Pods_GF {
 
 		$form = GFAPI::get_form( $form_id );
 
+		if ( $form && empty( $this->gf_validation_message ) ) {
+			remove_action( 'gform_after_update_entry_' . $form['id'], array( $this, '_gf_after_update_entry' ), 10 );
+
+			if ( isset( self::$actioned[ $form['id'] ] ) && in_array( __FUNCTION__, self::$actioned[ $form['id'] ] ) ) {
+				return $entry;
+			} elseif ( ! isset( self::$actioned[ $form['id'] ] ) ) {
+				self::$actioned[ $form['id'] ] = array();
+			}
+
+			self::$actioned[$form['id']][] = __FUNCTION__;
+
+			return $this->_gf_after_update_entry( $form, $entry, $original_entry );
+		}
+
+	}
+
+	/**
+	 * Action handler for Gravity Forms: gform_after_update_entry_{$form_id}
+	 *
+	 * @param array $form           GF Form array
+	 * @param array $entry          GF Entry array
+	 * @param array $original_entry Original GF Entry array
+	 */
+	public function _gf_after_update_entry ( $form, $entry, $original_entry ) {
+
+		if ( empty( $this->options['update_pod_item'] ) ) {
+			return $entry;
+		}
+
+		if ( ! is_array( $entry ) ) {
+			$entry = GFAPI::get_entry( $entry );
+		}
+
 		if ( empty( $this->gf_validation_message ) ) {
-			remove_action( 'gform_post_update_entry_' . $form['id'], array( $this, '_gf_post_update_entry' ), 10 );
+			remove_action( 'gform_after_update_entry_' . $form['id'], array( $this, '_gf_after_update_entry' ), 10 );
 
 			if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
 				return $entry;
@@ -4133,8 +4169,8 @@ class Pods_GF {
 				gform_update_meta( $entry['id'], '_pods_item_pod', $this->pod->pod );
 			}
 
-			do_action( 'pods_gf_post_update_entry_' . $form['id'], $entry, $form );
-			do_action( 'pods_gf_post_update_entry', $entry, $form );
+			do_action( 'pods_gf_after_update_entry_' . $form['id'], $entry, $form );
+			do_action( 'pods_gf_after_update_entry', $entry, $form );
 		}
 
 		return $entry;
