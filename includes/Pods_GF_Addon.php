@@ -840,9 +840,20 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		if ( $this->is_gravityforms_supported() ) {
 			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ) );
 			add_filter( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
+			add_action( 'gform_pre_entry_detail', array( $this, '_gf_pre_entry_detail' ), 10, 2 );
 			add_action( 'check_admin_referer', array( $this, '_check_admin_referer' ), 10, 2 );
 			add_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ), 10, 2 );
 		}
+
+	}
+
+	public function _gf_pre_entry_detail( $form, $lead ) {
+
+		// Remove other hooks for workarounds we don't need if this hook now exists. Not in GF when this was written.
+		remove_action( 'check_admin_referer', array( $this, '_check_admin_referer' ) );
+		remove_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ) );
+
+		$this->_gf_pre_render( $form, $entry );
 
 	}
 
