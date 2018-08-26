@@ -840,7 +840,39 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		if ( $this->is_gravityforms_supported() ) {
 			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ) );
 			add_filter( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
+			add_action( 'check_admin_referer', array( $this, '_check_admin_referer' ), 10, 2 );
+			add_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ), 10, 2 );
 		}
+
+	}
+
+	/**
+	 * Hook into check_admin_referer to setup Pods GF add-on hooks before updating form entry.
+	 *
+	 * @param string    $action The nonce action.
+	 * @param false|int $result False if the nonce is invalid, 1 if the nonce is valid and generated between
+	 *                          0-12 hours ago, 2 if the nonce is valid and generated between 12-24 hours ago.
+	 */
+	public function _check_admin_referer( $action, $result ) {
+
+		// So hacky, we need GF to add a better hook than this.
+		if ( $result && 'gforms_save_entry' === $action ) {
+			$form = GFEntryDetail::get_current_form();
+
+			$this->_gf_pre_process( $form );
+		}
+
+	}
+
+	/**
+	 * Hook into action to setup Pods GF add-on hooks before form entry edit form is shown.
+	 *
+	 * @param array|object $form  GF form data.
+	 * @param array|object $entry GF entry data.
+	 */
+	public function _gf_entry_detail_content_before( $form, $entry ) {
+
+		$this->_gf_pre_render( $form, $entry, true );
 
 	}
 
@@ -849,7 +881,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 *
 	 * @return mixed
 	 */
-	public function _gf_pre_render( $form ) {
+	public function _gf_pre_render( $form, $entry = null, $admin_edit = false ) {
 
 		$feeds = $this->get_feeds( $form['id'] );
 
@@ -861,10 +893,16 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		$pod_name   = '';
 		$feed       = null;
 
-		$entry = GFFormsModel::get_current_lead();
+		if ( empty( $entry ) ) {
+			$entry = GFFormsModel::get_current_lead();
+		}
 
 		foreach ( $feeds as $feed ) {
 			if ( 1 !== (int) $feed['is_active'] && $this->is_feed_condition_met( $feed, $form, $entry ) ) {
+				continue;
+			}
+
+			if ( $admin_edit && empty( $feed['update_pod_item'] ) ) {
 				continue;
 			}
 
