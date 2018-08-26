@@ -151,7 +151,7 @@ class Pods_GF {
 	 * @param int         $form_id GF Form ID
 	 * @param array       $options Form options for integration
 	 */
-	private function __construct ( $pod, $form_id ) {
+	private function __construct( $pod, $form_id ) {
 
 		// Pod object
 		if ( is_object( $pod ) ) {
@@ -269,7 +269,7 @@ class Pods_GF {
 	 *
 	 * @return bool Whether the conditions were met
 	 */
-	public static function conditions ( $conditions, $form_id ) {
+	public static function conditions( $conditions, $form_id ) {
 
 		$relation = 'AND';
 
@@ -324,7 +324,7 @@ class Pods_GF {
 	 *
 	 * @return bool Whether the condition was met
 	 */
-	public static function condition ( $condition, $value, $field = null ) {
+	public static function condition( $condition, $value, $field = null ) {
 
 		$field_value   = pods_v( 'value', $condition );
 		$field_check   = pods_v( 'check', $condition, 'value' );
@@ -492,7 +492,7 @@ class Pods_GF {
 	 *
 	 * @return bool Whether the length was valid
 	 */
-	public static function condition_validate_length ( $condition, $value ) {
+	public static function condition_validate_length( $condition, $value ) {
 
 		$valid = false;
 
@@ -573,7 +573,7 @@ class Pods_GF {
 	 *
 	 * @return bool Whether the value was valid
 	 */
-	public static function condition_validate_value ( $condition, $value ) {
+	public static function condition_validate_value( $condition, $value ) {
 
 		$valid = false;
 
@@ -678,7 +678,7 @@ class Pods_GF {
 	 * @param int  $form_id    GF Form ID
 	 * @param bool $keep_files To keep or delete files when deleting GF entries
 	 */
-	public static function auto_delete ( $form_id = null, $keep_files = null ) {
+	public static function auto_delete( $form_id = null, $keep_files = null ) {
 
 		if ( null !== $keep_files ) {
 			self::$keep_files[ $form_id ] = (boolean) $keep_files;
@@ -699,7 +699,7 @@ class Pods_GF {
 	 * @param int   $field_id GF Field ID
 	 * @param array $options  Dynamic select options
 	 */
-	public static function dynamic_select ( $form_id, $field_id, $options ) {
+	public static function dynamic_select( $form_id, $field_id, $options ) {
 		self::$dynamic_selects[] = array_merge(
 			array(
 				'form'        => $form_id,
@@ -733,7 +733,7 @@ class Pods_GF {
 	 *
 	 * @return array Choices array
 	 */
-	public static function build_choices ( $values, $current_value = '', $default = '' ) {
+	public static function build_choices( $values, $current_value = '', $default = '' ) {
 
 		$choices = array();
 
@@ -773,7 +773,7 @@ class Pods_GF {
 	 *
 	 * @return array Selected choice array
 	 */
-	public static function get_selected_choice ( $choices, $current_value = '', $default = '' ) {
+	public static function get_selected_choice( $choices, $current_value = '', $default = '' ) {
 
 		if ( null === $current_value || '' === $current_value ) {
 			$current_value = '';
@@ -815,7 +815,7 @@ class Pods_GF {
 	 * @param int         $id      Pod item ID
 	 * @param array       $fields  Field mapping to prepopulate from
 	 */
-	public static function prepopulate ( $form_id, $pod, $id, $fields ) {
+	public static function prepopulate( $form_id, $pod, $id, $fields ) {
 		self::$prepopulate = array(
 			'form'   => $form_id,
 
@@ -837,7 +837,7 @@ class Pods_GF {
 	 * @param int|array $form_id
 	 * @param int|array $field_id
 	 */
-	public static function prepopulate_override_value ( $form_id, $field_id ) {
+	public static function prepopulate_override_value( $form_id, $field_id ) {
 
 		if ( is_array( $form_id ) ) {
 			$form_id = $form_id['id'];
@@ -863,7 +863,7 @@ class Pods_GF {
 	 *
 	 * @return mixed
 	 */
-	public static function gf_prepopulate_value ( $post_value_override, $value_override ) {
+	public static function gf_prepopulate_value( $post_value_override, $value_override ) {
 
 		if ( null === $post_value_override ) {
 			$post_value_override = $value_override;
@@ -879,7 +879,7 @@ class Pods_GF {
 	 * @param int   $form_id GF Form ID
 	 * @param array $options Secondary Submits options
 	 */
-	public static function secondary_submits ( $form_id, $options = array() ) {
+	public static function secondary_submits( $form_id, $options = array() ) {
 
 		self::$secondary_submits[$form_id] = array(
 			'imageUrl'      => null,
@@ -917,7 +917,7 @@ class Pods_GF {
 	 *
 	 * @return string Button HTML
 	 */
-	public static function gf_secondary_submit_button ( $button_input, $form ) {
+	public static function gf_secondary_submit_button( $button_input, $form ) {
 
 		$secondary_submits = pods_v( $form['id'], self::$secondary_submits, array(), true );
 
@@ -998,7 +998,7 @@ class Pods_GF {
 	 * @param int   $form_id GF Form ID
 	 * @param array $options Save for Later options
 	 */
-	public static function save_for_later ( $form_id, $options = array() ) {
+	public static function save_for_later( $form_id, $options = array() ) {
 
 		self::$save_for_later[$form_id] = array(
 			'redirect'      => null,
@@ -1030,7 +1030,7 @@ class Pods_GF {
 	 *
 	 * @return array $form GF Form array
 	 */
-	public static function gf_save_for_later_load ( $form, $ajax ) {
+	public static function gf_save_for_later_load( $form, $ajax ) {
 
 		$save_for_later = pods_v( $form['id'], self::$save_for_later, array(), true );
 
@@ -1054,7 +1054,7 @@ class Pods_GF {
 	 *
 	 * @return array|bool
 	 */
-	public static function gf_save_for_later_data ( $form_id ) {
+	public static function gf_save_for_later_data( $form_id ) {
 
 		$postdata = array();
 
@@ -1094,7 +1094,7 @@ class Pods_GF {
 	 *
 	 * @return string Button HTML
 	 */
-	public static function gf_save_for_later_button ( $button_input, $form ) {
+	public static function gf_save_for_later_button( $button_input, $form ) {
 
 		$save_for_later = pods_v( $form['id'], self::$save_for_later, array(), true );
 
@@ -1139,7 +1139,7 @@ class Pods_GF {
 	/**
 	 * AJAX Handler for Save for Later
 	 */
-	public static function gf_save_for_later_ajax () {
+	public static function gf_save_for_later_ajax() {
 
 		global $user_ID;
 
@@ -1195,7 +1195,7 @@ class Pods_GF {
 	 * @param array $entry GF Entry array
 	 * @param array $form  GF Form array
 	 */
-	public static function gf_save_for_later_clear ( $entry, $form, $force = false ) {
+	public static function gf_save_for_later_clear( $entry, $form, $force = false ) {
 
 		global $user_ID;
 
@@ -1230,7 +1230,7 @@ class Pods_GF {
 	 * @param int   $form_id GF Form ID
 	 * @param array $options Save for Later options
 	 */
-	public static function remember ( $form_id, $options = array() ) {
+	public static function remember( $form_id, $options = array() ) {
 
 		self::$remember[$form_id] = array(
 			'fields' => null
@@ -1259,7 +1259,7 @@ class Pods_GF {
 	 *
 	 * @return array $form GF Form array
 	 */
-	public static function gf_remember_load ( $form, $ajax ) {
+	public static function gf_remember_load( $form, $ajax ) {
 
 		global $user_ID;
 
@@ -1309,7 +1309,7 @@ class Pods_GF {
 	 * @param array $entry GF Entry array
 	 * @param array $form  GF Form array
 	 */
-	public static function gf_remember_save ( $entry, $form ) {
+	public static function gf_remember_save( $entry, $form ) {
 
 		global $user_ID;
 
@@ -1480,7 +1480,7 @@ class Pods_GF {
 	 *
 	 * @return array Data array for saving
 	 */
-	public static function gf_to_pods ( $form, $options, $pod = array(), $entry = array() ) {
+	public static function gf_to_pods( $form, $options, $pod = array(), $entry = array() ) {
 
 		$data = array();
 
@@ -1644,7 +1644,7 @@ class Pods_GF {
 	 *
 	 * @return bool Whether the notifications were sent
 	 */
-	public static function gf_notifications ( $entry, $form, $options ) {
+	public static function gf_notifications( $entry, $form, $options ) {
 
 		if ( ! isset( $options['notifications'] ) || empty( $options['notifications'] ) ) {
 			return false;
@@ -1824,7 +1824,7 @@ class Pods_GF {
 	 *
 	 * @return array $form GF Form array
 	 */
-	public static function gf_dynamic_select ( $form, $ajax, $dynamic_selects = null ) {
+	public static function gf_dynamic_select( $form, $ajax, $dynamic_selects = null ) {
 
 		if ( null === $dynamic_selects ) {
 			$dynamic_selects = self::$dynamic_selects;
@@ -2042,7 +2042,7 @@ class Pods_GF {
 	 *
 	 * @return array $form GF Form array
 	 */
-	public static function gf_prepopulate ( $form, $ajax, $prepopulate = null ) {
+	public static function gf_prepopulate( $form, $ajax, $prepopulate = null ) {
 
 		if ( null === $prepopulate ) {
 			$prepopulate = self::$prepopulate;
@@ -2389,7 +2389,7 @@ class Pods_GF {
 	 * @param int   $form_id GF Form ID
 	 * @param array $options Confirmation options
 	 */
-	public static function confirmation ( $form_id, $options = array() ) {
+	public static function confirmation( $form_id, $options = array() ) {
 
 		self::$confirmation[$form_id] = $options;
 
@@ -2405,7 +2405,7 @@ class Pods_GF {
 	 * @param array $form         GF Form array
 	 * @param array $confirmation Confirmation array
 	 */
-	public static function gf_confirmation ( $confirmation, $form, $lead, $ajax = false, $return_confirmation = false ) {
+	public static function gf_confirmation( $confirmation, $form, $lead, $ajax = false, $return_confirmation = false ) {
 
 		$gf_confirmation = pods_v( $form['id'], self::$confirmation, array(), true );
 
@@ -2570,7 +2570,7 @@ class Pods_GF {
 	 *
 	 * @return array $form GF Form array
 	 */
-	public static function gf_markdown ( $form, $ajax, $markdown = null ) {
+	public static function gf_markdown( $form, $ajax, $markdown = null ) {
 
 		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
 			return $form;
@@ -2640,7 +2640,7 @@ class Pods_GF {
 	 * @param int         $id      Pod item ID
 	 * @param array       $fields  Field mapping to prepopulate from
 	 */
-	public static function read_only ( $form_id, $fields = true, $exclude_fields = array() ) {
+	public static function read_only( $form_id, $fields = true, $exclude_fields = array() ) {
 		self::$read_only = array(
 			'form'           => $form_id,
 
@@ -2666,7 +2666,7 @@ class Pods_GF {
 	 *
 	 * @return array $form GF Form array
 	 */
-	public static function gf_read_only ( $form, $ajax, $read_only = null ) {
+	public static function gf_read_only( $form, $ajax, $read_only = null ) {
 
 		if ( null === $read_only ) {
 			$read_only = self::$read_only;
@@ -2782,7 +2782,7 @@ class Pods_GF {
 	 *
 	 * @return string Input HTML override
 	 */
-	public static function gf_field_input_read_only ( $input_html, $field, $value, $lead_id, $form_id ) {
+	public static function gf_field_input_read_only( $input_html, $field, $value, $lead_id, $form_id ) {
 
 		if ( ! isset( self::$actioned[$form_id] ) ) {
 			self::$actioned[$form_id] = array();
@@ -2956,7 +2956,7 @@ class Pods_GF {
 	 *
 	 * @return string Input HTML override
 	 */
-	public static function gf_field_column_read_only ( $input, $input_info, $field, $text, $value, $form_id ) {
+	public static function gf_field_column_read_only( $input, $input_info, $field, $text, $value, $form_id ) {
 
 		$read_only = self::$read_only;
 
@@ -3012,7 +3012,7 @@ class Pods_GF {
 	 *
 	 * @param array $form GF Form array
 	 */
-	public static function gf_read_only_pre_submission ( $form ) {
+	public static function gf_read_only_pre_submission( $form ) {
 
 		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
 			return $form;
@@ -3052,7 +3052,7 @@ class Pods_GF {
 	 *
 	 * @return array $form GF Form array
 	 */
-	public function _gf_pre_render ( $form, $ajax = false ) {
+	public function _gf_pre_render( $form, $ajax = false ) {
 
 		if ( empty( $this->options ) ) {
 			return $form;
@@ -3144,7 +3144,7 @@ class Pods_GF {
 	 *
 	 * @return string Form HTML
 	 */
-	public function _gf_get_form_filter ( $form_string, $form ) {
+	public function _gf_get_form_filter( $form_string, $form ) {
 
 		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
 			return $form_string;
@@ -3624,7 +3624,7 @@ class Pods_GF {
 	 *
 	 * @return array GF validation result
 	 */
-	public function _gf_field_validation ( $validation_result, $value, $form, $field ) {
+	public function _gf_field_validation( $validation_result, $value, $form, $field ) {
 
 		if ( ! $validation_result['is_valid'] ) {
 			return $validation_result;
@@ -3752,7 +3752,7 @@ class Pods_GF {
 	 *
 	 * @return array GF Validation result
 	 */
-	public function _gf_validation ( $validation_result ) {
+	public function _gf_validation( $validation_result ) {
 
 		if ( ! $validation_result['is_valid'] ) {
 			return $validation_result;
@@ -3798,7 +3798,7 @@ class Pods_GF {
 	 *
 	 * @return null
 	 */
-	public function _gf_validation_message ( $validation_message, $form ) {
+	public function _gf_validation_message( $validation_message, $form ) {
 
 		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
 			return $validation_message;
@@ -3853,7 +3853,7 @@ class Pods_GF {
 	 *
 	 * @param array $form GF Form array
 	 */
-	public function _gf_pre_submission_filter ( $form ) {
+	public function _gf_pre_submission_filter( $form ) {
 
 		// Add Dynamic Selects
 		if ( isset( $this->options['dynamic_select'] ) && ! empty( $this->options['dynamic_select'] ) ) {
@@ -3886,7 +3886,7 @@ class Pods_GF {
 	 * @param array $lead GF Entry array
 	 * @param array $form GF Form array
 	 */
-	public function _gf_entry_post_save ( $lead, $form ) {
+	public function _gf_entry_post_save( $lead, $form ) {
 
 		global $wpdb;
 
@@ -3955,7 +3955,7 @@ class Pods_GF {
 	 * @param array $entry GF Entry array
 	 * @param array $form  GF Form array
 	 */
-	public function _gf_after_submission ( $entry, $form ) {
+	public function _gf_after_submission( $entry, $form ) {
 
 		if ( empty( $this->gf_validation_message ) ) {
 			remove_action( 'gform_post_submission_' . $form['id'], array( $this, '_gf_after_submission' ), 10 );
@@ -4088,7 +4088,7 @@ class Pods_GF {
 	 * @param array $entry          GF Entry array
 	 * @param array $original_entry Original GF Entry array
 	 */
-	public function _gf_post_update_entry ( $entry, $original_entry ) {
+	public function _gf_post_update_entry( $entry, $original_entry ) {
 
 		if ( empty( $this->options['update_pod_item'] ) ) {
 			return $entry;
@@ -4119,7 +4119,7 @@ class Pods_GF {
 	 * @param array $entry          GF Entry array
 	 * @param array $original_entry Original GF Entry array
 	 */
-	public function _gf_after_update_entry ( $form, $entry, $original_entry ) {
+	public function _gf_after_update_entry( $form, $entry, $original_entry ) {
 
 		if ( empty( $this->options['update_pod_item'] ) ) {
 			return $entry;
@@ -4206,7 +4206,7 @@ class Pods_GF {
 	 *
 	 * @return null|mixed Value of the variable key or default value
 	 */
-	public static function v ( $name, $var, $default = null, $strict = false ) {
+	public static function v( $name, $var, $default = null, $strict = false ) {
 
 		$value = $default;
 
