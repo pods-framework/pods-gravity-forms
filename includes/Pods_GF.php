@@ -4099,8 +4099,6 @@ class Pods_GF {
 		$form = GFAPI::get_form( $form_id );
 
 		if ( $form && empty( $this->gf_validation_message ) ) {
-			remove_action( 'gform_after_update_entry_' . $form['id'], array( $this, '_gf_after_update_entry' ), 10 );
-
 			if ( isset( self::$actioned[ $form['id'] ] ) && in_array( __FUNCTION__, self::$actioned[ $form['id'] ] ) ) {
 				return $entry;
 			} elseif ( ! isset( self::$actioned[ $form['id'] ] ) ) {
@@ -4132,8 +4130,6 @@ class Pods_GF {
 		}
 
 		if ( empty( $this->gf_validation_message ) ) {
-			remove_action( 'gform_after_update_entry_' . $form['id'], array( $this, '_gf_after_update_entry' ), 10 );
-
 			if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
 				return $entry;
 			}

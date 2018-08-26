@@ -838,16 +838,56 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		parent::init();
 
 		if ( $this->is_gravityforms_supported() ) {
-			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ) );
+			// Handle normal forms.
+			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ), 9 );
 			add_filter( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
+
+			// Handle entry detail edits.
 			add_action( 'gform_pre_entry_detail', array( $this, '_gf_pre_entry_detail' ), 10, 2 );
 			add_action( 'check_admin_referer', array( $this, '_check_admin_referer' ), 10, 2 );
 			add_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ), 10, 2 );
+
+			// Handle entry updates.
+			add_action( 'gform_post_update_entry_' . $form_id, array( $this, '_gf_post_update_entry' ), 9, 2 );
+			add_action( 'gform_after_update_entry_' . $form_id, array( $this, '_gf_after_update_entry' ), 9, 3 );
 		}
 
 	}
 
-	public function _gf_pre_entry_detail( $form, $lead ) {
+	/**
+	 * Action handler for Gravity Forms: gform_post_update_entry.
+	 *
+	 * @param array $entry          GF Entry array
+	 * @param array $original_entry Original GF Entry array
+	 */
+	public function _gf_post_update_entry ( $entry, $original_entry ) {
+
+		$form = GFAPI::get_form( $entry['form_id'] );
+
+		$this->_gf_pre_process( $form );
+
+	}
+
+	/**
+	 * Action handler for Gravity Forms: gform_after_update_entry.
+	 *
+	 * @param array $form           GF Form array
+	 * @param array $entry          GF Entry array
+	 * @param array $original_entry Original GF Entry array
+	 */
+	public function _gf_after_update_entry ( $form, $entry, $original_entry ) {
+
+		$this->_gf_pre_process( $form );
+
+	}
+
+	/**
+	 * Hook into action to setup Pods GF add-on hooks before form entry edit form is shown.
+	 *
+	 * @param array|object $form  GF form data.
+	 * @param array|object $entry GF entry data.
+	 */
+	public function _gf_pre_entry_detail( $form, $entry ) {
 
 		// Remove other hooks for workarounds we don't need if this hook now exists. Not in GF when this was written.
 		remove_action( 'check_admin_referer', array( $this, '_check_admin_referer' ) );
@@ -893,6 +933,12 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 * @return mixed
 	 */
 	public function _gf_pre_render( $form, $entry = null, $admin_edit = false ) {
+
+		static $setup = array();
+
+		if ( ! empty( $setup[ $form['id'] ] ) ) {
+			return $form;
+		}
 
 		$feeds = $this->get_feeds( $form['id'] );
 
