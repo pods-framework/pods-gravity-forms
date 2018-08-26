@@ -850,7 +850,24 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			// Handle entry updates.
 			add_action( 'gform_post_update_entry_' . $form_id, array( $this, '_gf_post_update_entry' ), 9, 2 );
 			add_action( 'gform_after_update_entry_' . $form_id, array( $this, '_gf_after_update_entry' ), 9, 3 );
+
+			// Handle Payment Add-on callbacks.
+			add_action( 'gform_action_pre_payment_callback', array( $this, '_gf_action_pre_payment_callback' ), 10, 2 );
 		}
+
+	}
+
+	/**
+	 * Action handler for Gravity Forms: gform_action_pre_payment_callback.
+	 *
+	 * @param array $entry          GF Entry array
+	 * @param array $original_entry Original GF Entry array
+	 */
+	public function _gf_action_pre_payment_callback( $action, $entry ) {
+
+		$form = GFAPI::get_form( $entry['form_id'] );
+
+		$this->_gf_pre_process( $form );
 
 	}
 
@@ -860,7 +877,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 * @param array $entry          GF Entry array
 	 * @param array $original_entry Original GF Entry array
 	 */
-	public function _gf_post_update_entry ( $entry, $original_entry ) {
+	public function _gf_post_update_entry( $entry, $original_entry ) {
 
 		$form = GFAPI::get_form( $entry['form_id'] );
 
@@ -875,7 +892,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 * @param array $entry          GF Entry array
 	 * @param array $original_entry Original GF Entry array
 	 */
-	public function _gf_after_update_entry ( $form, $entry, $original_entry ) {
+	public function _gf_after_update_entry( $form, $entry, $original_entry ) {
 
 		$this->_gf_pre_process( $form );
 
