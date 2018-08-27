@@ -848,8 +848,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			add_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ), 10, 2 );
 
 			// Handle entry updates.
-			add_action( 'gform_post_update_entry_' . $form_id, array( $this, '_gf_post_update_entry' ), 9, 2 );
-			add_action( 'gform_after_update_entry_' . $form_id, array( $this, '_gf_after_update_entry' ), 9, 3 );
+			add_action( 'gform_post_update_entry', array( $this, '_gf_post_update_entry' ), 9, 2 );
+			add_action( 'gform_after_update_entry', array( $this, '_gf_after_update_entry' ), 9, 3 );
 
 			// Handle Payment Add-on callbacks.
 			add_action( 'gform_action_pre_payment_callback', array( $this, '_gf_action_pre_payment_callback' ), 10, 2 );
