@@ -860,8 +860,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	/**
 	 * Action handler for Gravity Forms: gform_action_pre_payment_callback.
 	 *
-	 * @param array $entry          GF Entry array
-	 * @param array $original_entry Original GF Entry array
+	 * @param array $action Action data being saved.
+	 * @param array $entry  GF Entry array.
 	 */
 	public function _gf_action_pre_payment_callback( $action, $entry ) {
 
