@@ -49,6 +49,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	protected $_capabilities_form_settings = array( 'pods_gravityforms', 'pods' );
 
 	/**
+	 * @var Pods_GF[]
+	 */
+	public $pods_gf = [];
+
+	/**
 	 * Contains an instance of this class, if available.
 	 *
 	 * @since  1.0
@@ -94,6 +99,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 	}
 
+	/**
+	 * @return array
+	 */
 	public function scripts() {
 
 		$scripts = array(
@@ -842,6 +850,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ), 9 );
 			add_filter( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
 
+			// Handle merge tags
+			add_filter( 'gform_custom_merge_tags', array( $this, '_gf_custom_merge_tags' ), 10, 2 );
+			add_filter( 'gform_merge_tag_data', array( $this, '_gf_add_merge_tags' ), 10, 3 );
+			add_filter( 'gform_replace_merge_tags', array( $this, '_gf_replace_merge_tags' ), 10, 2 );
+
 			// Handle entry detail edits.
 			add_action( 'gform_pre_entry_detail', array( $this, '_gf_pre_entry_detail' ), 10, 2 );
 			add_action( 'check_admin_referer', array( $this, '_check_admin_referer' ), 10, 2 );
@@ -850,10 +863,53 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			// Handle entry updates.
 			add_action( 'gform_post_update_entry', array( $this, '_gf_post_update_entry' ), 9, 2 );
 			add_action( 'gform_after_update_entry', array( $this, '_gf_after_update_entry' ), 9, 3 );
+			add_action( 'gform_post_update_entry_property', array( $this, '_gf_post_update_entry_property' ), 10, 2 );
 
 			// Handle Payment Add-on callbacks.
 			add_action( 'gform_action_pre_payment_callback', array( $this, '_gf_action_pre_payment_callback' ), 10, 2 );
 		}
+
+	}
+
+	/**
+	 * Processes feed action.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param array  $feed  The Feed Object currently being processed.
+	 * @param array  $entry The Entry Object currently being processed.
+	 * @param array  $form  The Form Object currently being processed.
+	 *
+	 * @return array|null Returns a modified entry object or null.
+	 */
+	public function process_feed( $feed, $entry, $form ) {
+
+		if ( empty( $this->pods_gf[ $feed['id'] ] ) ) {
+			return null;
+		}
+
+		/** @var Pods_GF $pods_gf */
+		$pods_gf = $this->pods_gf[ $feed['id'] ];
+
+		// Handle the submission here before notifications go out.
+		$pods_gf->_gf_after_submission( $entry, $form );
+
+		return null;
+
+	}
+
+	/**
+	 * Action handler for Gravity Forms: gform_post_update_entry_property.
+	 *
+	 * @param array $action Action data being saved.
+	 * @param array $entry  GF Entry array.
+	 */
+	public function _gf_post_update_entry_property( $action, $entry ) {
+
+		$form = GFAPI::get_form( $entry['form_id'] );
+
+		$this->_gf_pre_process( $form );
 
 	}
 
@@ -1185,13 +1241,122 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				 */
 				$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
 
-				pods_gf( $pod, $form['id'], $options );
+				$this->pods_gf[ $feed['id'] ] = pods_gf( $pod, $form['id'], $options );
 
 				$setup[ $form['id'] ] = true;
 			}
 		}
 
 		return $form;
+
+	}
+
+	/**
+	 * Add custom merge tags for Pods GF.
+	 *
+	 * @param array $merge_tags Merge tags.
+	 * @param int   $form_id    Form ID.
+	 *
+	 * @return array Merge tags,
+	 */
+	public function _gf_custom_merge_tags( $merge_tags, $form_id ) {
+
+		$merge_tags[] = array(
+			'tag'   => '{pods:id}',
+			'label' => esc_html__( 'Pods GF Item ID', 'pods-gravity-forms' ),
+		);
+
+		$merge_tags[] = array(
+			'tag'   => '{pods:permalink}',
+			'label' => esc_html__( 'Pods GF Item Permalink', 'pods-gravity-forms' ),
+		);
+
+		return $merge_tags;
+
+	}
+
+	/**
+	 * Add custom merge tags for Pods GF.
+	 *
+	 * @param array       $data Merge tag data.
+	 * @param string      $text Content to replace custom merge tags in.
+	 * @param false|array $form GF form object.
+	 *
+	 * @return array Merge tag data.
+	 */
+	public function _gf_add_merge_tags( $data, $text, $form ) {
+
+		if ( empty( $form ) || empty( $form['id'] ) ) {
+			return $data;
+		}
+
+		$form_id = $form['id'];
+
+		$id        = 0;
+		$permalink = '';
+
+		if ( ! empty( Pods_GF::$gf_to_pods_id[ $form_id ] ) ) {
+			$id = Pods_GF::$gf_to_pods_id[ $form_id ];
+		}
+
+		if ( ! empty( Pods_GF::$gf_to_pods_id[ $form_id . '_permalink' ] ) ) {
+			$permalink = Pods_GF::$gf_to_pods_id[ $form_id . '_permalink' ];
+		}
+
+		$data['pods'] = array(
+			'id'        => $id,
+			'permalink' => $permalink,
+		);
+
+		return $data;
+
+	}
+
+	/**
+	 * Replace custom merge tags in content for Pods GF.
+	 *
+	 * @param string      $content Content to replace custom merge tags in.
+	 * @param false|array $form    GF form object.
+	 *
+	 * @return string Content with custom merge tags replaced.
+	 */
+	public function _gf_replace_merge_tags( $content, $form ) {
+
+		if ( empty( $form ) || empty( $form['id'] ) ) {
+			return $content;
+		}
+
+		$form_id = $form['id'];
+
+		$id        = 0;
+		$permalink = '';
+
+		if ( ! empty( Pods_GF::$gf_to_pods_id[ $form_id ] ) ) {
+			$id = Pods_GF::$gf_to_pods_id[ $form_id ];
+		}
+
+		if ( ! empty( Pods_GF::$gf_to_pods_id[ $form_id . '_permalink' ] ) ) {
+			$permalink = Pods_GF::$gf_to_pods_id[ $form_id . '_permalink' ];
+		}
+
+		// For backcompat purposes.
+		$id_merge_tags = array(
+			'{pods:id}',
+			'{gf_to_pods_id}',
+			'{@gf_to_pods_id}',
+		);
+
+		// For backcompat purposes.
+		$permalink_merge_tags = array(
+			'{pods:permalink}',
+			'{gf_to_pods_permalink}',
+			'{@gf_to_pods_permalink}',
+		);
+
+		$content = str_replace( $id_merge_tags, $id, $content );
+		$content = str_replace( $permalink_merge_tags, $permalink, $content );
+
+		return $content;
 
 	}
 
@@ -1358,8 +1523,13 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				'is_default_column'          => true,
 				'update_entry_meta_callback' => array( $this, 'update_entry_meta_pod_id' ),
 				'filter'                     => array(
-					'operators' => array( 'is', 'isnot', '>', '<' )
-				)
+					'operators' => array(
+						'is',
+						'isnot',
+						'>',
+						'<',
+					),
+				),
 			);
 		}
 
