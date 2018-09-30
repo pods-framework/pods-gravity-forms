@@ -2216,147 +2216,20 @@ class Pods_GF {
 			if ( null === $value_override ) {
 				$value = $value_override;
 
+				$pod_field_type = '';
+
 				if ( is_object( $pod ) ) {
 					$pod_field_type = $pod->fields( $field_options['field'], 'type' );
-
-					if ( $pod_field_type ) {
-						$value_override = $pod->field( $field_options['field'], array( 'output' => 'ids' ) );
-
-						$date_time_types = array(
-							'date',
-							'datetime',
-						);
-
-						$empty_values = array(
-							'0000-00-00',
-							'0000-00-00 00:00:00',
-						);
-
-						if ( in_array( $pod_field_type, $date_time_types, true ) && in_array( $value_override, $empty_values, true ) ) {
-							$value_override = '';
-						} elseif ( ! empty( $value_override ) ) {
-							if ( 'list' === $gf_field['type'] ) {
-								if ( is_string( $value_override ) ) {
-									$list = @json_decode( $value_override, true );
-
-									if ( ! $list || ! is_array( $list ) ) {
-										$list = maybe_unserialize( $value_override );
-									}
-
-									$value_override = array();
-
-									if ( $list && is_array( $list ) ) {
-										$list = call_user_func_array( 'array_values', $list );
-										$list = call_user_func_array( 'array_merge', $list );
-
-										$value_override = $list;
-									}
-								} elseif ( 'pick' === $pod_field_type ) {
-									$related_pod = $pod->field( $field_options['field'], array( 'output' => 'find' ) );
-
-									$value_override = array();
-
-									if ( $related_pod && is_a( $related_pod, 'Pods' ) && is_a( $gf_field, 'GF_Field_List' ) ) {
-										$columns = wp_list_pluck( $gf_field->choices, 'text' );
-
-										$columns = self::match_pod_fields_to_list_columns( $related_pod, $columns, $form, $gf_field );
-
-										while ( $related_pod->fetch() ) {
-											foreach ( $columns as $column ) {
-												$column_value = $related_pod->field( $column, array( 'output' => 'ids' ) );
-
-												$value_override[] = $column_value;
-											}
-										}
-									}
-								}
-							} elseif ( 'time' === $gf_field['type'] && ! empty( $value_override ) ) {
-								$format = empty( $gf_field->timeFormat ) ? '12' : esc_attr( $gf_field->timeFormat );
-
-								if ( '12' === $format && preg_match( '/^(\d{1,2}):(\d{1,2})/', $value_override, $matches ) && 12 < (int) $matches[1] ) {
-									$hour = (int) $matches[1];
-									$hour -= 12;
-
-									if ( $hour < 10 ) {
-										$hour = '0' . $hour;
-									}
-
-									$value_override = sprintf( '%s:%s pm', $hour, $matches[2] );
-								}
-							} elseif ( 'address' === $gf_field['type'] ) {
-								// @todo Figure out what to do for address values
-							} elseif ( 'checkbox' === $gf_field['type'] ) {
-								$values = $value_override;
-
-								$value_override = array();
-
-								$choice_id = 1;
-
-								foreach ( $gf_field['choices'] as $k => $choice ) {
-									$gf_field->choices[$k]['isSelected'] = false;
-
-									$is_selected = false;
-
-									if ( 'boolean' === $pod_field_type && 1 === (int) $values && ! empty( $choice['value'] ) ) {
-										$is_selected = true;
-									} elseif ( ( ! is_array( $values ) && (string) $choice['value'] === (string) $values )
-										|| ( is_array( $values ) && in_array( $choice['value'], $values, true ) ) ) {
-										$is_selected = true;
-									}
-
-									if ( $is_selected ) {
-										$gf_field->choices[$k]['isSelected'] = true;
-
-										if ( ! empty( $choice['id'] ) ) {
-											$choice_id = $choice['id'];
-										}
-
-										$value_override[ 'input_' . $choice_id ] = $choice['value'];
-									}
-
-									$choice_id ++;
-								}
-
-								$autopopulate = false;
-							}
-						}
-					}
 				}
-				elseif ( ! empty( $pod ) ) {
-					if ( isset( $pod[$field_options['field']] ) ) {
-						$value_override = maybe_unserialize( $pod[$field_options['field']] );
 
-						if ( ! empty( $value_override ) ) {
-							if ( 'list' === $gf_field['type'] ) {
-								$list = $value_override;
+				if ( isset( $pod[ $field_options['field'] ] ) ) {
+					$value_override = $pod[ $field_options['field'] ];
+				}
 
-								$value_override = array();
-
-								foreach ( $list as $list_row ) {
-									$value_override = array_merge( $value_override, array_values( $list_row ) );
-								}
-							}
-							elseif ( 'checkbox' === $gf_field['type'] ) {
-								$values = $value_override;
-
-								$value_override = array();
-
-								foreach ( $gf_field['choices'] as $k => $choice ) {
-									$gf_field['choices'][$k]['isSelected'] = false;
-
-									if ( ( ! is_array( $values ) && (string) $choice['value'] === (string) $values )
-										|| ( is_array( $values ) && in_array( $choice['value'], $values, true ) ) ) {
-										$gf_field['choices'][$k]['isSelected'] = true;
-
-										$value_override['input_' . $choice['id']] = $choice['value'];
-									}
-								}
-
-								$autopopulate = false;
-							}
-						}
-					}
-					elseif ( null !== $field_key && 'checkbox' === $gf_field['type'] ) {
+				if ( $pod_field_type ) {
+					if ( is_object( $pod ) ) {
+						$value_override = $pod->field( $field_options['field'], array( 'output' => 'ids' ) );
+					} elseif ( is_array( $pod ) && null !== $field_key && 'checkbox' === $gf_field['type'] ) {
 						$value_override = array();
 
 						$items   = 0;
@@ -2365,16 +2238,18 @@ class Pods_GF {
 						$total_choices = count( $gf_field['choices'] );
 
 						while ( $items < $total_choices ) {
-							if ( isset( $pod[ $field_options['field'] . '.' . $counter ] ) ) {
+							$field_key_counter = $field_options['field'] . '.' . $counter;
+
+							if ( isset( $pod[ $field_key_counter ] ) ) {
 								$choice_counter = 1;
 
 								foreach ( $gf_field['choices'] as $k => $choice ) {
-									$gf_field['choices'][$k]['isSelected'] = false;
+									$gf_field['choices'][ $k ]['isSelected'] = false;
 
-									if ( (string) $choice['value'] === (string) $pod[$field_options['field'] . '.' . $counter] || $counter == $choice_counter ) {
-										$gf_field['choices'][$k]['isSelected'] = true;
+									if ( (string) $choice['value'] === (string) $pod[ $field_key_counter ] || $counter == $choice_counter ) {
+										$gf_field['choices'][ $k ]['isSelected'] = true;
 
-										$value_override['input_' . pods_v( 'id', $choice, $field_options['field'] . '.1', true )] = $choice['value'];
+										$value_override[ 'input_' . pods_v( 'id', $choice, $field_options['field'] . '.1', true ) ] = $choice['value'];
 									}
 
 									$choice_counter ++;
@@ -2395,6 +2270,109 @@ class Pods_GF {
 						}
 
 						$autopopulate = false;
+					}
+
+					$date_time_types = array(
+						'date',
+						'datetime',
+					);
+
+					$empty_values = array(
+						'0000-00-00',
+						'0000-00-00 00:00:00',
+					);
+
+					if ( in_array( $pod_field_type, $date_time_types, true ) && in_array( $value_override, $empty_values, true ) ) {
+						$value_override = '';
+					} elseif ( ! empty( $value_override ) ) {
+						if ( 'list' === $gf_field['type'] ) {
+							if ( is_string( $value_override ) ) {
+								$list = @json_decode( $value_override, true );
+
+								if ( ! $list || ! is_array( $list ) ) {
+									$list = maybe_unserialize( $value_override );
+								}
+
+								$value_override = array();
+
+								if ( $list && is_array( $list ) ) {
+									$list = call_user_func_array( 'array_values', $list );
+									$list = call_user_func_array( 'array_merge', $list );
+
+									$value_override = $list;
+								}
+							} elseif ( 'pick' === $pod_field_type ) {
+								$related_pod = false;
+
+								if ( is_object( $pod ) ) {
+									$related_pod = $pod->field( $field_options['field'], array( 'output' => 'find' ) );
+								}
+
+								$value_override = array();
+
+								if ( $related_pod && is_a( $related_pod, 'Pods' ) && is_a( $gf_field, 'GF_Field_List' ) ) {
+									$columns = wp_list_pluck( $gf_field->choices, 'text' );
+
+									$columns = self::match_pod_fields_to_list_columns( $related_pod, $columns, $form, $gf_field );
+
+									while ( $related_pod->fetch() ) {
+										foreach ( $columns as $column ) {
+											$column_value = $related_pod->field( $column, array( 'output' => 'ids' ) );
+
+											$value_override[] = $column_value;
+										}
+									}
+								}
+							}
+						} elseif ( 'time' === $gf_field['type'] && ! empty( $value_override ) ) {
+							$format = empty( $gf_field->timeFormat ) ? '12' : esc_attr( $gf_field->timeFormat );
+
+							if ( '12' === $format && preg_match( '/^(\d{1,2}):(\d{1,2})/', $value_override, $matches ) && 12 < (int) $matches[1] ) {
+								$hour = (int) $matches[1];
+								$hour -= 12;
+
+								if ( $hour < 10 ) {
+									$hour = '0' . $hour;
+								}
+
+								$value_override = sprintf( '%s:%s pm', $hour, $matches[2] );
+							}
+						} elseif ( 'address' === $gf_field['type'] ) {
+							// @todo Figure out what to do for address values
+						} elseif ( 'checkbox' === $gf_field['type'] ) {
+							$values = $value_override;
+
+							$value_override = array();
+
+							$choice_id = 1;
+
+							foreach ( $gf_field['choices'] as $k => $choice ) {
+								$gf_field->choices[$k]['isSelected'] = false;
+
+								$is_selected = false;
+
+								if ( 'boolean' === $pod_field_type && 1 === (int) $values && ! empty( $choice['value'] ) ) {
+									$is_selected = true;
+								} elseif ( ( ! is_array( $values ) && (string) $choice['value'] === (string) $values )
+									|| ( is_array( $values ) && in_array( $choice['value'], $values, true ) ) ) {
+									$is_selected = true;
+								}
+
+								if ( $is_selected ) {
+									$gf_field->choices[$k]['isSelected'] = true;
+
+									if ( ! empty( $choice['id'] ) ) {
+										$choice_id = $choice['id'];
+									}
+
+									$value_override[ 'input_' . $choice_id ] = $choice['value'];
+								}
+
+								$choice_id ++;
+							}
+
+							$autopopulate = false;
+						}
 					}
 				}
 			}
