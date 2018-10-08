@@ -45,17 +45,28 @@ global $pods_gf_ui;
 
 /**
  * Include the Pods GF Add-On
+ *
+ * @throws \Exception
  */
 function pods_gf_include_gf_addon() {
 
+	if ( ! defined( 'PODS_VERSION' ) || ! class_exists( 'GFForms' ) ) {
+		return;
+	}
+
 	// Include GF Feed Addon code
-	if ( class_exists( 'GFForms' ) && ! class_exists( 'GFFeedAddOn' ) ) {
+	if ( ! class_exists( 'GFFeedAddOn' ) ) {
 		GFForms::include_feed_addon_framework();
 	}
 
 	// Include GF Add-On
-	if ( class_exists( 'GFForms' ) && defined( 'PODS_VERSION' ) ) {
-		require_once( PODS_GF_DIR . 'includes/Pods_GF_Addon.php' );
+	require_once PODS_GF_DIR . 'includes/Pods_GF_Addon.php';
+
+	// Include GF Add-On
+	if ( defined( 'WP_CLI' ) ) {
+		require_once PODS_GF_DIR . 'includes/Pods_GF_CLI.php';
+
+		WP_CLI::add_command( 'pods-gf', 'Pods_GF_CLI' );
 	}
 
 }

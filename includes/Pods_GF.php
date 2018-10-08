@@ -1383,7 +1383,10 @@ class Pods_GF {
 			$item_pod = gform_get_meta( $entry['id'], '_pods_item_pod' );
 
 			if ( $item_id && $item_pod && is_object( $this->pod ) && $item_pod === $this->pod->pod ) {
-				$id = $item_id;
+				// Only use the item ID if it exists.
+				if ( $this->pod->fetch( $id ) ) {
+					$id = $item_id;
+				}
 			}
 		}
 
