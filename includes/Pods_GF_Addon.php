@@ -847,7 +847,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		if ( $this->is_gravityforms_supported() ) {
 			// Handle normal forms.
-			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ), 9 );
+			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ), 9, 2 );
 			add_filter( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
 
 			// Handle merge tags
@@ -966,7 +966,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		remove_action( 'check_admin_referer', array( $this, '_check_admin_referer' ) );
 		remove_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ) );
 
-		$this->_gf_pre_render( $form, $entry );
+		$this->_gf_pre_render( $form, $entry, true );
 
 	}
 
@@ -1028,11 +1028,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		}
 
 		foreach ( $feeds as $feed ) {
-			if ( 1 !== (int) $feed['is_active'] && $this->is_feed_condition_met( $feed, $form, $entry ) ) {
+			if ( 1 !== (int) $feed['is_active'] ) {
 				continue;
 			}
 
-			if ( $admin_edit && empty( $feed['update_pod_item'] ) ) {
+			if ( $admin_edit && empty( $feed['meta']['update_pod_item'] ) ) {
 				continue;
 			}
 
@@ -1052,6 +1052,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			if ( empty( $pod_obj ) || ! $pod_obj->valid() ) {
 				return $form;
 			}
+
+			$dynamic_selects = array();
 
 			/**
 			 * @var GF_Field $gf_field
@@ -1083,13 +1085,26 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						continue;
 					}
 
+					if ( isset( $data[''] ) ) {
+						unset( $data[''] );
+					}
+
+					$select_text = pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options['options'], __( '-- Select One --', 'pods' ), true );
+
 					$options = array(
-						'options'     => $data,
-						'select_text' => pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options['options'] ),
+						'options' => $data,
 					);
 
-					Pods_GF::dynamic_select( $form['id'], (string) $gf_field->id, $options );
+					if ( $select_text ) {
+						$options['select_text'] = $select_text;
+					}
+
+					$dynamic_selects[ $gf_field->id ] = $options;
 				}
+			}
+
+			if ( $dynamic_selects ) {
+				Pods_GF::gf_dynamic_select( $form, false, $dynamic_selects );
 			}
 
 			// Support other options like prepopulating etc
@@ -1123,131 +1138,145 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					continue;
 				}
 
-				// Block new post being created in GF
-				add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
-
-				$pod_fields    = self::get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
-				$object_fields = self::get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
-				$custom_fields = self::get_field_map_custom_fields_with_custom_values( $feed );
-
-				$fields = array_merge( $pod_fields, $object_fields, $custom_fields );
-
-				$options = array(
-					// array ( 'gf_field_id' => 'pod_field_name' )
-					'fields'              => $fields,
-					'update_pod_item'     => (int) pods_v( 'update_pod_item', $feed['meta'], 0 ),
-					'markdown'            => (int) pods_v( 'enable_markdown', $feed['meta'], 0 ),
-					'auto_delete'         => (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
-					'gf_to_pods_priority' => 'submission',
-				);
-
-				// Setup pod object
-				$pod = pods( $feed['meta']['pod'] );
-
-				$edit_id        = 0;
-				$prepopulate    = false;
-				$prepopulate_id = 0;
-
-				if ( 'user' === $pod->pod_data['type'] && is_user_logged_in() ) {
-					// Support user data editing
-					if ( 1 === (int) pods_v( 'enable_current_user', $feed['meta'], 0 ) ) {
-						$edit_id = get_current_user_id();
-					}
-
-					// Support prepopulating
-					if ( 1 === (int) pods_v( 'enable_prepopulate', $feed['meta'], 0 ) ) {
-						$prepopulate = true;
-
-						$prepopulate_id = get_current_user_id();
-					}
-				} elseif ( in_array( $pod->pod_data['type'], array( 'post_type', 'media' ), true ) && is_singular( $pod->pod ) ) {
-					// Support post data editing
-					if ( 1 === (int) pods_v( 'enable_current_post', $feed['meta'], 0 ) ) {
-						$edit_id = get_the_ID();
-					}
-
-					// Support prepopulating
-					if ( 1 === (int) pods_v( 'enable_prepopulate', $feed['meta'], 0 ) ) {
-						$prepopulate = true;
-
-						$prepopulate_id = get_the_ID();
-					}
-				}
-
-				/**
-				 * Allow filtering of which item ID to use when editing (default none, always add new items)
-				 *
-				 * @param int    $edit_id  Edit ID
-				 * @param string $pod_name Pod name
-				 * @param int    $form_id  GF Form ID
-				 * @param array  $feed     GF Form feed array
-				 * @param array  $form     GF Form array
-				 * @param array  $options  Pods GF options
-				 * @param Pods   $pod      Pods object
-				 */
-				$edit_id = (int) apply_filters( 'pods_gf_addon_edit_id', $edit_id, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
-
-				/**
-				 * Allow filtering of whether to prepopulate form fields (default none)
-				 *
-				 * @param bool   $prepopulate Whether to prepopulate or not
-				 * @param string $pod_name    Pod name
-				 * @param int    $form_id     GF Form ID
-				 * @param array  $feed        GF Form feed array
-				 * @param array  $form        GF Form array
-				 * @param array  $options     Pods GF options
-				 * @param Pods   $pod         Pods object
-				 */
-				$prepopulate = (boolean) apply_filters( 'pods_gf_addon_prepopulate', $prepopulate, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
-
-				if ( empty( $edit_id ) && $prepopulate ) {
-					/**
-					 * Allow filtering of which item ID to use when prepopulating form fields (default is same as Edit ID)
-					 *
-					 * @param int    $prepopulate_id  ID to use when prepopulating
-					 * @param string $pod_name Pod name
-					 * @param int    $form_id  GF Form ID
-					 * @param array  $feed     GF Form feed array
-					 * @param array  $form     GF Form array
-					 * @param array  $options  Pods GF options
-					 * @param Pods   $pod      Pods object
-					 */
-					$prepopulate_id = (int) apply_filters( 'pods_gf_addon_prepopulate_id', $prepopulate_id, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
-				}
-
-				if ( 0 < $edit_id ) {
-					$options['edit'] = true;
-
-					if ( $prepopulate ) {
-						$options['prepopulate'] = true;
-					}
-
-					$pod->fetch( $edit_id );
-				} elseif ( $prepopulate && 0 < $prepopulate_id ) {
-					$options['prepopulate'] = true;
-
-					$pod->fetch( $prepopulate_id );
-				}
-
-				/**
-				 * Allow filtering of Pods GF options to set custom settings apart from Pods GF add-on options
-				 *
-				 * @param array  $options  Pods GF options
-				 * @param string $pod_name Pod name
-				 * @param int    $form_id  GF Form ID
-				 * @param array  $feed     GF Form feed array
-				 * @param array  $form     GF Form array
-				 * @param Pods   $pod      Pods object
-				 */
-				$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
-
-				$this->pods_gf[ $feed['id'] ] = pods_gf( $pod, $form['id'], $options );
-
-				$setup[ $form['id'] ] = true;
+				$this->setup_pods_gf( $form, $feed );
 			}
 		}
 
 		return $form;
+
+	}
+
+	/**
+	 * @param array $form Form object.
+	 * @param array $feed Feed object.
+	 *
+	 * @return boolean
+	 */
+	public function setup_pods_gf( $form, $feed ) {
+
+		// Block new post being created in GF
+		add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
+
+		$pod_fields    = self::get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
+		$object_fields = self::get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
+		$custom_fields = self::get_field_map_custom_fields_with_custom_values( $feed );
+
+		$fields = array_merge( $pod_fields, $object_fields, $custom_fields );
+
+		$options = array(
+			// array ( 'gf_field_id' => 'pod_field_name' )
+			'fields'              => $fields,
+			'update_pod_item'     => (int) pods_v( 'update_pod_item', $feed['meta'], 0 ),
+			'markdown'            => (int) pods_v( 'enable_markdown', $feed['meta'], 0 ),
+			'auto_delete'         => (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
+			'gf_to_pods_priority' => 'submission',
+		);
+
+		// Setup pod object
+		$pod = pods( $feed['meta']['pod'] );
+
+		$edit_id        = 0;
+		$prepopulate    = false;
+		$prepopulate_id = 0;
+
+		if ( 'user' === $pod->pod_data['type'] && is_user_logged_in() ) {
+			// Support user data editing
+			if ( 1 === (int) pods_v( 'enable_current_user', $feed['meta'], 0 ) ) {
+				$edit_id = get_current_user_id();
+			}
+
+			// Support prepopulating
+			if ( 1 === (int) pods_v( 'enable_prepopulate', $feed['meta'], 0 ) ) {
+				$prepopulate = true;
+
+				$prepopulate_id = get_current_user_id();
+			}
+		} elseif ( in_array( $pod->pod_data['type'], array( 'post_type', 'media' ), true ) && is_singular( $pod->pod ) ) {
+			// Support post data editing
+			if ( 1 === (int) pods_v( 'enable_current_post', $feed['meta'], 0 ) ) {
+				$edit_id = get_the_ID();
+			}
+
+			// Support prepopulating
+			if ( 1 === (int) pods_v( 'enable_prepopulate', $feed['meta'], 0 ) ) {
+				$prepopulate = true;
+
+				$prepopulate_id = get_the_ID();
+			}
+		}
+
+		/**
+		 * Allow filtering of which item ID to use when editing (default none, always add new items)
+		 *
+		 * @param int    $edit_id  Edit ID
+		 * @param string $pod_name Pod name
+		 * @param int    $form_id  GF Form ID
+		 * @param array  $feed     GF Form feed array
+		 * @param array  $form     GF Form array
+		 * @param array  $options  Pods GF options
+		 * @param Pods   $pod      Pods object
+		 */
+		$edit_id = (int) apply_filters( 'pods_gf_addon_edit_id', $edit_id, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
+
+		/**
+		 * Allow filtering of whether to prepopulate form fields (default none)
+		 *
+		 * @param bool   $prepopulate Whether to prepopulate or not
+		 * @param string $pod_name    Pod name
+		 * @param int    $form_id     GF Form ID
+		 * @param array  $feed        GF Form feed array
+		 * @param array  $form        GF Form array
+		 * @param array  $options     Pods GF options
+		 * @param Pods   $pod         Pods object
+		 */
+		$prepopulate = (boolean) apply_filters( 'pods_gf_addon_prepopulate', $prepopulate, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
+
+		if ( empty( $edit_id ) && $prepopulate ) {
+			/**
+			 * Allow filtering of which item ID to use when prepopulating form fields (default is same as Edit ID)
+			 *
+			 * @param int    $prepopulate_id  ID to use when prepopulating
+			 * @param string $pod_name Pod name
+			 * @param int    $form_id  GF Form ID
+			 * @param array  $feed     GF Form feed array
+			 * @param array  $form     GF Form array
+			 * @param array  $options  Pods GF options
+			 * @param Pods   $pod      Pods object
+			 */
+			$prepopulate_id = (int) apply_filters( 'pods_gf_addon_prepopulate_id', $prepopulate_id, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
+		}
+
+		if ( 0 < $edit_id ) {
+			$options['edit'] = true;
+
+			if ( $prepopulate ) {
+				$options['prepopulate'] = true;
+			}
+
+			$pod->fetch( $edit_id );
+		} elseif ( $prepopulate && 0 < $prepopulate_id ) {
+			$options['prepopulate'] = true;
+
+			$pod->fetch( $prepopulate_id );
+		}
+
+		/**
+		 * Allow filtering of Pods GF options to set custom settings apart from Pods GF add-on options
+		 *
+		 * @param array  $options  Pods GF options
+		 * @param string $pod_name Pod name
+		 * @param int    $form_id  GF Form ID
+		 * @param array  $feed     GF Form feed array
+		 * @param array  $form     GF Form array
+		 * @param Pods   $pod      Pods object
+		 */
+		$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
+
+		$this->pods_gf[ $feed['id'] ] = pods_gf( $pod, $form['id'], $options );
+
+		$setup[ $form['id'] ] = true;
+
+		return true;
 
 	}
 

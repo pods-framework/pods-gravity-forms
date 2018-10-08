@@ -71,7 +71,9 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 		/** @var Pods_GF_Addon $pods_gf_addon */
 		$pods_gf_addon = Pods_GF_Addon::get_instance();
 
-		$pods_gf_addon->_gf_pre_process( $form );
+		$pods_gf_addon->setup_pods_gf( $form, $feed );
+
+		$pods_gf_addon->pods_gf[ $feed_id ]->options['update_pod_item'] = 1;
 
 		$total_entries = 0;
 

@@ -723,7 +723,7 @@ class Pods_GF {
 		$class = get_class();
 
 		if ( ! has_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_dynamic_select' ) ) ) {
-			add_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_dynamic_select' ), 10, 2 );
+			add_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_dynamic_select' ), 10, 1 );
 		}
 	}
 
@@ -830,7 +830,7 @@ class Pods_GF {
 		$class = get_class();
 
 		if ( ! has_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_prepopulate' ) ) ) {
-			add_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_prepopulate' ), 10, 2 );
+			add_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_prepopulate' ), 10, 1 );
 		}
 	}
 
@@ -1973,8 +1973,8 @@ class Pods_GF {
 			}
 
 			// Additional handling for showing an empty choice for fields that are not required.
-			if ( empty( $field_obj['isRequired'] ) ) {
-				if ( in_array( $field_obj['type'], array( 'select', 'radio' ), true ) ) {
+			if ( empty( $field_obj['isRequired'] ) && empty( $field_obj['placeholder'] ) ) {
+				if ( 'radio' === $field_obj['type'] || ( 'entry' !== rgget( 'view' ) && 'select' === $field_obj['type'] ) ) {
 					$needs_empty = true;
 
 					// Check if we have an empty option already.
@@ -2020,15 +2020,34 @@ class Pods_GF {
 				$field_obj['defaultValue'] = $dynamic_select['default'];
 			}
 
+			// Remove extra empty choices.
+			$empty_choice_found = false;
+
+			foreach ( $choices as $k => $choice ) {
+				if ( '' === $choice['value'] ) {
+					if ( $empty_choice_found ) {
+						unset( $choices[ $k ] );
+
+						continue;
+					}
+
+					$empty_choice_found = true;
+				}
+			}
+
+			$choices = array_values( $choices );
+
 			$field_obj['choices'] = $choices;
 
 			// Additional handling for checkboxes
 			if ( 'checkbox' === $field_obj['type'] ) {
 				$inputs = array();
 
-				$input_id = 1;
+				$input_id = 0;
 
 				foreach ( $choices as $choice ) {
+					$input_id ++;
+
 					// Workaround for GF bug with multiples of 10 (so that 5.1 doesn't conflict with 5.10)
 					if ( 0 == $input_id % 10 ) {
 						$input_id ++;
@@ -3329,12 +3348,33 @@ class Pods_GF {
 			if ( ! empty( $entry ) && isset( $entry[ $full_field ] ) ) {
 				$value = rgar( $entry, $full_field );
 			} else {
+				$forced_is_submit = false;
+
+				// If we are using a checkbox field, we need to force is_submit_{$form_id} on.
+				if ( 'checkbox' === $gf_field->type ) {
+					$forced_is_submit = true;
+
+					$_POST['is_submit_' . $form['id'] ] = true;
+				}
+
 				$value = GFFormsModel::get_field_value( $gf_field );
+
+				if ( $forced_is_submit ) {
+					unset( $_POST['is_submit_' . $form['id'] ] );
+				}
 			}
 		}
 
 		if ( is_array( $value ) && ! empty( $gf_field->inputs ) && isset( $value[ $full_field ] ) ) {
 			$value = $value[ $full_field ];
+		}
+
+		if ( 'multiselect' === $gf_field->type && ! is_array( $value ) && ! empty( $value ) && 0 === strpos( $value, '[' ) ) {
+			$check_value = json_decode( $value );
+
+			if ( is_array( $check_value ) ) {
+				$value = $check_value;
+			}
 		}
 
 		if ( 'list' === $gf_field->type && ! is_array( $value ) && ! empty( $value ) ) {
