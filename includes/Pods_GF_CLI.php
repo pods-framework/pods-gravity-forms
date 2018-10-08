@@ -50,8 +50,14 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 			\WP_CLI::error( esc_html__( 'Form not found.', 'pods-gravity-forms' ) );
 		}
 
+		$active_only = true;
+
+		if ( 0 < $feed_id ) {
+			$active_only = false;
+		}
+
 		// Get feed.
-		$feeds = \GFAPI::get_feeds( $feed_id, $form_id, 'pods-gravity-forms' );
+		$feeds = \GFAPI::get_feeds( $feed_id, $form_id, 'pods-gravity-forms', $active_only );
 
 		if ( empty( $feeds ) || is_wp_error( $feeds ) ) {
 			\WP_CLI::error( esc_html__( 'Feed not found.', 'pods-gravity-forms' ) );
