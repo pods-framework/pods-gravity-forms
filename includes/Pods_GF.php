@@ -1384,7 +1384,7 @@ class Pods_GF {
 
 			if ( $item_id && $item_pod && is_object( $this->pod ) && $item_pod === $this->pod->pod ) {
 				// Only use the item ID if it exists.
-				if ( $this->pod->fetch( $id ) ) {
+				if ( $this->pod->fetch( $item_id ) ) {
 					$id = $item_id;
 				}
 			}
