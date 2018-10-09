@@ -848,6 +848,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		if ( $this->is_gravityforms_supported() ) {
 			// Handle normal forms.
 			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ), 9, 2 );
+			add_filter( 'gform_admin_pre_render', array( $this, '_gf_pre_render' ), 9, 1 );
 			add_filter( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
 
 			// Handle merge tags
@@ -863,7 +864,6 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			// Handle entry updates.
 			add_action( 'gform_post_update_entry', array( $this, '_gf_post_update_entry' ), 9, 2 );
 			add_action( 'gform_after_update_entry', array( $this, '_gf_after_update_entry' ), 9, 3 );
-			add_action( 'gform_post_update_entry_property', array( $this, '_gf_post_update_entry_property' ), 10, 2 );
 
 			// Handle Payment Add-on callbacks.
 			add_action( 'gform_action_pre_payment_callback', array( $this, '_gf_action_pre_payment_callback' ), 10, 2 );
@@ -896,20 +896,6 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		$pods_gf->_gf_after_submission( $entry, $form );
 
 		return null;
-
-	}
-
-	/**
-	 * Action handler for Gravity Forms: gform_post_update_entry_property.
-	 *
-	 * @param array $action Action data being saved.
-	 * @param array $entry  GF Entry array.
-	 */
-	public function _gf_post_update_entry_property( $action, $entry ) {
-
-		$form = GFAPI::get_form( $entry['form_id'] );
-
-		$this->_gf_pre_process( $form );
 
 	}
 
