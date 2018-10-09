@@ -1433,25 +1433,27 @@ class Pods_GF {
 				unset( $data[ $this->pod->data->field_id ] );
 			}
 
-			if ( 'post_type' === $this->pod->pod_data['type'] ) {
-				if ( ! empty( $form['postStatus'] ) && empty( $args[0]['post_status'] ) ) {
-					$args[0]['post_status'] = $form['postStatus'];
-				}
-
-				if ( empty( $args[0]['post_author'] ) ) {
-					if ( ! empty( $form['useCurrentUserAsAuthor'] ) && is_user_logged_in() ) {
-						$args[0]['post_author'] = get_current_user_id();
-					} elseif ( ! empty( $form['postAuthor'] ) ) {
-						$args[0]['post_author'] = $form['postAuthor'];
+			if ( empty( $id ) ) {
+				if ( 'post_type' === $this->pod->pod_data['type'] ) {
+					if ( ! empty( $form['postStatus'] ) && empty( $args[0]['post_status'] ) ) {
+						$args[0]['post_status'] = $form['postStatus'];
 					}
-				}
 
-				if ( ! empty( $form['postCategory'] ) && empty( $args[0]['category'] ) && ! empty( $this->pod->pod_data['object_fields']['category'] ) ) {
-					$args[0]['category'] = $form['postCategory'];
-				}
+					if ( empty( $args[0]['post_author'] ) ) {
+						if ( ! empty( $form['useCurrentUserAsAuthor'] ) && is_user_logged_in() ) {
+							$args[0]['post_author'] = get_current_user_id();
+						} elseif ( ! empty( $form['postAuthor'] ) ) {
+							$args[0]['post_author'] = $form['postAuthor'];
+						}
+					}
 
-				if ( ! empty( $form['postFormat'] ) && empty( $args[0]['post_format'] ) && ! empty( $this->pod->pod_data['object_fields']['post_format'] ) ) {
-					$args[0]['post_format'] = $form['postFormat'];
+					if ( ! empty( $form['postCategory'] ) && empty( $args[0]['category'] ) && ! empty( $this->pod->pod_data['object_fields']['category'] ) ) {
+						$args[0]['category'] = $form['postCategory'];
+					}
+
+					if ( ! empty( $form['postFormat'] ) && empty( $args[0]['post_format'] ) && ! empty( $this->pod->pod_data['object_fields']['post_format'] ) ) {
+						$args[0]['post_format'] = $form['postFormat'];
+					}
 				}
 			}
 
