@@ -3350,18 +3350,34 @@ class Pods_GF {
 			} else {
 				$forced_is_submit = false;
 
-				// If we are using a checkbox field, we need to force is_submit_{$form_id} on.
-				if ( 'checkbox' === $gf_field->type ) {
+				$tmp_post = $_POST;
+
+				if ( empty( $_POST[ 'is_submit_' . $form['id'] ] ) ) {
+					// We need to force is_submit_{$form_id} on.
 					$forced_is_submit = true;
 
-					$_POST['is_submit_' . $form['id'] ] = true;
+					$_POST[ 'is_submit_' . $form['id'] ] = true;
+
+					if ( ! empty( $gf_field->inputs ) && is_array( $gf_field->inputs ) ) {
+						// Handle multi input fields.
+						foreach ( $entry as $entry_field => $entry_value ) {
+							if ( 0 === strpos( $entry_field, $gf_field->id . '.' ) ) {
+								$new_entry_field = str_replace( '.', '_', $entry_field );
+
+								$_POST[ $entry_field ]                = $entry_value;
+								$_POST[ 'input_' . $new_entry_field ] = $entry_value;
+							}
+						}
+					}
 				}
 
 				$value = GFFormsModel::get_field_value( $gf_field );
 
 				if ( $forced_is_submit ) {
-					unset( $_POST['is_submit_' . $form['id'] ] );
+					unset( $_POST[ 'is_submit_' . $form['id'] ] );
 				}
+
+				$_POST = $tmp_post;
 			}
 		}
 
