@@ -64,9 +64,13 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 		}
 
 		// Use first feed.
-		$feed = current( $feeds );
+		$feed = reset( $feeds );
 
 		$feed_id = $feed['id'];
+
+		if ( empty( $feed_id ) ) {
+			\WP_CLI::error( esc_html__( 'Invalid feed.', 'pods-gravity-forms' ) );
+		}
 
 		/** @var Pods_GF_Addon $pods_gf_addon */
 		$pods_gf_addon = Pods_GF_Addon::get_instance();
