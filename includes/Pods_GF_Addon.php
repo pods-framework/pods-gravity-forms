@@ -897,7 +897,14 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		try {
 			$pods_gf->options['entry'] = $entry;
 
-			$pods_gf->_gf_to_pods_handler( $form, $entry );
+			$id = $pods_gf->_gf_to_pods_handler( $form, $entry );
+
+			// Set post_id if we have it.
+			if ( 'post_type' === $pods_gf->pod->pod_data['type'] ) {
+				$entry['post_id'] = $id;
+
+				return $entry;
+			}
 		}
 		catch ( Exception $e ) {
 			// @todo Log something to the form entry
