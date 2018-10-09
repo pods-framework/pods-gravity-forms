@@ -51,7 +51,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	/**
 	 * @var Pods_GF[]
 	 */
-	public $pods_gf = [];
+	public $pods_gf = array();
 
 	/**
 	 * Contains an instance of this class, if available.
@@ -889,11 +889,19 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			return null;
 		}
 
+		$form = $this->_gf_pre_render( $form, $entry );
+
 		/** @var Pods_GF $pods_gf */
 		$pods_gf = $this->pods_gf[ $feed['id'] ];
 
-		// Handle the submission here before notifications go out.
-		$pods_gf->_gf_after_submission( $entry, $form );
+		try {
+			$pods_gf->options['entry'] = $entry;
+
+			$pods_gf->_gf_to_pods_handler( $form, $entry );
+		}
+		catch ( Exception $e ) {
+			// @todo Log something to the form entry
+		}
 
 		return null;
 
@@ -996,13 +1004,15 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		static $setup = array();
 
 		if ( ! empty( $setup[ $form['id'] ] ) ) {
-			return $form;
+			return $setup[ $form['id'] ];
 		}
 
 		$feeds = $this->get_feeds( $form['id'] );
 
 		if ( empty( $feeds ) ) {
-			return $form;
+			$setup[ $form['id'] ] = $form;
+
+			return $setup[ $form['id'] ];
 		}
 
 		$pod_fields = array();
@@ -1036,7 +1046,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			$pod_obj = pods( $pod_name, null, false );
 
 			if ( empty( $pod_obj ) || ! $pod_obj->valid() ) {
-				return $form;
+				$setup[ $form['id'] ] = $form;
+
+				return $setup[ $form['id'] ];
 			}
 
 			$dynamic_selects = array();
@@ -1089,15 +1101,14 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				}
 			}
 
-			if ( $dynamic_selects ) {
-				Pods_GF::gf_dynamic_select( $form, false, $dynamic_selects );
+			if ( ! empty( $dynamic_selects ) ) {
+				$form = Pods_GF::gf_dynamic_select( $form, $dynamic_selects );
 			}
-
-			// Support other options like prepopulating etc
-			$this->_gf_pre_process( $form );
 		}
 
-		return $form;
+		$setup[ $form['id'] ] = $form;
+
+		return $setup[ $form['id'] ];
 
 	}
 
@@ -1111,7 +1122,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		static $setup = array();
 
 		if ( ! empty( $setup[ $form['id'] ] ) ) {
-			return $form;
+			return $setup[ $form['id'] ];
 		}
 
 		$feeds = $this->get_feeds( $form['id'] );
@@ -1128,7 +1139,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			}
 		}
 
-		return $form;
+		$setup[ $form['id'] ] = $form;
+
+		return $setup[ $form['id'] ];
 
 	}
 
