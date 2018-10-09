@@ -1,34 +1,50 @@
 {
-	"name" : "pods-framework/pods-gravity-forms",
-	"description" : "Pods Gravity Forms Add-On",
-	"type" : "wordpress-plugin",
-	"keywords" : [ "pods", "wordpress", "gravityforms", "gravity-forms" ],
-	"homepage" : "https://github.com/pods-framework/pods-gravity-forms",
-	"license" : "GPL-2.0+",
-	"authors" : [
-		{
-			"name" : "Pods Framework Team",
-			"email" : "contact@pods.io",
-			"homepage" : "http://pods.io/"
-		},
-		{
-			"name" : "Scott Kingsley Clark",
-			"email" : "scott@pods.io",
-			"homepage" : "http://scottkclark.com/",
-			"role" : "Lead Developer"
-		},
-		{
-			"name" : "Naomi C. Bush | gravity+",
-			"email" : "naomi@gravityplus.pro",
-			"homepage" : "https://gravityplus.pro"
-		}
-	],
-	"support" : {
-		"issues" : "https://github.com/pods-framework/pods-gravity-forms/issues",
-		"source" : "https://github.com/pods-framework/pods-gravity-forms"
-	},
-	"require" : {
-		"composer/installers" : "~1.0",
-		"php" : ">=5.3"
-	}
+  "name": "pods-framework/pods-gravity-forms",
+  "description": "Pods Gravity Forms Add-On",
+  "type": "wordpress-plugin",
+  "keywords": [
+    "pods",
+    "wordpress",
+    "gravityforms",
+    "gravity-forms"
+  ],
+  "homepage": "https://github.com/pods-framework/pods-gravity-forms",
+  "license": "GPL-2.0+",
+  "authors": [
+    {
+      "name": "Pods Framework Team",
+      "email": "contact@pods.io",
+      "homepage": "https://pods.io/"
+    },
+    {
+      "name": "Scott Kingsley Clark",
+      "email": "scott@pods.io",
+      "homepage": "https://www.scottkclark.com/",
+      "role": "Lead Developer"
+    },
+    {
+      "name": "Naomi C. Bush | gravity+",
+      "email": "naomi@gravityplus.pro",
+      "homepage": "https://gravityplus.pro",
+      "role": "Contributing Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/pods-framework/pods-gravity-forms/issues",
+    "source": "https://github.com/pods-framework/pods-gravity-forms"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pods\\GF\\": "tests/integration/Pods/GF/",
+      "Pods\\GF\\Tests\\": "tests/_support/"
+    }
+  },
+  "require": {
+    "composer/installers": "~1.0",
+    "php": ">=5.3"
+  },
+  "require-dev": {
+    "lucatume/wp-browser": "^2.0",
+    "vlucas/phpdotenv": "^2.4"
+  }
 }

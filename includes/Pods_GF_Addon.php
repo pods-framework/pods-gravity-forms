@@ -49,6 +49,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	protected $_capabilities_form_settings = array( 'pods_gravityforms', 'pods' );
 
 	/**
+	 * @var Pods_GF[]
+	 */
+	public $pods_gf = [];
+
+	/**
 	 * Contains an instance of this class, if available.
 	 *
 	 * @since  1.0
@@ -94,6 +99,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 	}
 
+	/**
+	 * @return array
+	 */
 	public function scripts() {
 
 		$scripts = array(
@@ -133,12 +141,10 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		$gf_fields = array();
 
-		if ( 0 === (int) pods_v( 'fid' ) ) {
-			$gf_form = GFAPI::get_form( pods_v( 'id' ) );
+		$gf_form = GFAPI::get_form( pods_v( 'id' ) );
 
-			if ( ! empty( $gf_form ) && ! empty( $gf_form['fields'] ) ) {
-				$gf_fields = $gf_form['fields'];
-			}
+		if ( ! empty( $gf_form ) && ! empty( $gf_form['fields'] ) ) {
+			$gf_fields = $gf_form['fields'];
 		}
 
 		$pods_api = pods_api();
@@ -181,8 +187,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			$enable_current_user = (int) $posted_settings['enable_current_user'];
 		}
 
-		$pod_fields   = array();
-		$pod_type     = '';
+		$pod_fields = array();
+		$pod_type   = '';
 
 		if ( ! empty( $selected_pod ) ) {
 			$pod_object = $pods_api->load_pod( array( 'name' => $selected_pod ) );
@@ -241,11 +247,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						$field['options']['required'] = 1;
 					}
 				} elseif ( 'taxonomy' === $pod_type ) {
-					if ( in_array( $name, array( 'name' ), true ) ) {
+					if ( 'name' === $name ) {
 						$field['options']['required'] = 1;
 					}
 				} elseif ( 'user' === $pod_type ) {
-					if ( in_array( $name, array( 'user_login' ), true ) ) {
+					if ( 'user_login' === $name ) {
 						$field['options']['required'] = 1;
 					}
 				}
@@ -326,9 +332,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						'required'     => $field_required,
 					);
 
-					foreach ( $gf_fields as $gf_field ) {
-						if ( $field['label'] === $gf_field['label'] ) {
-							$field_map['default_value'] = $gf_field['id'];
+					if ( 0 === (int) pods_v( 'fid' ) ) {
+						foreach ( $gf_fields as $gf_field ) {
+							if ( strtolower( $field['label'] ) === strtolower( $gf_field['label'] ) ) {
+								$field_map['default_value'] = $gf_field['id'];
+							}
 						}
 					}
 				}
@@ -380,14 +388,14 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		);
 
 		$settings['advanced']['fields'][] = array(
-			'name'    => 'delete_entry',
-			'label'   => __( 'Delete Gravity Form Entry on submission', 'pods-gravity-forms' ),
+			'name'    => 'update_pod_item',
+			'label'   => __( 'Support entry updates', 'pods-gravity-forms' ),
 			'type'    => 'checkbox',
 			'choices' => array(
 				array(
 					'value' => 1,
-					'label' => __( 'Delete entry after processing', 'pods-gravity-forms' ),
-					'name'  => 'delete_entry',
+					'label' => __( 'Update pod item if the entry is updated', 'pods-gravity-forms' ),
+					'name'  => 'update_pod_item',
 				),
 			),
 		);
@@ -458,6 +466,19 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				),
 			);
 		}
+
+		$settings['advanced']['fields'][] = array(
+			'name'    => 'delete_entry',
+			'label'   => __( 'Delete Gravity Form Entry on submission', 'pods-gravity-forms' ),
+			'type'    => 'checkbox',
+			'choices' => array(
+				array(
+					'value' => 1,
+					'label' => __( 'Delete entry after processing', 'pods-gravity-forms' ),
+					'name'  => 'delete_entry',
+				),
+			),
+		);
 
 		$addon_slug = $this->get_slug();
 
@@ -644,10 +665,76 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					'label' => __( 'Custom override value', 'pods-gravity-forms' ),
 				),
 			),
-			$choices
+			$choices,
+			array(
+				array(
+					'value' => 'transaction_id',
+					'label' => 'Transaction ID',
+				),
+				array(
+					'value' => 'payment_amount',
+					'label' => 'Payment Amount',
+				),
+				array(
+					'value' => 'payment_date',
+					'label' => 'Payment Date',
+				),
+				array(
+					'value' => 'payment_status',
+					'label' => 'Payment Status',
+				),
+			)
 		);
 
+		foreach ( $choices as $k => $choice ) {
+			if ( '_pods_item_id' === $choice['value'] ) {
+				unset( $choices[ $k ] );
+
+				$choices = array_values( $choices );
+
+				break;
+			}
+		}
+
 		return $choices;
+
+	}
+
+	/***
+	 * Renders and initializes a drop down field based on the $field array
+	 *
+	 * @param array $field - Field array containing the configuration options of this field
+	 * @param bool  $echo  = true - true to echo the output to the screen, false to simply return the contents as a string
+	 *
+	 * @return string The HTML for the field
+	 */
+	public function settings_select( $field, $echo = true ) {
+
+		$has_gf_custom = false;
+
+		if ( ! empty( $field['choices'] ) ) {
+			foreach ( $field['choices'] as $choice ) {
+				if ( isset( $choice['value'] ) && 'gf_custom' === $choice['value'] ) {
+					$has_gf_custom = true;
+
+					break;
+				}
+			}
+		}
+
+		// Select has no custom choice or we already took over the first select.
+		if ( empty( $field['choices'] ) || ! $has_gf_custom || ! empty( $field['_pods_custom_select'] ) ) {
+			return parent::settings_select( $field, $echo );
+		}
+
+		// Already doing custom select.
+		if ( ! empty( $field['type'] ) && 'generic_map' === $field['type'] ) {
+			return parent::settings_select( $field, $echo );
+		}
+
+		$field['_pods_custom_select'] = true;
+
+		return parent::settings_select_custom( $field, $echo );
 
 	}
 
@@ -759,9 +846,143 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		parent::init();
 
 		if ( $this->is_gravityforms_supported() ) {
-			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ) );
+			// Handle normal forms.
+			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ), 9, 2 );
+			add_filter( 'gform_admin_pre_render', array( $this, '_gf_pre_render' ), 9, 1 );
 			add_filter( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
+
+			// Handle merge tags
+			add_filter( 'gform_custom_merge_tags', array( $this, '_gf_custom_merge_tags' ), 10, 2 );
+			add_filter( 'gform_merge_tag_data', array( $this, '_gf_add_merge_tags' ), 10, 3 );
+			add_filter( 'gform_replace_merge_tags', array( $this, '_gf_replace_merge_tags' ), 10, 2 );
+
+			// Handle entry detail edits.
+			add_action( 'gform_pre_entry_detail', array( $this, '_gf_pre_entry_detail' ), 10, 2 );
+			add_action( 'check_admin_referer', array( $this, '_check_admin_referer' ), 10, 2 );
+			add_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ), 10, 2 );
+
+			// Handle entry updates.
+			add_action( 'gform_post_update_entry', array( $this, '_gf_post_update_entry' ), 9, 2 );
+			add_action( 'gform_after_update_entry', array( $this, '_gf_after_update_entry' ), 9, 3 );
+
+			// Handle Payment Add-on callbacks.
+			add_action( 'gform_action_pre_payment_callback', array( $this, '_gf_action_pre_payment_callback' ), 10, 2 );
 		}
+
+	}
+
+	/**
+	 * Processes feed action.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param array  $feed  The Feed Object currently being processed.
+	 * @param array  $entry The Entry Object currently being processed.
+	 * @param array  $form  The Form Object currently being processed.
+	 *
+	 * @return array|null Returns a modified entry object or null.
+	 */
+	public function process_feed( $feed, $entry, $form ) {
+
+		if ( empty( $this->pods_gf[ $feed['id'] ] ) ) {
+			return null;
+		}
+
+		/** @var Pods_GF $pods_gf */
+		$pods_gf = $this->pods_gf[ $feed['id'] ];
+
+		// Handle the submission here before notifications go out.
+		$pods_gf->_gf_after_submission( $entry, $form );
+
+		return null;
+
+	}
+
+	/**
+	 * Action handler for Gravity Forms: gform_action_pre_payment_callback.
+	 *
+	 * @param array $action Action data being saved.
+	 * @param array $entry  GF Entry array.
+	 */
+	public function _gf_action_pre_payment_callback( $action, $entry ) {
+
+		$form = GFAPI::get_form( $entry['form_id'] );
+
+		$this->_gf_pre_process( $form );
+
+	}
+
+	/**
+	 * Action handler for Gravity Forms: gform_post_update_entry.
+	 *
+	 * @param array $entry          GF Entry array
+	 * @param array $original_entry Original GF Entry array
+	 */
+	public function _gf_post_update_entry( $entry, $original_entry ) {
+
+		$form = GFAPI::get_form( $entry['form_id'] );
+
+		$this->_gf_pre_process( $form );
+
+	}
+
+	/**
+	 * Action handler for Gravity Forms: gform_after_update_entry.
+	 *
+	 * @param array $form           GF Form array
+	 * @param array $entry          GF Entry array
+	 * @param array $original_entry Original GF Entry array
+	 */
+	public function _gf_after_update_entry( $form, $entry, $original_entry ) {
+
+		$this->_gf_pre_process( $form );
+
+	}
+
+	/**
+	 * Hook into action to setup Pods GF add-on hooks before form entry edit form is shown.
+	 *
+	 * @param array|object $form  GF form data.
+	 * @param array|object $entry GF entry data.
+	 */
+	public function _gf_pre_entry_detail( $form, $entry ) {
+
+		// Remove other hooks for workarounds we don't need if this hook now exists. Not in GF when this was written.
+		remove_action( 'check_admin_referer', array( $this, '_check_admin_referer' ) );
+		remove_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ) );
+
+		$this->_gf_pre_render( $form, $entry, true );
+
+	}
+
+	/**
+	 * Hook into check_admin_referer to setup Pods GF add-on hooks before updating form entry.
+	 *
+	 * @param string    $action The nonce action.
+	 * @param false|int $result False if the nonce is invalid, 1 if the nonce is valid and generated between
+	 *                          0-12 hours ago, 2 if the nonce is valid and generated between 12-24 hours ago.
+	 */
+	public function _check_admin_referer( $action, $result ) {
+
+		// So hacky, we need GF to add a better hook than this.
+		if ( $result && 'gforms_save_entry' === $action ) {
+			$form = GFEntryDetail::get_current_form();
+
+			$this->_gf_pre_process( $form );
+		}
+
+	}
+
+	/**
+	 * Hook into action to setup Pods GF add-on hooks before form entry edit form is shown.
+	 *
+	 * @param array|object $form  GF form data.
+	 * @param array|object $entry GF entry data.
+	 */
+	public function _gf_entry_detail_content_before( $form, $entry ) {
+
+		$this->_gf_pre_render( $form, $entry, true );
 
 	}
 
@@ -770,7 +991,13 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 *
 	 * @return mixed
 	 */
-	public function _gf_pre_render( $form ) {
+	public function _gf_pre_render( $form, $entry = null, $admin_edit = false ) {
+
+		static $setup = array();
+
+		if ( ! empty( $setup[ $form['id'] ] ) ) {
+			return $form;
+		}
 
 		$feeds = $this->get_feeds( $form['id'] );
 
@@ -782,15 +1009,21 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		$pod_name   = '';
 		$feed       = null;
 
-		$entry = GFFormsModel::get_current_lead();
+		if ( empty( $entry ) ) {
+			$entry = GFFormsModel::get_current_lead();
+		}
 
 		foreach ( $feeds as $feed ) {
-			if ( 1 !== (int) $feed['is_active'] && $this->is_feed_condition_met( $feed, $form, $entry ) ) {
+			if ( 1 !== (int) $feed['is_active'] ) {
 				continue;
 			}
 
-			$pod_fields    = $this->get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
-			$object_fields = $this->get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
+			if ( $admin_edit && empty( $feed['meta']['update_pod_item'] ) ) {
+				continue;
+			}
+
+			$pod_fields    = self::get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
+			$object_fields = self::get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
 
 			$pod_fields = array_merge( $pod_fields, $object_fields );
 
@@ -805,6 +1038,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			if ( empty( $pod_obj ) || ! $pod_obj->valid() ) {
 				return $form;
 			}
+
+			$dynamic_selects = array();
 
 			/**
 			 * @var GF_Field $gf_field
@@ -836,13 +1071,26 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						continue;
 					}
 
+					if ( isset( $data[''] ) ) {
+						unset( $data[''] );
+					}
+
+					$select_text = pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options['options'], __( '-- Select One --', 'pods' ), true );
+
 					$options = array(
-						'options'     => $data,
-						'select_text' => pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options['options'] ),
+						'options' => $data,
 					);
 
-					Pods_GF::dynamic_select( $form['id'], (string) $gf_field->id, $options );
+					if ( $select_text ) {
+						$options['select_text'] = $select_text;
+					}
+
+					$dynamic_selects[ $gf_field->id ] = $options;
 				}
+			}
+
+			if ( $dynamic_selects ) {
+				Pods_GF::gf_dynamic_select( $form, false, $dynamic_selects );
 			}
 
 			// Support other options like prepopulating etc
@@ -876,130 +1124,254 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					continue;
 				}
 
-				// Block new post being created in GF
-				add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
-
-				$pod_fields    = $this->get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
-				$object_fields = $this->get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
-				$custom_fields = $this->get_field_map_fields_with_custom_values( $feed, 'custom_fields' );
-
-				$fields = array_merge( $pod_fields, $object_fields, $custom_fields );
-
-				$options = array(
-					// array ( 'gf_field_id' => 'pod_field_name' )
-					'fields'              => $fields,
-					'auto_delete'         => (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
-					'markdown'            => (int) pods_v( 'enable_markdown', $feed['meta'], 0 ),
-					'gf_to_pods_priority' => 'submission',
-				);
-
-				// Setup pod object
-				$pod = pods( $feed['meta']['pod'] );
-
-				$edit_id        = 0;
-				$prepopulate    = false;
-				$prepopulate_id = 0;
-
-				if ( 'user' === $pod->pod_data['type'] && is_user_logged_in() ) {
-					// Support user data editing
-					if ( 1 === (int) pods_v( 'enable_current_user', $feed['meta'], 0 ) ) {
-						$edit_id = get_current_user_id();
-					}
-
-					// Support prepopulating
-					if ( 1 === (int) pods_v( 'enable_prepopulate', $feed['meta'], 0 ) ) {
-						$prepopulate = true;
-
-						$prepopulate_id = get_current_user_id();
-					}
-				} elseif ( in_array( $pod->pod_data['type'], array( 'post_type', 'media' ), true ) && is_singular( $pod->pod ) ) {
-					// Support post data editing
-					if ( 1 === (int) pods_v( 'enable_current_post', $feed['meta'], 0 ) ) {
-						$edit_id = get_the_ID();
-					}
-
-					// Support prepopulating
-					if ( 1 === (int) pods_v( 'enable_prepopulate', $feed['meta'], 0 ) ) {
-						$prepopulate = true;
-
-						$prepopulate_id = get_the_ID();
-					}
-				}
-
-				/**
-				 * Allow filtering of which item ID to use when editing (default none, always add new items)
-				 *
-				 * @param int    $edit_id  Edit ID
-				 * @param string $pod_name Pod name
-				 * @param int    $form_id  GF Form ID
-				 * @param array  $feed     GF Form feed array
-				 * @param array  $form     GF Form array
-				 * @param array  $options  Pods GF options
-				 * @param Pods   $pod      Pods object
-				 */
-				$edit_id = (int) apply_filters( 'pods_gf_addon_edit_id', $edit_id, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
-
-				/**
-				 * Allow filtering of whether to prepopulate form fields (default none)
-				 *
-				 * @param bool   $prepopulate Whether to prepopulate or not
-				 * @param string $pod_name    Pod name
-				 * @param int    $form_id     GF Form ID
-				 * @param array  $feed        GF Form feed array
-				 * @param array  $form        GF Form array
-				 * @param array  $options     Pods GF options
-				 * @param Pods   $pod         Pods object
-				 */
-				$prepopulate = (boolean) apply_filters( 'pods_gf_addon_prepopulate', $prepopulate, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
-
-				if ( empty( $edit_id ) && $prepopulate ) {
-					/**
-					 * Allow filtering of which item ID to use when prepopulating form fields (default is same as Edit ID)
-					 *
-					 * @param int    $prepopulate_id  ID to use when prepopulating
-					 * @param string $pod_name Pod name
-					 * @param int    $form_id  GF Form ID
-					 * @param array  $feed     GF Form feed array
-					 * @param array  $form     GF Form array
-					 * @param array  $options  Pods GF options
-					 * @param Pods   $pod      Pods object
-					 */
-					$prepopulate_id = (int) apply_filters( 'pods_gf_addon_prepopulate_id', $prepopulate_id, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
-				}
-
-				if ( 0 < $edit_id ) {
-					$options['edit'] = true;
-
-					if ( $prepopulate ) {
-						$options['prepopulate'] = true;
-					}
-
-					$pod->fetch( $edit_id );
-				} elseif ( $prepopulate && 0 < $prepopulate_id ) {
-					$options['prepopulate'] = true;
-
-					$pod->fetch( $prepopulate_id );
-				}
-
-				/**
-				 * Allow filtering of Pods GF options to set custom settings apart from Pods GF add-on options
-				 *
-				 * @param array  $options  Pods GF options
-				 * @param string $pod_name Pod name
-				 * @param int    $form_id  GF Form ID
-				 * @param array  $feed     GF Form feed array
-				 * @param array  $form     GF Form array
-				 * @param Pods   $pod      Pods object
-				 */
-				$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
-
-				pods_gf( $pod, $form['id'], $options );
-
-				$setup[ $form['id'] ] = true;
+				$this->setup_pods_gf( $form, $feed );
 			}
 		}
 
 		return $form;
+
+	}
+
+	/**
+	 * @param array $form Form object.
+	 * @param array $feed Feed object.
+	 *
+	 * @return boolean
+	 */
+	public function setup_pods_gf( $form, $feed ) {
+
+		// Block new post being created in GF
+		add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
+
+		$pod_fields    = self::get_field_map_fields_with_custom_values( $feed, 'pod_fields' );
+		$object_fields = self::get_field_map_fields_with_custom_values( $feed, 'wp_object_fields' );
+		$custom_fields = self::get_field_map_custom_fields_with_custom_values( $feed );
+
+		$fields = array_merge( $pod_fields, $object_fields, $custom_fields );
+
+		$options = array(
+			// array ( 'gf_field_id' => 'pod_field_name' )
+			'fields'              => $fields,
+			'update_pod_item'     => (int) pods_v( 'update_pod_item', $feed['meta'], 0 ),
+			'markdown'            => (int) pods_v( 'enable_markdown', $feed['meta'], 0 ),
+			'auto_delete'         => (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
+			'gf_to_pods_priority' => 'submission',
+		);
+
+		// Setup pod object
+		$pod = pods( $feed['meta']['pod'] );
+
+		$edit_id        = 0;
+		$prepopulate    = false;
+		$prepopulate_id = 0;
+
+		if ( 'user' === $pod->pod_data['type'] && is_user_logged_in() ) {
+			// Support user data editing
+			if ( 1 === (int) pods_v( 'enable_current_user', $feed['meta'], 0 ) ) {
+				$edit_id = get_current_user_id();
+			}
+
+			// Support prepopulating
+			if ( 1 === (int) pods_v( 'enable_prepopulate', $feed['meta'], 0 ) ) {
+				$prepopulate = true;
+
+				$prepopulate_id = get_current_user_id();
+			}
+		} elseif ( in_array( $pod->pod_data['type'], array( 'post_type', 'media' ), true ) && is_singular( $pod->pod ) ) {
+			// Support post data editing
+			if ( 1 === (int) pods_v( 'enable_current_post', $feed['meta'], 0 ) ) {
+				$edit_id = get_the_ID();
+			}
+
+			// Support prepopulating
+			if ( 1 === (int) pods_v( 'enable_prepopulate', $feed['meta'], 0 ) ) {
+				$prepopulate = true;
+
+				$prepopulate_id = get_the_ID();
+			}
+		}
+
+		/**
+		 * Allow filtering of which item ID to use when editing (default none, always add new items)
+		 *
+		 * @param int    $edit_id  Edit ID
+		 * @param string $pod_name Pod name
+		 * @param int    $form_id  GF Form ID
+		 * @param array  $feed     GF Form feed array
+		 * @param array  $form     GF Form array
+		 * @param array  $options  Pods GF options
+		 * @param Pods   $pod      Pods object
+		 */
+		$edit_id = (int) apply_filters( 'pods_gf_addon_edit_id', $edit_id, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
+
+		/**
+		 * Allow filtering of whether to prepopulate form fields (default none)
+		 *
+		 * @param bool   $prepopulate Whether to prepopulate or not
+		 * @param string $pod_name    Pod name
+		 * @param int    $form_id     GF Form ID
+		 * @param array  $feed        GF Form feed array
+		 * @param array  $form        GF Form array
+		 * @param array  $options     Pods GF options
+		 * @param Pods   $pod         Pods object
+		 */
+		$prepopulate = (boolean) apply_filters( 'pods_gf_addon_prepopulate', $prepopulate, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
+
+		if ( empty( $edit_id ) && $prepopulate ) {
+			/**
+			 * Allow filtering of which item ID to use when prepopulating form fields (default is same as Edit ID)
+			 *
+			 * @param int    $prepopulate_id  ID to use when prepopulating
+			 * @param string $pod_name Pod name
+			 * @param int    $form_id  GF Form ID
+			 * @param array  $feed     GF Form feed array
+			 * @param array  $form     GF Form array
+			 * @param array  $options  Pods GF options
+			 * @param Pods   $pod      Pods object
+			 */
+			$prepopulate_id = (int) apply_filters( 'pods_gf_addon_prepopulate_id', $prepopulate_id, $feed['meta']['pod'], $form['id'], $feed, $form, $options, $pod );
+		}
+
+		if ( 0 < $edit_id ) {
+			$options['edit'] = true;
+
+			if ( $prepopulate ) {
+				$options['prepopulate'] = true;
+			}
+
+			$pod->fetch( $edit_id );
+		} elseif ( $prepopulate && 0 < $prepopulate_id ) {
+			$options['prepopulate'] = true;
+
+			$pod->fetch( $prepopulate_id );
+		}
+
+		/**
+		 * Allow filtering of Pods GF options to set custom settings apart from Pods GF add-on options
+		 *
+		 * @param array  $options  Pods GF options
+		 * @param string $pod_name Pod name
+		 * @param int    $form_id  GF Form ID
+		 * @param array  $feed     GF Form feed array
+		 * @param array  $form     GF Form array
+		 * @param Pods   $pod      Pods object
+		 */
+		$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
+
+		$this->pods_gf[ $feed['id'] ] = pods_gf( $pod, $form['id'], $options );
+
+		$setup[ $form['id'] ] = true;
+
+		return true;
+
+	}
+
+	/**
+	 * Add custom merge tags for Pods GF.
+	 *
+	 * @param array $merge_tags Merge tags.
+	 * @param int   $form_id    Form ID.
+	 *
+	 * @return array Merge tags,
+	 */
+	public function _gf_custom_merge_tags( $merge_tags, $form_id ) {
+
+		$merge_tags[] = array(
+			'tag'   => '{pods:id}',
+			'label' => esc_html__( 'Pods GF Item ID', 'pods-gravity-forms' ),
+		);
+
+		$merge_tags[] = array(
+			'tag'   => '{pods:permalink}',
+			'label' => esc_html__( 'Pods GF Item Permalink', 'pods-gravity-forms' ),
+		);
+
+		return $merge_tags;
+
+	}
+
+	/**
+	 * Add custom merge tags for Pods GF.
+	 *
+	 * @param array       $data Merge tag data.
+	 * @param string      $text Content to replace custom merge tags in.
+	 * @param false|array $form GF form object.
+	 *
+	 * @return array Merge tag data.
+	 */
+	public function _gf_add_merge_tags( $data, $text, $form ) {
+
+		if ( empty( $form ) || empty( $form['id'] ) ) {
+			return $data;
+		}
+
+		$form_id = $form['id'];
+
+		$id        = 0;
+		$permalink = '';
+
+		if ( ! empty( Pods_GF::$gf_to_pods_id[ $form_id ] ) ) {
+			$id = Pods_GF::$gf_to_pods_id[ $form_id ];
+		}
+
+		if ( ! empty( Pods_GF::$gf_to_pods_id[ $form_id . '_permalink' ] ) ) {
+			$permalink = Pods_GF::$gf_to_pods_id[ $form_id . '_permalink' ];
+		}
+
+		$data['pods'] = array(
+			'id'        => $id,
+			'permalink' => $permalink,
+		);
+
+		return $data;
+
+	}
+
+	/**
+	 * Replace custom merge tags in content for Pods GF.
+	 *
+	 * @param string      $content Content to replace custom merge tags in.
+	 * @param false|array $form    GF form object.
+	 *
+	 * @return string Content with custom merge tags replaced.
+	 */
+	public function _gf_replace_merge_tags( $content, $form ) {
+
+		if ( empty( $form ) || empty( $form['id'] ) ) {
+			return $content;
+		}
+
+		$form_id = $form['id'];
+
+		$id        = 0;
+		$permalink = '';
+
+		if ( ! empty( Pods_GF::$gf_to_pods_id[ $form_id ] ) ) {
+			$id = Pods_GF::$gf_to_pods_id[ $form_id ];
+		}
+
+		if ( ! empty( Pods_GF::$gf_to_pods_id[ $form_id . '_permalink' ] ) ) {
+			$permalink = Pods_GF::$gf_to_pods_id[ $form_id . '_permalink' ];
+		}
+
+		// For backcompat purposes.
+		$id_merge_tags = array(
+			'{pods:id}',
+			'{gf_to_pods_id}',
+			'{@gf_to_pods_id}',
+		);
+
+		// For backcompat purposes.
+		$permalink_merge_tags = array(
+			'{pods:permalink}',
+			'{gf_to_pods_permalink}',
+			'{@gf_to_pods_permalink}',
+		);
+
+		$content = str_replace( $id_merge_tags, $id, $content );
+		$content = str_replace( $permalink_merge_tags, $permalink, $content );
+
+		return $content;
 
 	}
 
@@ -1016,69 +1388,135 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 */
 	public static function get_field_map_fields_with_custom_values( $feed, $field_name ) {
 
-		$prefix        = $field_name . '_';
-		$custom_prefix = $prefix . 'override_custom_';
+		$prefix = $field_name . '_';
+
+		$old_custom_prefix = $prefix . 'override_custom_';
 
 		$fields = array();
 
-		foreach ( $feed['meta'] as $config_field_name => $value ) {
-			$config_field_name = (string) $config_field_name;
+		$skip = array();
 
-			if ( 0 === strpos( $config_field_name, $custom_prefix ) ) {
+		foreach ( $feed['meta'] as $config_field_name => $config ) {
+			$config_field_name = (string) $config_field_name;
+			$gf_field_custom   = sprintf( '%s_custom', $config_field_name );
+
+			if ( in_array( $config_field_name, $skip, true ) ) {
+				continue;
+			}
+
+			if ( 0 === strpos( $config_field_name, $old_custom_prefix ) ) {
 				// Skip override values (old way)
 				continue;
-			} elseif ( 0 === strpos( $config_field_name, $prefix ) ) {
-				// Get field name
-				$field_name = substr( $config_field_name, strlen( $prefix ) );
+			}
 
-				// Mapping value is the GF field ID
-				$gf_field = trim( $value );
+			if ( 0 !== strpos( $config_field_name, $prefix ) && $field_name !== $config_field_name ) {
+				continue;
+			}
 
-				// Mapping value
-				$mapping_value = array(
-					'gf_field'      => $gf_field,
-					'field'         => $field_name,
-				);
+			// Get field name
+			$field_name = substr( $config_field_name, strlen( $prefix ) );
 
-				if ( 'gf_custom' === $gf_field ) {
-					// Support override value settings (new way)
-					$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
-					$gf_field_custom = sprintf( '%s_custom', $field_name );
+			// Mapping value is the GF field ID
+			$gf_field = trim( $config );
 
-					$mapping_value['gf_field'] = $gf_field;
-					$mapping_value['value']    = '';
+			// Mapping value
+			$mapping_value = array(
+				'gf_field' => $gf_field,
+				'field'    => $field_name,
+			);
 
-					if ( ! empty( $feed['meta'][ $gf_field_custom ] ) ) {
-						$value = trim( $feed['meta'][ $gf_field_custom ] );
+			if ( 'gf_custom' === $gf_field ) {
+				// Support override value settings (new way)
+				$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
 
-						if ( ! empty( $value ) ) {
-							$mapping_value['value'] = $value;
+				$mapping_value['gf_field'] = $gf_field;
+				$mapping_value['value']    = '';
 
-							$mapping_value['gf_merge_tags'] = true;
-						}
-					}
-				} elseif ( '_pods_custom' === $gf_field ) {
-					// Support override value settings (old way)
-					$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
+				if ( ! empty( $feed['meta'][ $gf_field_custom ] ) ) {
+					$value = trim( $feed['meta'][ $gf_field_custom ] );
 
-					$mapping_value['gf_field'] = $gf_field;
-					$mapping_value['value']    = '';
+					if ( ! empty( $value ) ) {
+						$mapping_value['value'] = $value;
 
-					if ( ! empty( $feed['meta'][ $custom_prefix ] ) ) {
-						$value = trim( $feed['meta'][ $custom_prefix ] );
-
-						if ( ! empty( $value ) ) {
-							$mapping_value['value'] = $value;
-
-							$mapping_value['gf_merge_tags'] = true;
-						}
+						$mapping_value['gf_merge_tags'] = true;
 					}
 				}
+			} elseif ( '_pods_custom' === $gf_field ) {
+				// Support override value settings (old way)
+				$gf_field = sprintf( '_pods_gf_custom_%s', $field_name );
 
-				if ( ! empty( $gf_field ) ) {
-					$fields[] = $mapping_value;
+				$mapping_value['gf_field'] = $gf_field;
+				$mapping_value['value']    = '';
+
+				if ( ! empty( $feed['meta'][ $old_custom_prefix ] ) ) {
+					$value = trim( $feed['meta'][ $old_custom_prefix ] );
+
+					if ( ! empty( $value ) ) {
+						$mapping_value['value'] = $value;
+
+						$mapping_value['gf_merge_tags'] = true;
+					}
 				}
 			}
+
+			$skip[] = $gf_field_custom;
+
+			if ( ! empty( $gf_field ) ) {
+				$fields[] = $mapping_value;
+			}
+		}
+
+		return $fields;
+
+	}
+
+	/**
+	 * Get field map field values with support for custom override values.
+	 *
+	 * This differs from get_field_map_fields() in that it returns an array
+	 * that is already formatted for Pods GF field mapping usage.
+	 *
+	 * @param array $feed
+	 *
+	 * @return array
+	 */
+	public static function get_field_map_custom_fields_with_custom_values( $feed ) {
+
+		if ( empty( $feed['meta']['custom_fields'] ) ) {
+			return array();
+		}
+
+		$configs = $feed['meta']['custom_fields'];
+
+		$fields = array();
+
+		foreach ( $configs as $config ) {
+			$config = array_map( 'trim', $config );
+
+			$gf_field   = $config['value'];
+			$field_name = $config['key'];
+
+			if ( in_array( $field_name, array( 'gf_custom', '' ), true ) ) {
+				$field_name = $config['custom_key'];
+			}
+
+			// Mapping value
+			$mapping_value = array(
+				'gf_field' => $gf_field,
+				'field'    => $field_name,
+			);
+
+			if ( in_array( $gf_field, array( 'gf_custom', '' ), true ) && ! empty( $config['custom_value'] ) ) {
+				$mapping_value['gf_field']      = sprintf( '_pods_gf_custom_%s', $field_name );
+				$mapping_value['value']         = $config['custom_value'];
+				$mapping_value['gf_merge_tags'] = true;
+			}
+
+			if ( '' === $mapping_value['gf_field'] || '' === $mapping_value['field'] ) {
+				continue;
+			}
+
+			$fields[] = $mapping_value;
 		}
 
 		return $fields;
@@ -1094,14 +1532,19 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	public function get_entry_meta( $entry_meta, $form_id ) {
 
 		if ( $this->has_feed( $form_id ) ) {
-			$entry_meta['pod_id'] = array(
-				'label'                      => 'Pod ID',
+			$entry_meta['_pods_item_id'] = array(
+				'label'                      => 'Pod Item ID',
 				'is_numeric'                 => true,
 				'is_default_column'          => true,
 				'update_entry_meta_callback' => array( $this, 'update_entry_meta_pod_id' ),
 				'filter'                     => array(
-					'operators' => array( 'is', 'isnot', '>', '<' )
-				)
+					'operators' => array(
+						'is',
+						'isnot',
+						'>',
+						'<',
+					),
+				),
 			);
 		}
 

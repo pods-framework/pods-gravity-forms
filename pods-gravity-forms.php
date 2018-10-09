@@ -3,7 +3,7 @@
 Plugin Name: Pods Gravity Forms Add-On
 Plugin URI: http://pods.io/
 Description: Integration with Gravity Forms (http://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.4 Beta
+Version: 1.4 Beta 2
 Author: Pods Framework Team
 Author URI: http://pods.io/about/
 Text Domain: pods-gravity-forms
@@ -45,18 +45,30 @@ global $pods_gf_ui;
 
 /**
  * Include the Pods GF Add-On
+ *
+ * @throws \Exception
  */
-function pods_gf_include_gf_addon () {
+function pods_gf_include_gf_addon() {
+
+	if ( ! defined( 'PODS_VERSION' ) || ! class_exists( 'GFForms' ) ) {
+		return;
+	}
 
 	// Include GF Feed Addon code
-	if ( class_exists( 'GFForms' ) && ! class_exists( 'GFFeedAddOn' ) ) {
+	if ( ! class_exists( 'GFFeedAddOn' ) ) {
 		GFForms::include_feed_addon_framework();
 	}
 
 	// Include GF Add-On
-	if ( class_exists( 'GFForms' ) && defined( 'PODS_VERSION' ) ) {
-		require_once( PODS_GF_DIR . 'includes/Pods_GF_Addon.php' );
+	require_once PODS_GF_DIR . 'includes/Pods_GF_Addon.php';
+
+	// Include GF Add-On
+	if ( defined( 'WP_CLI' ) ) {
+		require_once PODS_GF_DIR . 'includes/Pods_GF_CLI.php';
+
+		WP_CLI::add_command( 'pods-gf', 'Pods_GF_CLI' );
 	}
+
 }
 
 add_action( 'plugins_loaded', 'pods_gf_include_gf_addon' );
@@ -64,7 +76,7 @@ add_action( 'plugins_loaded', 'pods_gf_include_gf_addon' );
 /**
  * Include main functions and initiate
  */
-function pods_gf_init () {
+function pods_gf_init() {
 
 	if ( ! function_exists( 'pods' ) || ! class_exists( 'GFCommon' ) ) {
 		return false;
@@ -97,15 +109,13 @@ add_filter( 'gform_duplicate_prevention_load_script', '__return_false' );
  */
 add_action( 'plugins_loaded', 'pods_gf_admin_nag' );
 
-function pods_gf_admin_nag () {
+function pods_gf_admin_nag() {
+
 	if ( is_admin() && ( ! class_exists( 'GFForms' ) || ! defined( 'PODS_VERSION' ) ) ) {
-		echo sprintf( '<div id="message" class="error"><p>%s</p></div>',
-					  __( 'Pods Gravity Forms requires that the Pods and Gravity Forms core plugins be installed and activated.', 'pods-gravity-forms' )
-		);
+		echo sprintf( '<div id="message" class="error"><p>%s</p></div>', esc_html__( 'Pods Gravity Forms requires that the Pods and Gravity Forms core plugins be installed and activated.', 'pods-gravity-forms' ) );
 	}
 
 }
-
 
 /**
  * Add Advanced Related Objects
@@ -122,6 +132,7 @@ function pods_gf_add_related_objects() {
 	);
 
 }
+
 add_action( 'pods_form_ui_field_pick_related_objects_other', 'pods_gf_add_related_objects' );
 
 /**
@@ -148,11 +159,7 @@ function pods_gf_add_related_objects_forms( $name = null, $value = null, $option
 		$form_title = $form->title;
 
 		if ( 1 !== (int) $form->is_active ) {
-			$form_title = sprintf(
-				'%s (%s)',
-				$form_title,
-				__( 'inactive', 'pods-gravity-forms' )
-			);
+			$form_title = sprintf( '%s (%s)', $form_title, __( 'inactive', 'pods-gravity-forms' ) );
 		}
 
 		$data[ $form->id ] = $form_title;

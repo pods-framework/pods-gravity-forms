@@ -34,7 +34,7 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 
 == Changelog ==
 
-= 1.4 - April 23rd, 2018 =
+= 1.4 - TBD 2018 =
 
 * Support: Added support for Gravity Forms 2.3 database tables changes
 * Changed: Backwards compatibility issue -- You can now more easily set custom override values, however the old style was not able to be brought over -- you'll want to update your feeds when possible, the old values will not show up and you'll have to select the custom override value option once more, then fill it in
