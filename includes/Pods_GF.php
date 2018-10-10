@@ -2064,11 +2064,11 @@ class Pods_GF {
 				}
 
 				$field_obj->inputs = $inputs;
-			}
 
-			if ( is_admin() && 'gf_edit_forms' === pods_v( 'page' ) && 'settings' === pods_v( 'view' ) && 'pods-gravity-forms' === pods_v( 'subview' ) ) {
-				$field_obj->choices = array();
-				$field_obj->inputs  = array();
+				if ( is_admin() && 'gf_edit_forms' === pods_v( 'page' ) && 'settings' === pods_v( 'view' ) && 'pods-gravity-forms' === pods_v( 'subview' ) ) {
+					$field_obj->choices = array();
+					$field_obj->inputs  = array();
+				}
 			}
 
 			$form['fields'][$field_key] = $field_obj;
