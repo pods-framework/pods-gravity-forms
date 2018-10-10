@@ -20,6 +20,84 @@ Please report bugs or request featured on [GitHub](https://github.com/pods-frame
 
 Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bush for her help in the initial add-on UI work.
 
+= WP-CLI Command for Syncing Entries =
+
+This add-on provides the ability to sync entries from a Form Submission and Entry Edit screen. To bulk sync all entries even prior to setting up a Pods Gravity Form Feed, you can run a WP-CLI command.
+
+**Example 1: Sync all entries for Form 123 first active Pod feed**
+
+`wp pods-gf sync --form=123`
+
+**Example 2: Sync all entries for Form 123 using a specific feed (even if it is inactive)**
+
+`wp pods-gf sync --form=123 --feed=2`
+
+= Mapping GF List Fields to a Pods Relationship field =
+
+**Example 1: Customize what columns map to which Related Pod fields for Form ID 1, Field ID 2**
+
+Customizing a list field row can be done by using the `pods_gf_field_columns_mapping` filter, which has Form ID and Field ID variations (`pods_gf_field_columns_mapping_{form_id}` and `pods_gf_field_columns_mapping_{form_id}_{field_id}`).
+
+`
+add_filter( 'pods_gf_field_columns_mapping_1_2', 'my_columns_mapping', 10, 4 );
+
+/**
+ * Filter list columns mapping for related pod fields.
+ *
+ * @param array    $columns  List field columns.
+ * @param array    $form     GF form.
+ * @param GF_Field $gf_field GF field data.
+ * @param Pods     $pod      Pods object.
+ *
+ * @return array
+ */
+function my_columns_mapping( $columns, $form, $gf_field, $related_obj ) {
+
+	$columns[0] = 'first_field';
+	$columns[1] = 'second_field';
+	$columns[2] = 'third_field';
+
+	return $columns;
+
+}
+`
+
+**Example 2: Customize a List row for Form ID 1, Field ID 2**
+
+Customizing a list field row can be done by using the `pods_gf_field_column_row` filter, which has Form ID and Field ID variations (`pods_gf_field_column_row_{form_id}` and `pods_gf_field_column_row_{form_id}_{field_id}`).
+
+`
+add_filter( 'pods_gf_field_column_row_1_2', 'my_column_row_override', 10, 6 );
+
+/**
+ * Filter list field row for relationship field saving purposes.
+ *
+ * @param array      $row         List field row.
+ * @param array      $columns     List field columns.
+ * @param array      $form        GF form.
+ * @param GF_Field   $gf_field    GF field data.
+ * @param array      $options     Pods GF options.
+ * @param Pods|false $related_obj Related Pod object.
+ *
+ * @return array
+ */
+function my_column_row_override( $row, $columns, $form, $gf_field, $options, $related_obj ) {
+
+	// Update certain row fields based on the value of specific column.
+	if ( ! empty( $row['user_relationship_field'] ) ) {
+		$user = get_userdata( (int) $row['user'] );
+
+		// Set the post_title to match the User display name.
+		if ( $user && ! is_wp_error( $user ) ) {
+			$row['post_title'] = $user->display_name;
+		}
+	}
+
+	return $row;
+
+}
+`
+
 == Screenshots ==
 
 1. In the Pods Admin, create your Pods and Pod Fields: Pods Admin -> Add New
@@ -34,20 +112,29 @@ Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bus
 
 == Changelog ==
 
-= 1.4 - TBD 2018 =
+= 1.4 - October 10th, 2018 =
 
-* Support: Added support for Gravity Forms 2.3 database tables changes
+* Support: Added support for Gravity Forms 2.3 database tables changes (You may see a warning on the Edit Pod screen but this is a false positive because we cache a list of all tables to transients and it triggers the warning solved by removing those old "rg" tables)
 * Changed: Backwards compatibility issue -- You can now more easily set custom override values, however the old style was not able to be brought over -- you'll want to update your feeds when possible, the old values will not show up and you'll have to select the custom override value option once more, then fill it in
 * Changed: Backwards compatibility issue -- Now requiring WordPress 4.6+
-* Added: New Custom fields section added for Pods that support meta (Posts, Terms, Users, Media, and Comments), you can set additional custom fields including ability to set custom values there too
-* Added: Ability to set conditional processing per feed, based on specific values submitted
+* Feature: When editing entries in the admin area, changes now sync to the associated Pod item (except trash/deletes)
+* Feature: New Bulk Entry Syncing to Pods WP-CLI command `wp pods-gf sync --form=123` or you can specify which feed (even if it is not active) with `wp pods-gf sync --form=123 --feed=2`
+* Feature: Support for List field mapping to a Pod field which ends up serializing the value, but can be prepopulated back into the Gravity Form
+* Feature: List field mapping to relationship fields related to another Pod (list columns map to individual fields in the related Pod) with new filters `pods_gf_field_columns_mapping` and `pods_gf_field_column_row`
+* Feature: Support for Chained Select field mapping to a Pod field
+* Feature: New Custom fields section added for Pods that support meta (Posts, Terms, Users, Media, and Comments), you can set additional custom fields including ability to set custom values there too
+* Feature: Ability to set conditional processing per feed, based on specific values submitted
+* Added: Whenever you create a new feed, mapping will automatically be associated between a Gravity Form field and a Pod field if the labels match
 * Added: Custom override values now support GF merge tags by default (no insert UI yet) like `{form_id}` and any other merge tag
 * Added: Required WP Object Fields in mapping are no longer required if you choose to 'Enable editing with this form using ____' option for Post/Media or User pod types
 * Added: Support for E-mail field mappings with 'Confirm E-mail' enabled
 * Added: Support for Date fields with multiple inputs (date dropdown / text fields)
 * Added: Smarter requirement handling for WP object fields based on object type (only require what the WP insert API requires)
-* Added: Support for List field mapping to a Pod field which ends up serializing the value, but can be prepopulated back into the Gravity Form
+* Added: New mapping fields are now available for more Entry and Payment fields
+* Added: New merge tags `{pods.id}` and `{pods.permalink}` are available for usage and in the merge tag selection dropdowns
 * Improved: Added headings to each group of feed options so they are easier to work with
+* Improved: Address field mapping for Country, State, and CA Provinces now convert properly to their Pods counterparts
+* Updated: PHP Markdown library updated to 1.0.2
 * Fixed: Issues with using 'bypass' as a save action
 * Fixed: Dynamic select options should set the current value (as posted in form) properly
 * Fixed: Date/time fields shouldn't auto populate with empty dates such as 0000-00-00 anymore
