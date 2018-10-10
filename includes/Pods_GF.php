@@ -3768,6 +3768,9 @@ class Pods_GF {
 						continue;
 					}
 
+					$attachment = explode( '|:|', $attachment );
+					$attachment = $attachment[0];
+
 					if ( is_string( $attachment ) ) {
 						$attachment_id = pods_attachment_import( $attachment );
 					} else {
