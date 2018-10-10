@@ -2226,25 +2226,25 @@ class Pods_GF {
 			// Allow for value to be overridden by existing prepopulation or callback
 			$value_override = $field_options['value'];
 
-			if ( null === $value_override && isset( $gf_field['allowsPrepopulate'] ) && $gf_field['allowsPrepopulate'] ) {
+			if ( null === $value_override && isset( $gf_field->allowsPrepopulate ) && $gf_field->allowsPrepopulate ) {
 				// @todo handling for field types that have different $_POST input names
 
-				if ( 'checkbox' === $gf_field['type'] ) {
-					if ( isset( $_GET[ $gf_field['name'] ] ) ) {
-						$value_override = $_GET[ $gf_field['name'] ];
+				if ( 'checkbox' === $gf_field->type ) {
+					if ( isset( $_GET[ $gf_field->name ] ) ) {
+						$value_override = $_GET[ $gf_field->name ];
 
-						foreach ( $gf_field['choices'] as $k => $choice ) {
-							$gf_field['choices'][ $k ]['isSelected'] = false;
+						foreach ( $gf_field->choices as $k => $choice ) {
+							$gf_field->choices[ $k ]['isSelected'] = false;
 
 							if ( ( ! is_array( $value_override ) && $choice['value'] == $value_override ) || ( is_array( $value_override ) && in_array( $choice['value'], $value_override ) ) ) {
-								$gf_field['choices'][ $k ]['isSelected'] = true;
+								$gf_field->choices[ $k ]['isSelected'] = true;
 
 								break;
 							}
 						}
 					}
-				} elseif ( isset( $gf_field['inputName'] ) && isset( $_GET[ $gf_field['inputName'] ] ) ) {
-					$value_override = $_GET[ $gf_field['inputName'] ];
+				} elseif ( isset( $gf_field->inputName ) && isset( $_GET[ $gf_field->inputName ] ) ) {
+					$value_override = $_GET[ $gf_field->inputName ];
 				}
 			}
 
@@ -2266,13 +2266,13 @@ class Pods_GF {
 				if ( $pod_field_type ) {
 					if ( is_object( $pod ) ) {
 						$value_override = $pod->field( $field_options['field'], array( 'output' => 'ids' ) );
-					} elseif ( is_array( $pod ) && null !== $field_key && 'checkbox' === $gf_field['type'] ) {
+					} elseif ( is_array( $pod ) && null !== $field_key && 'checkbox' === $gf_field->type ) {
 						$value_override = array();
 
 						$items   = 0;
 						$counter = 1;
 
-						$total_choices = count( $gf_field['choices'] );
+						$total_choices = count( $gf_field->choices );
 
 						while ( $items < $total_choices ) {
 							$field_key_counter = $field_options['field'] . '.' . $counter;
@@ -2280,11 +2280,11 @@ class Pods_GF {
 							if ( isset( $pod[ $field_key_counter ] ) ) {
 								$choice_counter = 1;
 
-								foreach ( $gf_field['choices'] as $k => $choice ) {
-									$gf_field['choices'][ $k ]['isSelected'] = false;
+								foreach ( $gf_field->choices as $k => $choice ) {
+									$gf_field->choices[ $k ]['isSelected'] = false;
 
 									if ( (string) $choice['value'] === (string) $pod[ $field_key_counter ] || $counter == $choice_counter ) {
-										$gf_field['choices'][ $k ]['isSelected'] = true;
+										$gf_field->choices[ $k ]['isSelected'] = true;
 
 										$value_override[ 'input_' . pods_v( 'id', $choice, $field_options['field'] . '.1', true ) ] = $choice['value'];
 									}
@@ -2322,7 +2322,7 @@ class Pods_GF {
 					if ( in_array( $pod_field_type, $date_time_types, true ) && in_array( $value_override, $empty_values, true ) ) {
 						$value_override = '';
 					} elseif ( ! empty( $value_override ) ) {
-						if ( 'list' === $gf_field['type'] ) {
+						if ( 'list' === $gf_field->type ) {
 							if ( is_string( $value_override ) ) {
 								$list = @json_decode( $value_override, true );
 
@@ -2361,7 +2361,7 @@ class Pods_GF {
 									}
 								}
 							}
-						} elseif ( 'time' === $gf_field['type'] && ! empty( $value_override ) ) {
+						} elseif ( 'time' === $gf_field->type && ! empty( $value_override ) ) {
 							$format = empty( $gf_field->timeFormat ) ? '12' : esc_attr( $gf_field->timeFormat );
 
 							if ( '12' === $format && preg_match( '/^(\d{1,2}):(\d{1,2})/', $value_override, $matches ) && 12 < (int) $matches[1] ) {
@@ -2374,20 +2374,20 @@ class Pods_GF {
 
 								$value_override = sprintf( '%s:%s pm', $hour, $matches[2] );
 							}
-						} elseif ( 'address' === $gf_field['type'] ) {
+						} elseif ( 'address' === $gf_field->type ) {
 							// @todo Figure out what to do for address values
-						} elseif ( 'name' === $gf_field['type'] ) {
+						} elseif ( 'name' === $gf_field->type ) {
 							// @todo Figure out what to do for name values
-						} elseif ( 'chainedselect' === $gf_field['type'] ) {
+						} elseif ( 'chainedselect' === $gf_field->type ) {
 							// @todo Figure out what to do for chained select values
-						} elseif ( 'checkbox' === $gf_field['type'] ) {
+						} elseif ( 'checkbox' === $gf_field->type ) {
 							$values = $value_override;
 
 							$value_override = array();
 
 							$choice_id = 1;
 
-							foreach ( $gf_field['choices'] as $k => $choice ) {
+							foreach ( $gf_field->choices as $k => $choice ) {
 								$gf_field->choices[$k]['isSelected'] = false;
 
 								$is_selected = false;
@@ -2395,7 +2395,7 @@ class Pods_GF {
 								if ( 'boolean' === $pod_field_type && 1 === (int) $values && ! empty( $choice['value'] ) ) {
 									$is_selected = true;
 								} elseif ( ( ! is_array( $values ) && (string) $choice['value'] === (string) $values )
-									|| ( is_array( $values ) && in_array( $choice['value'], $values, true ) ) ) {
+									|| ( is_array( $values ) && in_array( $choice['value'], $values ) ) ) {
 									$is_selected = true;
 								}
 
@@ -2419,8 +2419,8 @@ class Pods_GF {
 			}
 
 			if ( null !== $field_key ) {
-				$gf_field['allowsPrepopulate'] = $autopopulate;
-				$gf_field['inputName']         = 'pods_gf_field_' . $field;
+				$gf_field->allowsPrepopulate = $autopopulate;
+				$gf_field->inputName         = 'pods_gf_field_' . $field;
 			}
 
 			$form['fields'][ $field_key ] = $gf_field;
@@ -2430,7 +2430,7 @@ class Pods_GF {
 			$value_override = apply_filters( 'pods_gf_pre_populate_value', $value_override, $field, $field_options, $form, $prepopulate, $pod );
 
 			if ( null !== $value_override ) {
-				if ( is_array( $value_override ) && 'list' === $gf_field['type'] ) {
+				if ( is_array( $value_override ) && 'list' === $gf_field->type ) {
 					$choices = $gf_field->choices;
 
 					$value_override_chunked = array_chunk( $value_override, count( $choices ) );
@@ -2451,7 +2451,7 @@ class Pods_GF {
 			$post_value_override = apply_filters( 'pods_gf_field_value', $post_value_override, $value_override, $field, $field_options, $form, $prepopulate, $pod );
 
 			if ( null !== $post_value_override ) {
-				if ( is_array( $post_value_override ) && 'list' === $gf_field['type'] ) {
+				if ( is_array( $post_value_override ) && 'list' === $gf_field->type ) {
 					$post_value_override = maybe_serialize( $post_value_override );
 				}
 
@@ -2820,7 +2820,7 @@ class Pods_GF {
 				$form['fields'][$field_keys[$field]]['isRequired'] = false;
 
 				if ( 'list' == GFFormsModel::get_input_type( $gf_field ) ) {
-					$columns = ( is_array( $gf_field['choices'] ) ? $gf_field['choices'] : array( array() ) );
+					$columns = ( is_array( $gf_field->choices ) ? $gf_field->choices : array( array() ) );
 
 					$col_number = 1;
 
