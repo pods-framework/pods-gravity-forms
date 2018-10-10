@@ -3200,13 +3200,13 @@ class Pods_GF {
 		 * Filter list field columns for relationship field mapping purposes.
 		 *
 		 * @param array    $columns  List field columns.
-		 * @param int      $form_id  GF form ID.
-		 * @param int      $field_id GF field ID.
+		 * @param array    $form     GF form data.
 		 * @param GF_Field $gf_field GF field data.
+		 * @param Pods     $pod      Pods object.
 		 *
 		 * @since 1.4
 		 */
-		$columns = (array) gf_apply_filters( array( 'pods_gf_field_columns_mapping', $form['id'], $gf_field->id ), $columns, $form['id'], $gf_field->id, $gf_field );
+		$columns = (array) gf_apply_filters( array( 'pods_gf_field_columns_mapping', $form['id'], $gf_field->id ), $columns, $form, $gf_field, $pod );
 
 		return $columns;
 
@@ -3518,15 +3518,14 @@ class Pods_GF {
 						 *
 						 * @param array      $row         List field row.
 						 * @param array      $columns     List field columns.
-						 * @param int        $form_id     GF form ID.
-						 * @param int        $field_id    GF field ID.
+						 * @param int        $form_id     GF form data.
 						 * @param GF_Field   $gf_field    GF field data.
 						 * @param array      $options     Pods GF options.
 						 * @param Pods|false $related_obj Related Pod object.
 						 *
 						 * @since 1.4
 						 */
-						$row = (array) gf_apply_filters( array( 'pods_gf_field_column_row', $form['id'], $gf_field->id ), $row, $columns, $form['id'], $gf_field->id, $gf_field, $options, $related_obj );
+						$row = (array) gf_apply_filters( array( 'pods_gf_field_column_row', $form['id'], $gf_field->id ), $row, $columns, $form, $gf_field, $options, $related_obj );
 
 						$related_id = 0;
 
