@@ -2363,6 +2363,10 @@ class Pods_GF {
 							}
 						} elseif ( 'address' === $gf_field['type'] ) {
 							// @todo Figure out what to do for address values
+						} elseif ( 'name' === $gf_field['type'] ) {
+							// @todo Figure out what to do for name values
+						} elseif ( 'chainedselect' === $gf_field['type'] ) {
+							// @todo Figure out what to do for chained select values
 						} elseif ( 'checkbox' === $gf_field['type'] ) {
 							$values = $value_override;
 
