@@ -34,6 +34,8 @@ This add-on provides the ability to sync entries from a Form Submission and Entr
 
 = Mapping GF List Fields to a Pods Relationship field =
 
+You can map a GF List field to a Relationship field related to another Pod. Using the below examples you can customize how the automatic mapping works. By default, the list columns will map to the pod fields with the same labels.
+
 **Example 1: Customize what columns map to which Related Pod fields for Form ID 1, Field ID 2**
 
 Customizing a list field row can be done by using the `pods_gf_field_columns_mapping` filter, which has Form ID and Field ID variations (`pods_gf_field_columns_mapping_{form_id}` and `pods_gf_field_columns_mapping_{form_id}_{field_id}`).
