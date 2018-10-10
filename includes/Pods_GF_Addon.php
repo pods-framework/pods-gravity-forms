@@ -1113,6 +1113,8 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			}
 		}
 
+		$form = $this->_gf_pre_process( $form );
+
 		$setup[ $form['id'] ] = $form;
 
 		return $setup[ $form['id'] ];
