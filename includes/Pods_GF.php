@@ -2246,7 +2246,7 @@ class Pods_GF {
 					$pod_field_type = $pod->fields( $field_options['field'], 'type' );
 				}
 
-				if ( isset( $pod[ $field_options['field'] ] ) ) {
+				if ( is_array( $pod ) && isset( $pod[ $field_options['field'] ] ) ) {
 					$value_override = $pod[ $field_options['field'] ];
 				}
 
@@ -2320,7 +2320,7 @@ class Pods_GF {
 								$value_override = array();
 
 								if ( $list && is_array( $list ) ) {
-									$list = call_user_func_array( 'array_values', $list );
+									$list = array_map( 'array_values', $list );
 									$list = call_user_func_array( 'array_merge', $list );
 
 									$value_override = $list;
