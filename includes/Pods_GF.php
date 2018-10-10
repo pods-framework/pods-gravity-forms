@@ -1636,6 +1636,14 @@ class Pods_GF {
 			$value = apply_filters( 'pods_gf_to_pods_value_' . $form['id'], $value, $field, $field_options, $form, $gf_field, $data, $options );
 			$value = apply_filters( 'pods_gf_to_pods_value', $value, $field, $field_options, $form, $gf_field, $data, $options );
 
+			// If a file is not set, check if we are editing an item.
+			if ( null === $value && in_array( $gf_field->type, array( 'fileupload', 'post_image' ), true ) ) {
+				// If we are editing an item, don't attempt to save.
+				if ( is_object( $pod ) && $pod->id ) {
+					continue;
+				}
+			}
+
 			// Set data
 			if ( null !== $value ) {
 				// @todo Support simple repeatable fields in Pods 2.9
@@ -3896,6 +3904,14 @@ class Pods_GF {
 				);
 
 				$gf_value = self::get_gf_field_value( $value, $gf_params );
+
+				// If a file is not set, check if we are editing an item.
+				if ( null === $gf_value && in_array( $field->type, array( 'fileupload', 'post_image' ), true ) ) {
+					// If we are editing an item, return normal result, don't attempt to save.
+					if ( is_object( $this->pod ) && $this->pod->id ) {
+						return $validation_result;
+					}
+				}
 
 				$validate = $pods_api->handle_field_validation( $gf_value, $field_options['field'], $this->pod->pod_data['object_fields'], $this->pod->pod_data['fields'], $this->pod, null );
 			}
