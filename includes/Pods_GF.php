@@ -3247,6 +3247,8 @@ class Pods_GF {
 	 */
 	public static function get_gf_field_value( $value, $params ) {
 
+		static $cached_field_value = array();
+
 		$params = array_merge( array(
 			'gf_field'         => null,
 			'gf_field_options' => array(),
@@ -3296,6 +3298,16 @@ class Pods_GF {
 
 		if ( empty( $full_field ) ) {
 			$full_field = $gf_field->id;
+		}
+
+		$cache_key = $form['id'] . ':' . $full_field;
+
+		if ( ! empty( $field_options['id'] ) ) {
+			$cache_key .= ':' . $field_options['id'];
+		}
+
+		if ( isset( $cached_field_value[ $cache_key ] ) ) {
+			return $cached_field_value[ $cache_key ]['value'];
 		}
 
 		if ( null === $value ) {
@@ -3811,6 +3823,10 @@ class Pods_GF {
 		if ( is_string( $value ) && ! empty( $gf_field_options['gf_merge_tags'] ) ) {
 			$value = GFCommon::replace_variables( $value, $form, $entry );
 		}
+
+		$cached_field_value[ $cache_key ] = array(
+			'value' => $value,
+		);
 
 		return $value;
 
