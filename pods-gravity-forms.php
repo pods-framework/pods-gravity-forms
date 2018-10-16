@@ -1,16 +1,15 @@
 <?php
 /*
 Plugin Name: Pods Gravity Forms Add-On
-Plugin URI: http://pods.io/
-Description: Integration with Gravity Forms (http://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.4 Beta 3
+Plugin URI: https://pods.io/
+Description: Integration with Gravity Forms (https://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
+Version: 1.4
 Author: Pods Framework Team
-Author URI: http://pods.io/about/
+Author URI: https://pods.io/about/
 Text Domain: pods-gravity-forms
-Domain Path: /languages/
 GitHub Plugin URI: https://github.com/pods-framework/pods-gravity-forms
 
-Copyright 2013-2017  Pods Foundation, Inc  (email : contact@podsfoundation.org)
+Copyright 2013-2018  Pods Foundation, Inc  (email : contact@podsfoundation.org)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
