@@ -115,7 +115,7 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 
 			$paging['offset'] = $entries_counter;
 
-			$entries = \GFAPI::get_entries( $form_id, $search_criteria, null, $paging, $total_entries );
+			$entries = \GFAPI::get_entries( $form_id, $search_criteria, null, $paging );
 		} while ( $entries );
 
 		$progress_bar->finish();

@@ -1380,7 +1380,7 @@ class Pods_GF {
 
 		$save_action = 'add';
 
-		if ( empty( $id ) && ! empty( $entry['id'] ) && ( ! empty( $this->options['update_pod_item'] ) || apply_filters( 'pods_gf_to_pods_update_pod_items', false ) ) ) {
+		if ( empty( $id ) && ! empty( $entry['id'] ) && ( ! empty( $this->options['edit'] ) || ! empty( $this->options['update_pod_item'] ) || apply_filters( 'pods_gf_to_pods_update_pod_items', false ) ) ) {
 			$item_id  = (int) gform_get_meta( $entry['id'], '_pods_item_id' );
 			$item_pod = gform_get_meta( $entry['id'], '_pods_item_pod' );
 
@@ -3300,14 +3300,18 @@ class Pods_GF {
 			$full_field = $gf_field->id;
 		}
 
-		$cache_key = $form['id'] . ':' . $full_field;
+		$cache_key = false;
 
-		if ( ! empty( $field_options['id'] ) ) {
-			$cache_key .= ':' . $field_options['id'];
-		}
+		if ( ! empty( $entry ) ) {
+			$cache_key = $form['id'] . ':' . $entry['id'] . ':' . $full_field;
 
-		if ( isset( $cached_field_value[ $cache_key ] ) ) {
-			return $cached_field_value[ $cache_key ]['value'];
+			if ( ! empty( $field_options['id'] ) ) {
+				$cache_key .= ':' . $field_options['id'];
+			}
+
+			if ( isset( $cached_field_value[ $cache_key ] ) ) {
+				return $cached_field_value[ $cache_key ]['value'];
+			}
 		}
 
 		if ( null === $value ) {
@@ -3824,9 +3828,11 @@ class Pods_GF {
 			$value = GFCommon::replace_variables( $value, $form, $entry );
 		}
 
-		$cached_field_value[ $cache_key ] = array(
-			'value' => $value,
-		);
+		if ( $cache_key ) {
+			$cached_field_value[ $cache_key ] = array(
+				'value' => $value,
+			);
+		}
 
 		return $value;
 

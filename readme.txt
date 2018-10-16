@@ -4,7 +4,7 @@ Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.6
 Tested up to: 4.9.8
-Stable tag: 1.4
+Stable tag: 1.4.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -113,6 +113,10 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 9. Form entries page showing Pod ID
 
 == Changelog ==
+
+= 1.4.1 - October 16th, 2018 =
+
+* Fixed: When syncing multiple entries, the field values were caching and not unique per entry resulting in what appeared to be duplicated content inserts/updates.
 
 = 1.4 - October 16th, 2018 =
 

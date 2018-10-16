@@ -908,6 +908,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		}
 		catch ( Exception $e ) {
 			// @todo Log something to the form entry
+			if ( defined( 'WP_CLI' ) ) {
+				\WP_CLI::warning( 'Feed processing error: ' . $e->getMessage() );
+			}
 		}
 
 		return null;
