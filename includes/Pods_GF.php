@@ -1380,7 +1380,7 @@ class Pods_GF {
 
 		$save_action = 'add';
 
-		if ( empty( $id ) && ! empty( $this->options['update_pod_item'] ) ) {
+		if ( empty( $id ) && ! empty( $entry['id'] ) && ( ! empty( $this->options['update_pod_item'] ) || apply_filters( 'pods_gf_to_pods_update_pod_items', false ) ) ) {
 			$item_id  = (int) gform_get_meta( $entry['id'], '_pods_item_id' );
 			$item_pod = gform_get_meta( $entry['id'], '_pods_item_pod' );
 
@@ -1480,6 +1480,14 @@ class Pods_GF {
 
 		if ( $this->pod && ! empty( $this->pod->pod_data ) ) {
 			self::$gf_to_pods_id[ $this->form_id . '_permalink' ] = $this->pod->field( 'detail_url' );
+		}
+
+		if ( ! empty( $entry['id'] ) ) {
+			gform_update_meta( $entry['id'], '_pods_item_id', $id );
+
+			if ( is_object( $this->pod ) ) {
+				gform_update_meta( $entry['id'], '_pods_item_pod', $this->pod->pod );
+			}
 		}
 
 		do_action( 'pods_gf_to_pods', $this->pod, $save_action, $data, $id, $this );
@@ -4284,13 +4292,6 @@ class Pods_GF {
 
 		if ( pods_v( 'auto_delete', $this->options, false ) ) {
 			self::gf_delete_entry( $entry );
-		} else {
-			// Save the pod item ID for future reference.
-			gform_update_meta( $entry['id'], '_pods_item_id', self::$gf_to_pods_id[ $form['id'] ] );
-
-			if ( is_object( $this->pod ) ) {
-				gform_update_meta( $entry['id'], '_pods_item_pod', $this->pod->pod );
-			}
 		}
 
 		do_action( 'pods_gf_after_submission_' . $form['id'], $entry, $form );
@@ -4449,13 +4450,6 @@ class Pods_GF {
 			}
 			catch ( Exception $e ) {
 				// @todo Log something to the form entry
-			}
-
-			// Save the pod item ID for future reference.
-			gform_update_meta( $entry['id'], '_pods_item_id', self::$gf_to_pods_id[ $form['id'] ] );
-
-			if ( is_object( $this->pod ) ) {
-				gform_update_meta( $entry['id'], '_pods_item_pod', $this->pod->pod );
 			}
 
 			do_action( 'pods_gf_after_update_entry_' . $form['id'], $entry, $form );

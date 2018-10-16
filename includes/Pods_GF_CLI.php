@@ -27,6 +27,8 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 	 */
 	public function sync( $args, $assoc_args ) {
 
+		add_filter( 'pods_gf_to_pods_update_pod_items', '__return_true' );
+
 		$form_id = 0;
 
 		if ( ! empty( $assoc_args['form'] ) ) {
