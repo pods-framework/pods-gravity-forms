@@ -3,7 +3,7 @@ Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
 Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.6
-Tested up to: 4.8
+Tested up to: 4.9.8
 Stable tag: 1.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -114,7 +114,7 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 
 == Changelog ==
 
-= 1.4 - October 10th, 2018 =
+= 1.4 - October 16th, 2018 =
 
 * Support: Added support for Gravity Forms 2.3 database tables changes (You may see a warning on the Edit Pod screen but this is a false positive because we cache a list of all tables to transients and it triggers the warning solved by removing those old "rg" tables)
 * Changed: Backwards compatibility issue -- You can now more easily set custom override values, however the old style was not able to be brought over -- you'll want to update your feeds when possible, the old values will not show up and you'll have to select the custom override value option once more, then fill it in
