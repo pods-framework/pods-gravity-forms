@@ -404,22 +404,22 @@ class Pods_GF_UI {
 		foreach ( $this->actions as $action => $options ) {
 			$this->actions[ $action ] = $options = array_merge( $defaults, $options );
 
-			if ( !empty( $options[ 'heading' ] ) ) {
+			if ( !empty( $options[ 'heading' ] ) && empty( $this->ui[ 'heading' ][ $action ] ) ) {
 				$this->ui[ 'heading' ][ $action ] = $options[ 'heading' ];
 			}
 
-			if ( !empty( $options[ 'header' ] ) ) {
+			if ( !empty( $options[ 'header' ] ) && empty( $this->ui[ 'header' ][ $action ] ) ) {
 				$this->ui[ 'header' ][ $action ] = $options[ 'header' ];
 			}
 
 			if ( !empty( $options[ 'label' ] ) ) {
 				$this->ui[ 'label' ][ $action ] = $options[ 'label' ];
 
-				if ( !isset( $this->ui[ 'heading' ][ $action ] ) || empty( $this->ui[ 'heading' ][ $action ] ) ) {
+				if ( empty( $this->ui[ 'heading' ][ $action ] ) ) {
 					$this->ui[ 'heading' ][ $action ] = $options[ 'label' ];
 				}
 
-				if ( !isset( $this->ui[ 'header' ][ $action ] ) || empty( $this->ui[ 'header' ][ $action ] ) ) {
+				if ( empty( $this->ui[ 'header' ][ $action ] ) ) {
 					$this->ui[ 'header' ][ $action ] = $options[ 'label' ];
 				}
 
@@ -818,6 +818,10 @@ class Pods_GF_UI {
 	public function _action_add( $obj ) {
 
 		self::$pods_ui =& $obj;
+
+		if ( $obj->restricted( $obj->action ) ) {
+			return false;
+		}
 ?>
 <div class="wrap pods-admin pods-ui">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
@@ -825,7 +829,7 @@ class Pods_GF_UI {
 		<?php
 			echo $obj->header[ 'add' ];
 
-			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) ) {
+			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
 				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
 
 				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
@@ -890,6 +894,10 @@ class Pods_GF_UI {
 
 			return;
 		}
+
+		if ( $obj->restricted( $obj->action, $obj->row ) ) {
+			return $obj->error( sprintf( __( '<strong>Error:</strong> You do not have access to this %s.', 'pods' ), $obj->item ) );
+		}
 ?>
 <div class="wrap pods-admin pods-ui">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
@@ -897,7 +905,7 @@ class Pods_GF_UI {
 		<?php
 			echo $obj->do_template( $duplicate ? $obj->header[ 'duplicate' ] : $obj->header[ $obj->action ] );
 
-			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) ) {
+			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
 				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
 
 				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
@@ -952,6 +960,10 @@ class Pods_GF_UI {
 
 			return;
 		}
+
+		if ( $obj->restricted( $obj->action, $obj->row ) ) {
+			return false;
+		}
 ?>
 <div class="wrap pods-admin pods-ui">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
@@ -959,7 +971,7 @@ class Pods_GF_UI {
 		<?php
 			echo $obj->do_template( $obj->header[ $obj->action ] );
 
-			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) ) {
+			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
 				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
 
 				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
@@ -1003,6 +1015,10 @@ class Pods_GF_UI {
 
 		self::$pods_ui =& $obj;
 
+		if ( $obj->restricted( $obj->action, $obj->row ) ) {
+			return false;
+		}
+
 		if ( is_object( $this->pod ) ) {
 			return false; // continue as normal
 		}
@@ -1034,6 +1050,10 @@ class Pods_GF_UI {
 	public function _action_custom( $obj ) {
 
 		self::$pods_ui =& $obj;
+
+		if ( $obj->restricted( $obj->action, $obj->row ) ) {
+			return false;
+		}
 ?>
 <div class="wrap pods-admin pods-ui">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
@@ -1041,7 +1061,7 @@ class Pods_GF_UI {
 		<?php
 			echo $obj->header[ $this->action ];
 
-			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) ) {
+			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
 				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
 
 				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
