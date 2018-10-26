@@ -1595,6 +1595,105 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		return $value;
 
 	}
+
+	/**
+	 * Registers hooks which need to be included before the init hook is triggered.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 */
+	public function pre_init() {
+
+		add_filter( 'gform_export_form', array( $this, '_gf_export_form' ) );
+		add_action( 'gform_forms_post_import', array( $this, '_gf_forms_post_import' ) );
+
+		parent::pre_init();
+
+	}
+
+	/**
+	 * Adds form feeds to form object during export.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param array $form The form to be exported.
+	 *
+	 * @uses   GFFeedAddOn::get_feeds()
+	 *
+	 * @return array
+	 */
+	public function _gf_export_form( $form ) {
+
+		// Get feeds for form.
+		$feeds = $this->get_feeds( $form['id'] );
+
+		// If feeds array does not exist for form, create it.
+		if ( ! isset( $form['feeds'] ) ) {
+			$form['feeds'] = array();
+		}
+
+		// Add feeds to form.
+		$form['feeds'][ $this->_slug ] = $feeds;
+
+		return $form;
+
+	}
+
+	/**
+	 * Imports the feeds for the newly imported forms.
+	 *
+	 * @since  Unknown
+	 * @access public
+	 *
+	 * @param array $forms The imported forms.
+	 *
+	 * @uses   GFAPI::add_feed()
+	 * @uses   GFAPI::get_form()
+	 * @uses   GFAPI::update_form()
+	 * @uses   GFFeedAddOn::update_feed_active()
+	 */
+	public function _gf_forms_post_import( $forms ) {
+
+		// Loop through imported forms.
+		foreach ( $forms as $import_form ) {
+
+			// Get latest version of form object.
+			$form = GFAPI::get_form( $import_form['id'] );
+
+			// If no feeds are found for form, skip.
+			if ( ! rgars( $form, 'feeds/' . $this->_slug ) ) {
+				continue;
+			}
+
+			// Import feeds.
+			foreach ( $form['feeds'][ $this->_slug ] as $feed ) {
+
+				// Add feed.
+				$new_feed_id = GFAPI::add_feed( $form['id'], $feed['meta'], $this->_slug );
+
+				// Set active status.
+				if ( ! $feed['is_active'] ) {
+					$this->update_feed_active( $new_feed_id, false );
+				}
+
+			}
+
+			// Remove Pods feeds from form object.
+			unset( $form['feeds'][ $this->_slug ] );
+
+			// If no other feeds are found, remove feeds array.
+			if ( empty( $form['feeds'] ) ) {
+				unset( $form['feeds'] );
+			}
+
+			// Save form.
+			GFAPI::update_form( $form );
+
+		}
+
+	}
+
 }
 
 new Pods_GF_Addon();
