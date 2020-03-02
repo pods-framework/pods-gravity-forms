@@ -209,7 +209,7 @@ function pods_gf_save_for_later_ajax() {
 /**
  * Backwards-compatible method for retrieving GF table name
  *
- * @since
+ * @since 1.4
  *
  * @param $table_type
  *

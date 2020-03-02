@@ -119,6 +119,7 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 * Fixed: Ajax handling for various callbacks that hook into `gform_pre_render`.
 * Fixed: Cleaned up logic and prevent PHP notices with multi-select arrays when setting up choices arrays.
 * Fixed: Make sure `Pods_GF_UI` does not return false on UI callbacks to prevent access errors.
+* Fixed: Add mapping feeds to the import/export! (props @travislopes)
 
 = 1.4.1 - October 16th, 2018 =
 

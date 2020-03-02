@@ -874,7 +874,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	/**
 	 * Processes feed action.
 	 *
-	 * @since  Unknown
+	 * @since  1.4.2
 	 * @access public
 	 *
 	 * @param array  $feed  The Feed Object currently being processed.
@@ -1599,7 +1599,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	/**
 	 * Registers hooks which need to be included before the init hook is triggered.
 	 *
-	 * @since  Unknown
+	 * @since  1.4.2
 	 * @access public
 	 */
 	public function pre_init() {
@@ -1614,7 +1614,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	/**
 	 * Adds form feeds to form object during export.
 	 *
-	 * @since  Unknown
+	 * @since  1.4.2
 	 * @access public
 	 *
 	 * @param array $form The form to be exported.
@@ -1643,7 +1643,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	/**
 	 * Imports the feeds for the newly imported forms.
 	 *
-	 * @since  Unknown
+	 * @since  1.4.2
 	 * @access public
 	 *
 	 * @param array $forms The imported forms.
