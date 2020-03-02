@@ -3,7 +3,7 @@ Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
 Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.6
-Tested up to: 4.9.8
+Tested up to: 5.4
 Stable tag: 1.4.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -113,6 +113,12 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 9. Form entries page showing Pod ID
 
 == Changelog ==
+
+= 1.4.2 - March 2nd, 2020 =
+
+* Fixed: Ajax handling for various callbacks that hook into `gform_pre_render`.
+* Fixed: Cleaned up logic and prevent PHP notices with multi-select arrays when setting up choices arrays.
+* Fixed: Make sure `Pods_GF_UI` does not return false on UI callbacks to prevent access errors.
 
 = 1.4.1 - October 16th, 2018 =
 

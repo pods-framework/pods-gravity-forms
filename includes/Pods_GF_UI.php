@@ -820,7 +820,7 @@ class Pods_GF_UI {
 		self::$pods_ui =& $obj;
 
 		if ( $obj->restricted( $obj->action ) ) {
-			return false;
+			return;
 		}
 ?>
 <div class="wrap pods-admin pods-ui">
@@ -962,7 +962,7 @@ class Pods_GF_UI {
 		}
 
 		if ( $obj->restricted( $obj->action, $obj->row ) ) {
-			return false;
+			return;
 		}
 ?>
 <div class="wrap pods-admin pods-ui">
@@ -1016,13 +1016,14 @@ class Pods_GF_UI {
 		self::$pods_ui =& $obj;
 
 		if ( $obj->restricted( $obj->action, $obj->row ) ) {
-			return false;
+			return;
 		}
 
 		if ( is_object( $this->pod ) ) {
-			return false; // continue as normal
+			return; // continue as normal
 		}
-		elseif ( is_array( $this->pod ) ) {
+
+		if ( is_array( $this->pod ) ) {
 			pods_gf();
 
 			Pods_GF::gf_delete_entry( $id, $this->actions[ 'delete' ][ 'keep_files' ] );
@@ -1052,7 +1053,7 @@ class Pods_GF_UI {
 		self::$pods_ui =& $obj;
 
 		if ( $obj->restricted( $obj->action, $obj->row ) ) {
-			return false;
+			return;
 		}
 ?>
 <div class="wrap pods-admin pods-ui">

@@ -723,7 +723,7 @@ class Pods_GF {
 		$class = get_class();
 
 		if ( ! has_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_dynamic_select' ) ) ) {
-			add_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_dynamic_select' ), 10, 1 );
+			add_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_dynamic_select' ), 10, 2 );
 		}
 	}
 
@@ -752,13 +752,20 @@ class Pods_GF {
 			if ( is_array( $label ) ) {
 				$choices[] = $label;
 			} else {
+				$is_selected = false;
 
-				$isSelected = ( (string) $value === $current_value ) || ( is_array( $current_value ) && in_array( $value, $current_value ) );
+				if ( is_array( $current_value ) ) {
+					if ( in_array( (string) $value, $current_value, true ) ) {
+						$is_selected = true;
+					}
+				} elseif ( (string) $value === (string) $current_value ) {
+					$is_selected = true;
+				}
 
 				$choices[] = array(
 					'text'       => $label,
 					'value'      => $value,
-					'isSelected' => $isSelected,
+					'isSelected' => $is_selected,
 				);
 			}
 		}
@@ -830,7 +837,7 @@ class Pods_GF {
 		$class = get_class();
 
 		if ( ! has_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_prepopulate' ) ) ) {
-			add_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_prepopulate' ), 10, 1 );
+			add_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_prepopulate' ), 10, 2 );
 		}
 	}
 
@@ -1855,11 +1862,12 @@ class Pods_GF {
 	 * Set dynamic option values for GF Form fields
 	 *
 	 * @param array      $form            GF Form array
+	 * @param bool       $ajax            Whether the form was submitted using AJAX
 	 * @param array|null $dynamic_selects The Dynamic select options to use
 	 *
 	 * @return array $form GF Form array
 	 */
-	public static function gf_dynamic_select( $form, $dynamic_selects = null ) {
+	public static function gf_dynamic_select( $form, $ajax = false, $dynamic_selects = null ) {
 
 		if ( null === $dynamic_selects ) {
 			$dynamic_selects = self::$dynamic_selects;
@@ -2098,11 +2106,12 @@ class Pods_GF {
 	 * Prepopulate a GF Form
 	 *
 	 * @param array      $form        GF Form array
+	 * @param bool       $ajax        Whether the form was submitted using AJAX
 	 * @param array|null $prepopulate The prepopulate array
 	 *
 	 * @return array $form GF Form array
 	 */
-	public static function gf_prepopulate( $form, $prepopulate = null ) {
+	public static function gf_prepopulate( $form, $ajax = false, $prepopulate = null ) {
 
 		if ( null === $prepopulate ) {
 			$prepopulate = self::$prepopulate;
@@ -2670,7 +2679,7 @@ class Pods_GF {
 	 *
 	 * @return array $form GF Form array
 	 */
-	public static function gf_markdown( $form, $ajax, $markdown = null ) {
+	public static function gf_markdown( $form, $ajax = false, $markdown = null ) {
 
 		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
 			return $form;
@@ -2751,7 +2760,7 @@ class Pods_GF {
 		$class = get_class();
 
 		if ( ! has_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_read_only' ) ) ) {
-			add_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_read_only' ), 10, 1 );
+			add_filter( 'gform_pre_render_' . $form_id, array( $class, 'gf_read_only' ), 10, 2 );
 
 			add_filter( 'gform_pre_submission_filter_' . $form_id, array( $class, 'gf_read_only_pre_submission' ), 10, 1 );
 		}
@@ -2761,11 +2770,12 @@ class Pods_GF {
 	 * Enable Read Only for fields
 	 *
 	 * @param array $form      GF Form array
+	 * @param bool  $ajax      Whether the form was submitted using AJAX
 	 * @param array $read_only Read Only options
 	 *
 	 * @return array $form GF Form array
 	 */
-	public static function gf_read_only( $form, $read_only = null ) {
+	public static function gf_read_only( $form, $ajax = false, $read_only = null ) {
 
 		if ( null === $read_only ) {
 			$read_only = self::$read_only;
