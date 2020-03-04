@@ -243,7 +243,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 				}
 
 				if ( in_array( $pod_type, array( 'post_type', 'media' ), true ) ) {
-					if ( in_array( $name, array( 'post_title', 'post_content' ), true ) ) {
+					if ( 1 === $enable_current_post ) {
+						$field['options']['required'] = 0;
+					} elseif ( in_array( $name, array( 'post_title', 'post_content' ), true ) ) {
 						$field['options']['required'] = 1;
 					}
 				} elseif ( 'taxonomy' === $pod_type ) {
@@ -251,7 +253,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 						$field['options']['required'] = 1;
 					}
 				} elseif ( 'user' === $pod_type ) {
-					if ( 'user_login' === $name ) {
+					if ( 1 === $enable_current_user ) {
+						$field['options']['required'] = 0;
+					} elseif ( 'user_login' === $name ) {
 						$field['options']['required'] = 1;
 					}
 				}
