@@ -843,36 +843,36 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	}
 
 	/**
-	 *
+	 * Init integration.
 	 */
 	public function init() {
-
 		parent::init();
 
-		if ( $this->is_gravityforms_supported() ) {
-			// Handle normal forms.
-			add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ), 9, 2 );
-			add_filter( 'gform_admin_pre_render', array( $this, '_gf_pre_render' ), 9, 1 );
-			add_filter( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
-
-			// Handle merge tags
-			add_filter( 'gform_custom_merge_tags', array( $this, '_gf_custom_merge_tags' ), 10, 2 );
-			add_filter( 'gform_merge_tag_data', array( $this, '_gf_add_merge_tags' ), 10, 3 );
-			add_filter( 'gform_replace_merge_tags', array( $this, '_gf_replace_merge_tags' ), 10, 2 );
-
-			// Handle entry detail edits.
-			add_action( 'gform_pre_entry_detail', array( $this, '_gf_pre_entry_detail' ), 10, 2 );
-			add_action( 'check_admin_referer', array( $this, '_check_admin_referer' ), 10, 2 );
-			add_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ), 10, 2 );
-
-			// Handle entry updates.
-			add_action( 'gform_post_update_entry', array( $this, '_gf_post_update_entry' ), 9, 2 );
-			add_action( 'gform_after_update_entry', array( $this, '_gf_after_update_entry' ), 9, 3 );
-
-			// Handle Payment Add-on callbacks.
-			add_action( 'gform_action_pre_payment_callback', array( $this, '_gf_action_pre_payment_callback' ), 10, 2 );
+		if ( ! $this->is_gravityforms_supported() ) {
+			return;
 		}
 
+		// Handle normal forms.
+		add_filter( 'gform_pre_render', array( $this, '_gf_pre_render' ), 9, 3 );
+		add_filter( 'gform_admin_pre_render', array( $this, '_gf_pre_render' ), 9, 1 );
+		add_filter( 'gform_pre_process', array( $this, '_gf_pre_process' ) );
+
+		// Handle merge tags
+		add_filter( 'gform_custom_merge_tags', array( $this, '_gf_custom_merge_tags' ), 10, 2 );
+		add_filter( 'gform_merge_tag_data', array( $this, '_gf_add_merge_tags' ), 10, 3 );
+		add_filter( 'gform_replace_merge_tags', array( $this, '_gf_replace_merge_tags' ), 10, 2 );
+
+		// Handle entry detail edits.
+		add_action( 'gform_pre_entry_detail', array( $this, '_gf_pre_entry_detail' ), 10, 2 );
+		add_action( 'check_admin_referer', array( $this, '_check_admin_referer' ), 10, 2 );
+		add_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ), 10, 2 );
+
+		// Handle entry updates.
+		add_action( 'gform_post_update_entry', array( $this, '_gf_post_update_entry' ), 9, 2 );
+		add_action( 'gform_after_update_entry', array( $this, '_gf_after_update_entry' ), 9, 3 );
+
+		// Handle Payment Add-on callbacks.
+		add_action( 'gform_action_pre_payment_callback', array( $this, '_gf_action_pre_payment_callback' ), 10, 2 );
 	}
 
 	/**
@@ -893,7 +893,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			return null;
 		}
 
-		$form = $this->_gf_pre_render( $form, $entry );
+		$form = $this->_gf_pre_render( $form, false, $entry );
 
 		/** @var Pods_GF $pods_gf */
 		$pods_gf = $this->pods_gf[ $feed['id'] ];
@@ -974,7 +974,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		remove_action( 'check_admin_referer', array( $this, '_check_admin_referer' ) );
 		remove_action( 'gform_entry_detail_content_before', array( $this, '_gf_entry_detail_content_before' ) );
 
-		$this->_gf_pre_render( $form, $entry, true );
+		$this->_gf_pre_render( $form, false, $entry, true );
 
 	}
 
@@ -1004,7 +1004,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 */
 	public function _gf_entry_detail_content_before( $form, $entry ) {
 
-		$this->_gf_pre_render( $form, $entry, true );
+		$this->_gf_pre_render( $form, false, $entry, true );
 
 	}
 
@@ -1013,7 +1013,11 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 *
 	 * @return mixed
 	 */
-	public function _gf_pre_render( $form, $entry = null, $admin_edit = false ) {
+	public function _gf_pre_render( $form, $ajax = false, $entry = null, $admin_edit = false ) {
+		// Bad form / form ID.
+		if ( empty( $form ) ) {
+			return $form;
+		}
 
 		static $setup = array();
 
@@ -1071,52 +1075,58 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			 * @var GF_Field $gf_field
 			 */
 			foreach ( $form['fields'] as $gf_field ) {
-				if ( ! empty( $gf_field->pods_populate_related_items ) ) {
-					$pod_field = null;
-
-					foreach ( $pod_fields as $k => $field_options ) {
-						if ( (string) $gf_field->id === (string) $field_options['gf_field'] ) {
-							$pod_field = $field_options['field'];
-						}
-					}
-
-					if ( empty( $pod_field ) ) {
-						continue;
-					}
-
-					$pod_field_options = $pod_obj->fields( $pod_field );
-
-					// Override limit for autocomplete
-					$object_params = array(
-						'limit' => -1,
-					);
-
-					$data = PodsForm::field_method( $pod_field_options['type'], 'get_field_data', $pod_field_options, array(), $object_params );
-
-					if ( empty( $data ) ) {
-						continue;
-					}
-
-					if ( isset( $data[''] ) ) {
-						unset( $data[''] );
-					}
-
-					$select_text = pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options['options'], __( '-- Select One --', 'pods' ), true );
-
-					$options = array(
-						'options' => $data,
-					);
-
-					if ( $select_text ) {
-						$options['select_text'] = $select_text;
-					}
-
-					$dynamic_selects[ $gf_field->id ] = $options;
+				if ( empty( $gf_field->pods_populate_related_items ) ) {
+					//continue;
 				}
+
+				$pod_field = null;
+
+				foreach ( $pod_fields as $k => $field_options ) {
+					if ( (string) $gf_field->id === (string) $field_options['gf_field'] ) {
+						$pod_field = $field_options['field'];
+					}
+				}
+
+				if ( empty( $pod_field ) ) {
+					continue;
+				}
+
+				$pod_field_options = $pod_obj->fields( $pod_field );
+
+				if ( empty( $pod_field_options ) ) {
+					continue;
+				}
+
+				// Override limit for autocomplete
+				$object_params = array(
+					'limit' => -1,
+				);
+
+				$data = PodsForm::field_method( $pod_field_options['type'], 'get_field_data', $pod_field_options, array(), $object_params );
+
+				if ( empty( $data ) ) {
+					continue;
+				}
+
+				if ( isset( $data[''] ) ) {
+					unset( $data[''] );
+				}
+
+				$select_text = pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options['options'], __( '-- Select One --', 'pods' ), true );
+
+				$options = array(
+					'options' => $data,
+				);
+
+				if ( $select_text ) {
+					$options['select_text'] = $select_text;
+				}
+
+				$dynamic_selects[ $gf_field->id ] = $options;
 			}
 
 			if ( ! empty( $dynamic_selects ) ) {
-				$form = Pods_GF::gf_dynamic_select( $form, $dynamic_selects );
+				$form = Pods_GF::gf_dynamic_select( $form, false, $dynamic_selects );
 			}
 		}
 
