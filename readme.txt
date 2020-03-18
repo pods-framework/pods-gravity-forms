@@ -4,7 +4,7 @@ Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.6
 Tested up to: 5.4
-Stable tag: 1.4.2
+Stable tag: 1.4.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -113,6 +113,11 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 9. Form entries page showing Pod ID
 
 == Changelog ==
+
+= 1.4.3 - March 17th, 2020 =
+
+* Fixed: Prepopulate handling for relationship fields.
+* Fixed: Prevent errors when form doesn't exist by the time it gets to our hook.
 
 = 1.4.2 - March 2nd, 2020 =
 

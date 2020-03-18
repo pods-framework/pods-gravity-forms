@@ -3,7 +3,7 @@
 Plugin Name: Pods Gravity Forms Add-On
 Plugin URI: https://pods.io/
 Description: Integration with Gravity Forms (https://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.4.2
+Version: 1.4.3
 Author: Pods Framework Team
 Author URI: https://pods.io/about/
 Text Domain: pods-gravity-forms
