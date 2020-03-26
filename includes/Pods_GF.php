@@ -156,12 +156,12 @@ class Pods_GF {
 		// Pod object
 		if ( is_object( $pod ) ) {
 			$this->pod =& $pod;
-			$this->id  =& $this->pod->id;
+			$this->id  = $this->pod->id;
 		}
 		// Pod name
 		elseif ( ! is_array( $pod ) ) {
 			$this->pod = pods( $pod );
-			$this->id  =& $this->pod->id;
+			$this->id  = $this->pod->id;
 		}
 		// GF entry
 		elseif ( isset( $pod['id'] ) ) {
@@ -1877,19 +1877,18 @@ class Pods_GF {
 			return $form;
 		}
 
-		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
+		if ( isset( self::$actioned[ $form['id'] ] ) && in_array( __FUNCTION__, self::$actioned[ $form['id'] ], true ) ) {
 			return $form;
-		}
-		elseif ( ! isset( self::$actioned[$form['id']] ) ) {
-			self::$actioned[$form['id']] = array();
+		} elseif ( ! isset( self::$actioned[ $form['id'] ] ) ) {
+			self::$actioned[ $form['id'] ] = array();
 		}
 
-		self::$actioned[$form['id']][] = __FUNCTION__;
+		self::$actioned[ $form['id'] ][] = __FUNCTION__;
 
 		$field_keys = array();
 
 		foreach ( $form['fields'] as $k => $field ) {
-			$field_keys[(string) $field['id']] = $k;
+			$field_keys[ (string) $field['id'] ] = $k;
 		}
 
 		// Dynamic Select handler
@@ -2187,6 +2186,8 @@ class Pods_GF {
 
 		$basic_array = isset( $prepopulate['fields'][0] );
 
+		// @todo Need to know list of Pod field >> GF field for name/address/etc fields.
+
 		// Prepopulate values
 		foreach ( $prepopulate['fields'] as $field => $field_options ) {
 			if ( $basic_array && is_string( $field_options ) ) {
@@ -2394,7 +2395,12 @@ class Pods_GF {
 						} elseif ( 'address' === $gf_field->type ) {
 							// @todo Figure out what to do for address values
 						} elseif ( 'name' === $gf_field->type ) {
-							// @todo Figure out what to do for name values
+							// @todo This is beginning logic to setup mapping for each input, but needs value overrides.
+							foreach ( $gf_field->inputs as $k => $input ) {
+								$input['name'] = 'pods_gf_field_' . str_replace( '.', '_', $input['id'] );
+
+								$gf_field->inputs[ $k ] = $input;
+							}
 						} elseif ( 'chainedselect' === $gf_field->type ) {
 							// @todo Figure out what to do for chained select values
 						} elseif ( 'checkbox' === $gf_field->type ) {
@@ -2459,7 +2465,7 @@ class Pods_GF {
 					$value_override = implode( ',', $value_override_chunked );
 				}
 
-				$_GET['pods_gf_field_' . $field] = pods_slash( $value_override );
+				$_GET[ 'pods_gf_field_' . $field ] = pods_slash( $value_override );
 			}
 
 			$post_value_override = null;
@@ -2472,7 +2478,7 @@ class Pods_GF {
 					$post_value_override = maybe_serialize( $post_value_override );
 				}
 
-				$_POST['input_' . $field] = pods_slash( $post_value_override );
+				$_POST[ 'input_' . $field ] = pods_slash( $post_value_override );
 			}
 		}
 
@@ -3162,7 +3168,6 @@ class Pods_GF {
 	 * @return array $form GF Form array
 	 */
 	public function _gf_pre_render( $form, $ajax = false ) {
-
 		$form = $this->setup_form( $form );
 
 		if ( empty( $this->options ) ) {
@@ -3170,7 +3175,6 @@ class Pods_GF {
 		}
 
 		return $form;
-
 	}
 
 	/**
@@ -3182,15 +3186,13 @@ class Pods_GF {
 	 * @return string Form HTML
 	 */
 	public function _gf_get_form_filter( $form_string, $form ) {
-
-		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
+		if ( isset( self::$actioned[ $form['id'] ] ) && in_array( __FUNCTION__, self::$actioned[ $form['id'] ], true ) ) {
 			return $form_string;
-		}
-		elseif ( ! isset( self::$actioned[$form['id']] ) ) {
-			self::$actioned[$form['id']] = array();
+		} elseif ( ! isset( self::$actioned[ $form['id'] ] ) ) {
+			self::$actioned[ $form['id'] ] = array();
 		}
 
-		self::$actioned[$form['id']][] = __FUNCTION__;
+		self::$actioned[ $form['id'] ][] = __FUNCTION__;
 
 		// Cleanup $_GET
 		if ( $_GET ) {
