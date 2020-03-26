@@ -173,7 +173,7 @@ function pods_gf_add_related_objects_forms( $name = null, $value = null, $option
  */
 function pods_gravity_forms_freemius() {
 	try {
-		fs_dynamic_init( [
+		fs_dynamic_init( array(
 			'id'               => '5754',
 			'slug'             => 'pods-gravity-forms',
 			'type'             => 'plugin',
@@ -181,13 +181,13 @@ function pods_gravity_forms_freemius() {
 			'is_premium'       => false,
 			'has_paid_plans'   => false,
 			'is_org_compliant' => true,
-			'parent'           => [
+			'parent'           => array(
 				'id'         => '5347',
 				'slug'       => 'pods',
 				'public_key' => 'pk_737105490825babae220297e18920',
 				'name'       => 'Pods',
-			],
-			'menu'             => [
+			),
+			'menu'             => array(
 				'slug'        => 'pods-settings',
 				'contact'     => false,
 				'support'     => false,
@@ -195,11 +195,11 @@ function pods_gravity_forms_freemius() {
 				'account'     => true,
 				'pricing'     => false,
 				'addons'      => true,
-				'parent'      => [
+				'parent'      => array(
 					'slug' => 'pods',
-				],
-			],
-		] );
+				),
+			),
+		) );
 	} catch ( \Exception $exception ) {
 		return;
 	}

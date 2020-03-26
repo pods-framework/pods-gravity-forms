@@ -156,12 +156,12 @@ class Pods_GF {
 		// Pod object
 		if ( is_object( $pod ) ) {
 			$this->pod =& $pod;
-			$this->id  =& $this->pod->id;
+			$this->id  = $this->pod->id;
 		}
 		// Pod name
 		elseif ( ! is_array( $pod ) ) {
 			$this->pod = pods( $pod );
-			$this->id  =& $this->pod->id;
+			$this->id  = $this->pod->id;
 		}
 		// GF entry
 		elseif ( isset( $pod['id'] ) ) {
