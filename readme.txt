@@ -117,6 +117,7 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 
 = 1.4.3 - March 17th, 2020 =
 
+* Added: Freemius support when running Pods 2.7.17
 * Fixed: Prepopulate handling for relationship fields.
 * Fixed: Prevent errors when form doesn't exist by the time it gets to our hook.
 
