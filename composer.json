@@ -41,7 +41,7 @@
   },
   "require": {
     "composer/installers": "~1.0",
-    "php": ">=5.3"
+    "php": ">=5.4"
   },
   "require-dev": {
     "lucatume/wp-browser": "^2.0",
