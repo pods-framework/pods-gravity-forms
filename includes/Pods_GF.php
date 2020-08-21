@@ -4284,7 +4284,7 @@ class Pods_GF {
 	 */
 	public function _gf_after_submission( $entry, $form ) {
 
-		if ( empty( $this->gf_validation_message ) ) {
+		if ( ! empty( $this->gf_validation_message ) ) {
 			return $entry;
 		}
 
