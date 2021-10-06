@@ -3,9 +3,9 @@ Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
 Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.6
-Tested up to: 5.4
+Tested up to: 5.8
 Requires PHP: 5.4
-Stable tag: 1.4.3
+Stable tag: 1.4.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,11 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 9. Form entries page showing Pod ID
 
 == Changelog ==
+
+= 1.4.4 - October 6th, 2021 =
+
+* Tested against WP 5.8
+* Get ready for Pods 2.8 in just a week! This add-on will receive updates to ensure it is compatible with the latest Gravity Forms and the changes in Pods 2.8
 
 = 1.4.3 - March 26th, 2020 =
 
