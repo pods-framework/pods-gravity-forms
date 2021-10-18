@@ -36,6 +36,17 @@ define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
 define( 'PODS_GF_URL', plugin_dir_url( PODS_GF_FILE ) );
 define( 'PODS_GF_ADDON_FILE', basename( PODS_GF_DIR ) . '/' . basename( PODS_GF_FILE ) );
 
+// Opted not to use an autoloader for speed since this is a small plugin.
+use Pods_Gravity_Forms\Plugin;
+
+require_once __DIR__ . '/src/Plugin.php';
+
+add_action( 'plugins_loaded', static function () {
+	Plugin::instance( __FILE__ );
+} );
+
+
+
 /**
  * @global Pods_GF_UI $GLOBALS ['pods_gf_ui']
  * @name              $pods_gf_ui
