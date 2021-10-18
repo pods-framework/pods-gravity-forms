@@ -3,7 +3,7 @@
 Plugin Name: Pods Gravity Forms Add-On
 Plugin URI: https://pods.io/
 Description: Integration with Gravity Forms (https://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.4.5
+Version: 1.5.0-b-1
 Author: Pods Framework Team
 Author URI: https://pods.io/about/
 Text Domain: pods-gravity-forms
@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * @package Pods\Gravity Forms
  */
 
-define( 'PODS_GF_VERSION', '1.4.5' );
+define( 'PODS_GF_VERSION', '1.5.0-b-1' );
 define( 'PODS_GF_FILE', __FILE__ );
 define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
 define( 'PODS_GF_URL', plugin_dir_url( PODS_GF_FILE ) );
@@ -167,41 +167,3 @@ function pods_gf_add_related_objects_forms( $name = null, $value = null, $option
 	return apply_filters( 'pods_form_ui_field_pick_' . __FUNCTION__, $data, $name, $value, $options, $pod, $id );
 
 }
-
-/**
- * Register add-on with Pods Freemius connection.
- */
-function pods_gravity_forms_freemius() {
-	try {
-		fs_dynamic_init( array(
-			'id'               => '5754',
-			'slug'             => 'pods-gravity-forms',
-			'type'             => 'plugin',
-			'public_key'       => 'pk_1aaaee6bf8963f2077405e84f2ac5',
-			'is_premium'       => false,
-			'has_paid_plans'   => false,
-			'is_org_compliant' => true,
-			'parent'           => array(
-				'id'         => '5347',
-				'slug'       => 'pods',
-				'public_key' => 'pk_737105490825babae220297e18920',
-				'name'       => 'Pods',
-			),
-			'menu'             => array(
-				'slug'        => 'pods-settings',
-				'contact'     => false,
-				'support'     => false,
-				'affiliation' => false,
-				'account'     => true,
-				'pricing'     => false,
-				'addons'      => true,
-				'parent'      => array(
-					'slug' => 'pods',
-				),
-			),
-		) );
-	} catch ( \Exception $exception ) {
-		return;
-	}
-}
-add_action( 'pods_freemius_init', 'pods_gravity_forms_freemius' );
