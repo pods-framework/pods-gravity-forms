@@ -4,8 +4,8 @@
 
 ## Requirements
 
-* [Pods](http://pods.io/) 2.4+
-* [Gravity Forms](http://www.gravityforms.com/) 1.9+
+* [Pods](http://pods.io/) 2.8+
+* [Gravity Forms](http://www.gravityforms.com/) 2.5+
 
 ## How To Use
 
