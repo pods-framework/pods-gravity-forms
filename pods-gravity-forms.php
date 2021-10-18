@@ -89,7 +89,7 @@ add_action( 'plugins_loaded', 'pods_gf_include_gf_addon' );
 function pods_gf_init() {
 
 	if ( ! function_exists( 'pods' ) || ! class_exists( 'GFCommon' ) ) {
-		return false;
+		return;
 	}
 
 	// Include main functions
