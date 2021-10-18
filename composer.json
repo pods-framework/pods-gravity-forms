@@ -44,7 +44,7 @@
     "php": ">=5.4"
   },
   "require-dev": {
-    "lucatume/wp-browser": "^2.0",
+    "lucatume/wp-browser": "^3.0",
     "vlucas/phpdotenv": "^3.6"
   }
 }
