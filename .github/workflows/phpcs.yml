@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'includes/**.php'
+      - 'src/**.php'
       - '*.php'
 jobs:
   phpcs:
