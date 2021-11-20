@@ -1,11 +1,11 @@
 === Pods Gravity Forms Add-On ===
 Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
-Donate link: https://pods.io/friends-of-pods/
+Donate link: https://friends.pods.io/
 Tags: pods, gravity forms, form mapping
-Requires at least: 4.6
+Requires at least: 5.5
 Tested up to: 6.0
-Requires PHP: 5.4
-Stable tag: 1.4.5
+Requires PHP: 5.6
+Stable tag: 2.0.0-b-1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 

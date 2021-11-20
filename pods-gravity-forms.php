@@ -3,7 +3,7 @@
 Plugin Name: Pods Gravity Forms Add-On
 Plugin URI: https://pods.io/
 Description: Integration with Gravity Forms (https://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.5.0-b-1
+Version: 2.0.0-b-1
 Author: Pods Framework Team
 Author URI: https://pods.io/about/
 Text Domain: pods-gravity-forms
@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * @package Pods\Gravity Forms
  */
 
-define( 'PODS_GF_VERSION', '1.5.0-b-1' );
+define( 'PODS_GF_VERSION', '2.0.0-b-1' );
 define( 'PODS_GF_FILE', __FILE__ );
 define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
 define( 'PODS_GF_URL', plugin_dir_url( PODS_GF_FILE ) );
@@ -45,43 +45,11 @@ add_action( 'plugins_loaded', static function () {
 	Plugin::instance( __FILE__ );
 } );
 
-
-
 /**
  * @global Pods_GF_UI $GLOBALS ['pods_gf_ui']
  * @name              $pods_gf_ui
  */
 global $pods_gf_ui;
-
-/**
- * Include the Pods GF Add-On
- *
- * @throws \Exception
- */
-function pods_gf_include_gf_addon() {
-
-	if ( ! defined( 'PODS_VERSION' ) || ! class_exists( 'GFForms' ) ) {
-		return;
-	}
-
-	// Include GF Feed Addon code
-	if ( ! class_exists( 'GFFeedAddOn' ) ) {
-		GFForms::include_feed_addon_framework();
-	}
-
-	// Include GF Add-On
-	require_once PODS_GF_DIR . 'includes/Pods_GF_Addon.php';
-
-	// Include GF Add-On
-	if ( defined( 'WP_CLI' ) ) {
-		require_once PODS_GF_DIR . 'includes/Pods_GF_CLI.php';
-
-		WP_CLI::add_command( 'pods-gf', 'Pods_GF_CLI' );
-	}
-
-}
-
-add_action( 'plugins_loaded', 'pods_gf_include_gf_addon' );
 
 /**
  * Include main functions and initiate
