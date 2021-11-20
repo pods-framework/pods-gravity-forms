@@ -2703,7 +2703,7 @@ class Pods_GF {
 		self::$actioned[$form['id']][] = __FUNCTION__;
 
 		if ( ! function_exists( 'Markdown' ) ) {
-			include_once PODS_GF_DIR . 'includes/Markdown.php';
+			include_once PODS_DIR . 'components/Markdown.php';
 		}
 
 		$sanitize_from_markdown = array(
@@ -3547,7 +3547,7 @@ class Pods_GF {
 					$object      = $field_options['pick_val'];
 
 					if ( 'table' === $object_type ) {
-						$pick_val = pods_v( 'pick_table', $field_options['options'], $object, true );
+						$pick_val = pods_v( 'pick_table', $field_options, $object, true );
 					}
 
 					if ( 'pod' === $object_type ) {
@@ -3611,7 +3611,7 @@ class Pods_GF {
 						}
 					}
 
-					$single_multi = pods_v( $field_options['type'] . '_format_type', $field_options['options'], 'single' );
+					$single_multi = pods_v( $field_options['type'] . '_format_type', $field_options, 'single' );
 
 					if ( 'single' === $single_multi ) {
 						if ( $related_ids ) {

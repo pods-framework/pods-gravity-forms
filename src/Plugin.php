@@ -2,10 +2,12 @@
 
 namespace Pods_Gravity_Forms;
 
+use Pods_Gravity_Forms\Platform\Gravity_Forms\Integration as Gravity_Forms_Integration;
+
 /**
  * Plugin specific functionality.
  *
- * @since   1.5.0
+ * @since 2.0.0
  *
  * @package Pods_Gravity_Forms
  */
@@ -14,35 +16,35 @@ class Plugin {
 	/**
 	 * Constant that stores the current plugin version.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
-	const VERSION = '1.5.0-b-1';
+	const VERSION = '2.0.0-b-1';
 
 	/**
 	 * Constant that stores the minimum supported PHP version.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	const MIN_PHP_VERSION = '5.6';
 
 	/**
 	 * Constant that stores the minimum supported WP version.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	const MIN_WP_VERSION = '5.5';
 
 	/**
 	 * Constant that stores the minimum supported Pods version.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
-	const MIN_PODS_VERSION = '2.7';
+	const MIN_PODS_VERSION = '2.8';
 
 	/**
 	 * Plugin instance.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @var self
 	 */
@@ -51,7 +53,7 @@ class Plugin {
 	/**
 	 * The plugin name.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @var string
 	 */
@@ -60,7 +62,7 @@ class Plugin {
 	/**
 	 * The plugin file.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @var string
 	 */
@@ -69,7 +71,7 @@ class Plugin {
 	/**
 	 * Plugin slug.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @var string
 	 */
@@ -78,7 +80,7 @@ class Plugin {
 	/**
 	 * Plugin directory URL.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @var string
 	 */
@@ -87,7 +89,7 @@ class Plugin {
 	/**
 	 * Plugin constructor.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	private function __construct() {
 		// Set the plugin name.
@@ -96,13 +98,14 @@ class Plugin {
 		// Store the plugin directory URL for assets usage later.
 		$this->plugin_dir_url = plugin_dir_url( $this->plugin_file );
 
-		add_action( 'init', [ $this, 'init' ] );
+		// Run code that needs to run during plugins_loaded.
+		$this->plugins_loaded();
 	}
 
 	/**
 	 * Setup and get the instance of the class.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param string $plugin_file The plugin file.
 	 *
@@ -110,7 +113,7 @@ class Plugin {
 	 */
 	public static function instance( $plugin_file ) {
 		if ( ! self::$instance ) {
-			self::$instance = new self;
+			self::$instance = new self();
 		}
 
 		self::$instance->plugin_file = $plugin_file;
@@ -119,11 +122,11 @@ class Plugin {
 	}
 
 	/**
-	 * Handle init of plugin functionality.
+	 * Handle plugins_loaded functionality.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
-	public function init() {
+	public function plugins_loaded() {
 		global $wp_version;
 
 		$requirements = [
@@ -149,11 +152,11 @@ class Plugin {
 			return;
 		}
 
-		require_once __DIR__ . '/Integration.php';
+		require_once __DIR__ . '/Platform/Gravity_Forms/Integration.php';
 
 		// Setup instances and run their hooks.
 		$integrations = [
-			Integration::instance(),
+			Gravity_Forms_Integration::instance(),
 		];
 
 		foreach ( $integrations as $integration ) {
@@ -172,7 +175,7 @@ class Plugin {
 	/**
 	 * Check whether the requirements were met.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param array $requirements List of requirements.
 	 *
@@ -199,7 +202,7 @@ class Plugin {
 	/**
 	 * Message / Notice handling for Admin UI.
 	 *
-	 * @since 1.0.4
+	 * @since 2.0.0
 	 *
 	 * @param string $message The notice / error message shown.
 	 * @param string $type    The message type.
@@ -229,7 +232,7 @@ class Plugin {
 	/**
 	 * Check whether we should show notices.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @return bool Whether we should show notices.
 	 */

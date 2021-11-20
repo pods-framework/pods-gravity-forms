@@ -1,9 +1,15 @@
 <?php
 
+namespace Pods_Gravity_Forms\Platform\Gravity_Forms;
+
+use GFAPI;
+use WP_CLI;
+use WP_CLI_Command;
+
 /**
  * Implements Pods GF command for WP-CLI
  */
-class Pods_GF_CLI extends \WP_CLI_Command {
+class CLI_Command extends WP_CLI_Command {
 
 	/**
 	 * Sync form entries to a Pod.
@@ -23,10 +29,9 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 	 * @param $args
 	 * @param $assoc_args
 	 *
-	 * @throws \WP_CLI\ExitException
+	 * @throws WP_CLI\ExitException
 	 */
 	public function sync( $args, $assoc_args ) {
-
 		add_filter( 'pods_gf_to_pods_update_pod_items', '__return_true' );
 
 		$form_id = 0;
@@ -36,7 +41,7 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 		}
 
 		if ( empty( $form_id ) ) {
-			\WP_CLI::error( esc_html__( 'Form ID is required.', 'pods-gravity-forms' ) );
+			WP_CLI::error( esc_html__( 'Form ID is required.', 'pods-gravity-forms' ) );
 		}
 
 		$feed_id = 0;
@@ -46,10 +51,10 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 		}
 
 		// Get form.
-		$form = \GFAPI::get_form( $form_id );
+		$form = GFAPI::get_form( $form_id );
 
 		if ( empty( $form ) || is_wp_error( $form ) ) {
-			\WP_CLI::error( esc_html__( 'Form not found.', 'pods-gravity-forms' ) );
+			WP_CLI::error( esc_html__( 'Form not found.', 'pods-gravity-forms' ) );
 		}
 
 		$active_only = true;
@@ -59,10 +64,10 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 		}
 
 		// Get feed.
-		$feeds = \GFAPI::get_feeds( $feed_id, $form_id, 'pods-gravity-forms', $active_only );
+		$feeds = GFAPI::get_feeds( $feed_id, $form_id, 'pods-gravity-forms', $active_only );
 
 		if ( empty( $feeds ) || is_wp_error( $feeds ) ) {
-			\WP_CLI::error( esc_html__( 'Feed not found.', 'pods-gravity-forms' ) );
+			WP_CLI::error( esc_html__( 'Feed not found.', 'pods-gravity-forms' ) );
 		}
 
 		// Use first feed.
@@ -71,7 +76,7 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 		$feed_id = $feed['id'];
 
 		if ( empty( $feed_id ) ) {
-			\WP_CLI::error( esc_html__( 'Invalid feed.', 'pods-gravity-forms' ) );
+			WP_CLI::error( esc_html__( 'Invalid feed.', 'pods-gravity-forms' ) );
 		}
 
 		/** @var Pods_GF_Addon $pods_gf_addon */
@@ -83,20 +88,20 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 
 		$total_entries = 0;
 
-		$search_criteria = array(
+		$search_criteria = [
 			'status' => 'active',
-		);
+		];
 
-		$paging = array(
+		$paging = [
 			'offset'    => 0,
 			'page_size' => 50,
-		);
+		];
 
-		$entries = \GFAPI::get_entries( $form_id, $search_criteria, null, $paging, $total_entries );
+		$entries = GFAPI::get_entries( $form_id, $search_criteria, null, $paging, $total_entries );
 
 		/** @var \cli\progress\Bar $progress_bar */
 		/* translators: Total entries number is used in this message. */
-		$progress_bar = \WP_CLI\Utils\make_progress_bar( sprintf( esc_html_x( 'Syncing %s entries', 'Sync status message for WP-CLI feed sync using total entries count', 'pods-gravity-forms' ), number_format_i18n( $total_entries ) ), $total_entries );
+		$progress_bar = WP_CLI\Utils\make_progress_bar( sprintf( esc_html_x( 'Syncing %s entries', 'Sync status message for WP-CLI feed sync using total entries count', 'pods-gravity-forms' ), number_format_i18n( $total_entries ) ), $total_entries );
 
 		$entries_counter = 0;
 
@@ -110,19 +115,18 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 
 				$progress_bar->tick();
 
-				$entries_counter++;
+				$entries_counter ++;
 			}
 
 			$paging['offset'] = $entries_counter;
 
-			$entries = \GFAPI::get_entries( $form_id, $search_criteria, null, $paging );
+			$entries = GFAPI::get_entries( $form_id, $search_criteria, null, $paging );
 		} while ( $entries );
 
 		$progress_bar->finish();
 
 		/* translators: Feed ID is used in this message. */
-		\WP_CLI::success( sprintf( esc_html_x( 'Form entries synced to Pods using feed %d.', 'Success message for WP-CLI feed sync using Feed ID', 'pods-gravity-forms' ), $feed_id ) );
-
+		WP_CLI::success( sprintf( esc_html_x( 'Form entries synced to Pods using feed %d.', 'Success message for WP-CLI feed sync using Feed ID', 'pods-gravity-forms' ), $feed_id ) );
 	}
 
 }
