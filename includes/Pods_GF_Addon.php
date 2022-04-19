@@ -991,7 +991,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		if ( $result && 'gforms_save_entry' === $action && class_exists( 'GFEntryDetail' ) ) {
 			$form = GFEntryDetail::get_current_form();
 
-			$this->_gf_pre_process( $form );
+			if ( $form ) {
+				$this->_gf_pre_process( $form );
+			}
 		}
 
 	}
