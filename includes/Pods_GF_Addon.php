@@ -988,7 +988,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	public function _check_admin_referer( $action, $result ) {
 
 		// So hacky, we need GF to add a better hook than this.
-		if ( $result && 'gforms_save_entry' === $action ) {
+		if ( $result && 'gforms_save_entry' === $action && class_exists( 'GFEntryDetail' ) ) {
 			$form = GFEntryDetail::get_current_form();
 
 			$this->_gf_pre_process( $form );
