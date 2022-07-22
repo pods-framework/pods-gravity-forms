@@ -1675,6 +1675,12 @@ class Pods_GF {
 		$data = apply_filters( 'pods_gf_to_pods_data_' . $form['id'], $data, $form, $options );
 		$data = apply_filters( 'pods_gf_to_pods_data', $data, $form, $options );
 
+		// Debug purposes.
+		if ( 1 === (int) pods_v( 'pods_gf_debug_gf_to_pods', 'get', 0 ) && pods_is_admin( [ 'pods' ] ) ) {
+			pods_debug( compact( 'data', 'entry', 'options' ) );
+			die();
+		}
+
 		return $data;
 	}
 
