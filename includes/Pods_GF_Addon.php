@@ -1159,7 +1159,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		if ( ! empty( $feeds ) ) {
 			foreach ( $feeds as $feed ) {
-				if ( 1 !== (int) $feed['is_active'] && ! $this->is_feed_condition_met( $feed, $form, $entry ) ) {
+				if ( 1 !== (int) $feed['is_active'] || ! $this->is_feed_condition_met( $feed, $form, $entry ) ) {
 					continue;
 				}
 
