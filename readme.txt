@@ -3,9 +3,9 @@ Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
 Donate link: https://pods.io/friends-of-pods/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.6
-Tested up to: 5.8
+Tested up to: 6.0
 Requires PHP: 5.4
-Stable tag: 1.4.4
+Stable tag: 1.4.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,14 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 9. Form entries page showing Pod ID
 
 == Changelog ==
+
+= 1.4.5 - July 22nd, 2022 =
+
+* Tested against WP 6.0
+* Added: Not seeing something map correctly? As a site admin, you now have the power to debug the form submission and see what might be going on. Add `?pods_gf_debug_gf_to_pods=1` to the URL of the form action before submitting to take advantage of the admin-only debug mode. This will output the values as they would be sent to Pods, the entry information used to reference it, and the feed options used at the time. It will stop the form from completely saving to Pods so you can tweak and debug your form feeds however much you'd like to perfect them.
+* Fixed: Conditional checks for feeds has been resolved and now won't get confused when there are multiple feeds for the same form in certain cases.
+* Fixed: Additional compatibility with Gravity Flow
+* Pods 2.9 is in beta and after it is released, this add-on will be updated with minimum version requirements updated for WP 5.5+, Pods 2.8+, and Gravity Forms 2.5+. Complete testing will be done at that time to ensure complete compatibility.
 
 = 1.4.4 - October 6th, 2021 =
 
