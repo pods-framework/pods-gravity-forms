@@ -405,11 +405,12 @@ class Feed_AddOn extends GFFeedAddOn {
 		///////////////////
 		if ( in_array( $pod_type, [ 'post_type', 'taxonomy', 'user', 'media', 'comment' ], true ) ) {
 			$settings['custom_fields'] = [
-				'title'  => esc_html__( 'Custom Fields', 'pods-gravity-forms' ),
+				'title'  => esc_html__( 'Custom Field Mapping', 'pods-gravity-forms' ),
 				'fields' => [
 					[
 						'name'        => 'custom_fields',
-						'label'       => esc_html__( 'Custom Fields', 'pods-gravity-forms' ),
+						'label'       => '',
+						'description' => esc_html__( 'If you have additional fields to map for this Pod, you can customize them here.', 'pods-gravity-forms' ),
 						'type'        => 'generic_map',
 						'key_field'   => [
 							'choices'     => $this->get_meta_field_map( $selected_pod, $pod_type, $blacklisted_keys ),
@@ -530,10 +531,10 @@ class Feed_AddOn extends GFFeedAddOn {
 
 		$addon_slug = $this->get_slug();
 
-		add_filter( "gform_{$addon_slug}_field_map_choices", [ $this, 'add_field_map_choices' ] );
+		add_filter( "gform_field_map_choices", [ $this, 'add_field_map_choices' ] );
 
 		$settings['advanced']['fields'][] = [
-			'name'           => 'feed_condition',
+			'name'           => 'feed_condition_conditional_logic',
 			'label'          => __( 'Conditional Logic', 'pods-gravity-forms' ),
 			'checkbox_label' => __( 'Enable', 'pods-gravity-forms' ),
 			'type'           => 'feed_condition',
@@ -604,9 +605,17 @@ class Feed_AddOn extends GFFeedAddOn {
 		// Setup meta fields array.
 		$meta_fields = [
 			[
-				'label' => esc_html__( 'Select a Custom Field Name', 'pods-gravity-forms' ),
+				'label' => '-- ' . esc_html__( 'Select a Custom Field Name', 'pods-gravity-forms' ) . ' --',
 				'value' => '',
 			],
+		];
+
+		///////////////////
+		// Custom key
+		///////////////////
+		$meta_fields[] = [
+			'label' => '-- ' . esc_html__( 'Add New Custom Field Name', 'pods-gravity-forms' ) . ' --',
+			'value' => 'gf_custom',
 		];
 
 		///////////////////
@@ -628,14 +637,6 @@ class Feed_AddOn extends GFFeedAddOn {
 				'value' => $meta_key,
 			];
 		}
-
-		///////////////////
-		// Custom key
-		///////////////////
-		$meta_fields[] = [
-			'label' => esc_html__( 'Add New Custom Field Name', 'pods-gravity-forms' ),
-			'value' => 'gf_custom',
-		];
 
 		return $meta_fields;
 	}
@@ -743,7 +744,7 @@ class Feed_AddOn extends GFFeedAddOn {
 				// Add first choice back
 				[
 					'value' => '',
-					'label' => __( 'Select a Field', 'gravityforms' ), // Use gravtiyforms text domain here
+					'label' => __( 'Select a Field', 'pods-gravity-forms' ),
 				],
 				// Make custom override first option
 				[
@@ -751,25 +752,32 @@ class Feed_AddOn extends GFFeedAddOn {
 					'label' => __( 'Custom override value', 'pods-gravity-forms' ),
 				],
 			], $choices, [
-				[
-					'value' => 'transaction_id',
-					'label' => 'Transaction ID',
-				],
-				[
-					'value' => 'payment_amount',
-					'label' => 'Payment Amount',
-				],
-				[
-					'value' => 'payment_date',
-					'label' => 'Payment Date',
-				],
-				[
-					'value' => 'payment_status',
-					'label' => 'Payment Status',
+				'label'   => esc_html__( 'Payment Properties', 'pods-gravity-forms' ),
+				'choices' => [
+					[
+						'value' => 'transaction_id',
+						'label' => 'Transaction ID',
+					],
+					[
+						'value' => 'payment_amount',
+						'label' => 'Payment Amount',
+					],
+					[
+						'value' => 'payment_date',
+						'label' => 'Payment Date',
+					],
+					[
+						'value' => 'payment_status',
+						'label' => 'Payment Status',
+					],
 				],
 			] );
 
 		foreach ( $choices as $k => $choice ) {
+			if ( empty( $choice['value'] ) ) {
+				continue;
+			}
+
 			if ( '_pods_item_id' === $choice['value'] ) {
 				unset( $choices[ $k ] );
 
@@ -1222,7 +1230,7 @@ class Feed_AddOn extends GFFeedAddOn {
 					unset( $data[''] );
 				}
 
-				$select_text = pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options, __( '-- Select One --', 'pods' ), true );
+				$select_text = pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options, __( '-- Select One --', 'pods-gravity-forms' ), true );
 
 				$options = [
 					'options' => $data,
