@@ -45,10 +45,7 @@ add_action( 'plugins_loaded', static function () {
 	Plugin::instance( __FILE__ );
 } );
 
-/**
- * @global Pods_GF_UI $GLOBALS ['pods_gf_ui']
- * @name              $pods_gf_ui
- */
+/** @var Pods_GF_UI|null $pods_gf_ui */
 global $pods_gf_ui;
 
 /**
