@@ -2250,6 +2250,8 @@ class Pods_GF {
 			// Allow for value to be overridden by existing prepopulation or callback
 			$value_override = $field_options['value'];
 
+			// @todo Fix prepopulating for field types: name and address (mapped to indiv inputs), file, consent, post_tag (multiple, comma separated), post_image.
+
 			if ( null === $value_override && isset( $gf_field->allowsPrepopulate ) && $gf_field->allowsPrepopulate ) {
 				// @todo handling for field types that have different $_POST input names
 
@@ -2462,13 +2464,40 @@ class Pods_GF {
 				if ( is_array( $value_override ) && 'list' === $gf_field->type ) {
 					$choices = $gf_field->choices;
 
-					$value_override_chunked = array_chunk( $value_override, count( $choices ) );
+					$total_choices = count( $choices );
 
-					foreach ( $value_override_chunked as $k => $v ) {
-						$value_override_chunked[ $k ] = implode( '|', $v );
+					// Check if the values are chunked already.
+					if ( isset( $value_override[0] ) && is_array( $value_override[0] ) && $total_choices === count( $value_override[0] ) ) {
+						foreach ( $value_override as $vo_key => $value_override_row ) {
+							$value_override[ $vo_key ] = implode( '|', $value_override_row );
+						}
+
+						$value_override = implode( ',', $value_override );
+					} else {
+						$value_override_chunked = array_chunk( $value_override, $total_choices );
+
+						foreach ( $value_override_chunked as $k => $v ) {
+							$value_override_chunked[ $k ] = implode( '|', $v );
+						}
+
+						$value_override = implode( ',', $value_override_chunked );
 					}
 
-					$value_override = implode( ',', $value_override_chunked );
+					// @todo Figure this out, the 2.0 code had a count === 1 check that doesn't seem to make sense anymore.
+
+					/*if ( is_array( $gf_field->choices ) && 1 === count( $gf_field->choices ) ) {
+						$choices = $gf_field->choices;
+
+						$value_override_chunked = array_chunk( $value_override, count( $choices ) );
+
+						foreach ( $value_override_chunked as $k => $v ) {
+							$value_override_chunked[ $k ] = implode( '|', $v );
+						}
+					} else {
+						$value_override_chunked = $value_override;
+					}
+
+					$value_override = implode( ',', $value_override_chunked );*/
 				}
 
 				$_GET[ 'pods_gf_field_' . $field ] = pods_slash( $value_override );
@@ -2487,6 +2516,8 @@ class Pods_GF {
 				$_POST[ 'input_' . $field ] = pods_slash( $post_value_override );
 			}
 		}
+
+		pods_debug( $_GET );
 
 		return $form;
 
