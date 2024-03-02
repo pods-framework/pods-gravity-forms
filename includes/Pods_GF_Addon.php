@@ -1302,6 +1302,18 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		 */
 		$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
 
+		/**
+		 * Allow filtering of Pods GF options to set custom settings apart from Pods GF add-on options based on form ID.
+		 *
+		 * @param array  $options  Pods GF options.
+		 * @param string $pod_name Pod name.
+		 * @param int    $form_id  GF Form ID.
+		 * @param array  $feed     GF Form feed array.
+		 * @param array  $form     GF Form array.
+		 * @param Pods   $pod      Pods object.
+		 */
+		$options = apply_filters( 'pods_gf_addon_options_' . $form['id'], $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
+
 		$this->pods_gf[ $feed['id'] ] = pods_gf( $pod, $form['id'], $options );
 
 		$setup[ $form['id'] ] = true;
