@@ -901,6 +901,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		try {
 			$pods_gf->options['entry'] = $entry;
 
+			// Ensure other custom Pods GF submission handling does not duplicate.
+			remove_action( 'gform_after_submission_' . $form['id'], [ $pods_gf, '_gf_after_submission' ] );
+
 			$id = $pods_gf->_gf_to_pods_handler( $form, $entry );
 
 			// Set post_id if we have it.
