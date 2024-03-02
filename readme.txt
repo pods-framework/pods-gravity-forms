@@ -5,7 +5,7 @@ Tags: pods, gravity forms, form mapping
 Requires at least: 4.6
 Tested up to: 6.0
 Requires PHP: 5.4
-Stable tag: 1.4.5
+Stable tag: 1.4.6-a-1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
