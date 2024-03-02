@@ -40,8 +40,8 @@
     }
   },
   "require": {
-    "composer/installers": "~1.0",
-    "php": ">=5.4"
+    "composer/installers": "1.12.*",
+    "php": ">=7.2"
   },
   "require-dev": {
     "lucatume/wp-browser": "^3.0",

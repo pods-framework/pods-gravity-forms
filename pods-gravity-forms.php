@@ -9,7 +9,7 @@ Author URI: https://pods.io/about/
 Text Domain: pods-gravity-forms
 GitHub Plugin URI: https://github.com/pods-framework/pods-gravity-forms
 
-Copyright 2013-2021  Pods Foundation, Inc  (email : contact@podsfoundation.org)
+Copyright 2013-2024  Pods Foundation, Inc  (email : contact@podsfoundation.org)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

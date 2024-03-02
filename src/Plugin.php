@@ -25,21 +25,21 @@ class Plugin {
 	 *
 	 * @since 2.0.0
 	 */
-	const MIN_PHP_VERSION = '5.6';
+	const MIN_PHP_VERSION = '7.2';
 
 	/**
 	 * Constant that stores the minimum supported WP version.
 	 *
 	 * @since 2.0.0
 	 */
-	const MIN_WP_VERSION = '5.5';
+	const MIN_WP_VERSION = '5.7';
 
 	/**
 	 * Constant that stores the minimum supported Pods version.
 	 *
 	 * @since 2.0.0
 	 */
-	const MIN_PODS_VERSION = '2.8';
+	const MIN_PODS_VERSION = '2.9';
 
 	/**
 	 * Plugin instance.

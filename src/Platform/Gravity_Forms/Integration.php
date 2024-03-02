@@ -133,8 +133,8 @@ class Integration {
 		return [
 			[
 				// Gravity Forms should be the minimum required version.
-				'check'   => class_exists( 'GFForms' ) && version_compare( '2.5', GFForms::$version, '<=' ),
-				'message' => __( 'You need Gravity Forms 2.5+ installed and activated in order to use the Pods Gravity Forms Add-On.', 'pods-gravity-forms' ),
+				'check'   => class_exists( 'GFForms' ) && version_compare( '2.6', GFForms::$version, '<=' ),
+				'message' => __( 'You need Gravity Forms 2.6+ installed and activated in order to use the Pods Gravity Forms Add-On.', 'pods-gravity-forms' ),
 			],
 		];
 	}
@@ -149,7 +149,7 @@ class Integration {
 		GFForms::include_addon_framework();
 		GFForms::include_feed_addon_framework();
 
-		// Include our AddOn code.
+		// Include our Add-On code.
 		require_once __DIR__ . '/Feed_AddOn.php';
 
 		// Set up instance for the first time which kicks off GF Add-On framework __construct code.
