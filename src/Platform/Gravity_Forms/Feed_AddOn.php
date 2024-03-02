@@ -184,6 +184,569 @@ class Feed_AddOn extends GFFeedAddOn {
 	}
 
 	/**
+	 * Handle maybe detecting the feed mapping for a Pod.
+	 *
+	 * @param array  $gf_form          The Gravity Form data.
+	 * @param string $pod_name         The Pod name.
+	 * @param array  $existing_mapping Existing mapping to start with.
+	 *
+	 * @return array The feed field mapping.
+	 */
+	public function maybe_detect_feed_mapping( $gf_form, $pod_name, array $existing_mapping = [] ) {
+		$mapped_field_ids = [];
+
+		$mapping = [
+			'object_fields' => [],
+			'pod_fields'    => [],
+			'custom_fields' => [],
+		];
+
+		// Maybe use existing mapping if we have it.
+		if ( $existing_mapping ) {
+			$mapping = [
+				'object_fields' => $existing_mapping['object_fields'] ?? [],
+				'pod_fields'    => $existing_mapping['pod_fields'] ?? [],
+				'custom_fields' => $existing_mapping['custom_fields'] ?? [],
+			];
+
+			$mapped_field_ids = $existing_mapping['mapped_field_ids'] ?? [];
+		}
+
+		$gf_fields = [];
+
+		if ( ! empty( $gf_form ) && ! empty( $gf_form['fields'] ) ) {
+			$gf_fields = $gf_form['fields'];
+		}
+
+		$pods_api = pods_api();
+
+		$pod_object = null;
+
+		try {
+			$pod_object = $pods_api->load_pod( [ 'name' => $pod_name ] );
+		} catch ( \Exception $exception ) {
+			// Nothing to do here.
+		}
+
+		// Pod not found.
+		if ( empty( $pod_object ) ) {
+			pods_ui_error( __( 'There was a problem detecting the feed mapping for your Pod.', 'pods-gravity-forms' ) );
+
+			return $mapping;
+		}
+
+		$pod_type          = $pod_object['type'];
+		$pod_fields        = $pod_object->get_fields();
+		$pod_object_fields = $pod_object->get_object_fields();
+
+		foreach ( $pod_fields as $field ) {
+			foreach ( $gf_fields as $gf_field ) {
+				// Check whether we have mapped this field already.
+				if ( isset( $mapped_field_ids[ $gf_field['id'] ] ) ) {
+					continue;
+				}
+
+				// Check whether the GF field label matches the Pod field label.
+				if ( strtolower( $field['label'] ) !== strtolower( $gf_field['label'] ) ) {
+					continue;
+				}
+
+				$mapping['pod_fields'][ $field['name'] ] = $gf_field['id'];
+
+				$mapped_field_ids[ $gf_field['id'] ] = true;
+
+				break;
+			}
+		}
+
+		$ignore_object_fields = [
+			// Ignored for Post types.
+			'ID'                    => true,
+			'post_type'             => true,
+			'guid'                  => true,
+			'menu_order'            => true,
+			'post_mime_type'        => true,
+			'ping_status'           => true,
+			'post_date_gmt'         => true,
+			'post_modified_gmt'     => true,
+			'post_password'         => true,
+			'post_status'           => true,
+			'post_content_filtered' => true,
+			'pinged'                => true,
+			'to_ping'               => true,
+			'comment_count'         => true,
+			// Ignored for Taxonomies.
+			'term_id'               => true,
+			'term_taxonomy_id'      => true,
+			'taxonomy'              => true,
+			// Ignored for Comment types.
+			'comment_type'          => true,
+			'comment_status'        => true,
+		];
+
+		foreach ( $pod_object_fields as $field ) {
+			if ( isset( $ignore_object_fields[ $field['name'] ] ) ) {
+				continue;
+			}
+
+			foreach ( $gf_fields as $gf_field ) {
+				// Check whether we have mapped this field already.
+				if ( isset( $mapped_field_ids[ $gf_field['id'] ] ) ) {
+					continue;
+				}
+
+				// Check whether the GF field label matches the Pod field label.
+				if ( strtolower( $field['label'] ) !== strtolower( $gf_field['label'] ) ) {
+					continue;
+				}
+
+				$mapping['object_fields'][ $field['name'] ] = $gf_field['id'];
+
+				$mapped_field_ids[ $gf_field['id'] ] = true;
+
+				break;
+			}
+		}
+
+		if ( 'post_type' === $pod_type ) {
+			// Detect featured image.
+			foreach ( $gf_fields as $gf_field ) {
+				// Only deal with this GF field type.
+				if ( 'post_image' !== $gf_field['type'] ) {
+					continue;
+				}
+
+				// Check whether we have mapped this field already.
+				if ( isset( $mapped_field_ids[ $gf_field['id'] ] ) ) {
+					continue;
+				}
+
+				$mapping['object_fields']['_thumbnail_id'] = $gf_field['id'];
+
+				$mapped_field_ids[ $gf_field['id'] ] = true;
+
+				break;
+			}
+
+			// Detect custom fields.
+			foreach ( $gf_fields as $gf_field ) {
+				if ( 'post_custom_field' !== $gf_field['type'] ) {
+					continue;
+				}
+
+				// Check whether we have mapped this field already.
+				if ( isset( $mapped_field_ids[ $gf_field['id'] ] ) ) {
+					continue;
+				}
+
+				$mapping['custom_fields'][] = [
+					'key'          => $gf_field['key'],
+					'custom_key'   => $gf_field['custom_key'],
+					'value'        => $gf_field['value'],
+					'custom_value' => $gf_field['custom_value'],
+				];
+
+				$mapped_field_ids[ $gf_field['id'] ] = true;
+			}
+		}
+
+		return $mapping;
+	}
+
+	/**
+	 * Handle maybe creating the Pod.
+	 *
+	 * @param array  $gf_form      The Gravity Form data.
+	 * @param string $pod_type     The Pod type.
+	 * @param string $storage_type The Pod storage type.
+	 */
+	public function auto_create_pod( $gf_form, $pod_type, $storage_type ) {
+		$pods_api = pods_api();
+
+		$pod_label = $gf_form['title'];
+		$pod_name  = pods_clean_name( substr( $pod_label, 0, 20 ) );
+
+		$original_label = $pod_label;
+		$original_name  = $pod_name;
+		$counter        = 1;
+
+		while ( $pods_api->pod_exists( [ 'name' => $pod_name ] ) ) {
+			$counter ++;
+
+			$pod_name  = substr( $original_name, 0, ceil( 19 - ( $counter / 10 ) ) ) . $counter;
+			$pod_label = $original_label . $counter;
+		}
+
+		$new_pod_params = [
+			'create_extend'         => 'create',
+			'create_pod_type'       => $pod_type,
+			'create_storage'        => $storage_type,
+			'create_label_plural'   => $pod_label,
+			'create_label_singular' => __( 'Item', 'pods-gravity-forms' ),
+			'create_name'           => $pod_name,
+		];
+
+		$pod_id = $pods_api->add_pod( $new_pod_params );
+
+		$save_params = [
+			'fields' => [],
+		];
+
+		$gf_fields = [];
+
+		if ( ! empty( $gf_form ) && ! empty( $gf_form['fields'] ) ) {
+			$gf_fields = $gf_form['fields'];
+		}
+
+		$existing_mapping = [
+			'object_fields'    => [],
+			'pod_fields'       => [],
+			'mapped_field_ids' => [],
+		];
+
+		// Auto-detect post fields.
+		if ( 'post_type' === $pod_type ) {
+			$save_params['supports_title'] = 1;
+
+			foreach ( $gf_fields as $gf_field ) {
+				switch ( $gf_field['type'] ) {
+					case 'post_title':
+						$existing_mapping['object_fields'][ $gf_field['type'] ] = $gf_field['id'];
+
+						break;
+					case 'post_content':
+						$existing_mapping['object_fields'][ $gf_field['type'] ] = $gf_field['id'];
+
+						$save_params['supports_editor'] = 1;
+
+						break;
+					case 'post_excerpt':
+						$existing_mapping['object_fields'][ $gf_field['type'] ] = $gf_field['id'];
+
+						$save_params['supports_excerpt'] = 1;
+
+						break;
+					case 'post_image':
+						$existing_mapping['object_fields']['_thumbnail_id'] = $gf_field['id'];
+
+						$save_params['supports_thumbnail'] = 1;
+
+						break;
+					case 'post_category':
+						$existing_mapping['object_fields']['category'] = $gf_field['id'];
+
+						$save_params['built_in_taxonomies_category'] = 1;
+
+						break;
+					case 'post_tags':
+						$existing_mapping['object_fields']['post_tag'] = $gf_field['id'];
+
+						$save_params['built_in_taxonomies_post_tag'] = 1;
+
+						break;
+					default:
+						break;
+				}
+			}
+		}
+
+		// Setup custom fields.
+		$ignore_field_types = [
+			'post_title'    => true,
+			'post_content'  => true,
+			'post_excerpt'  => true,
+			'post_image'    => true,
+			'post_category' => true,
+			'post_tags'     => true,
+			'html'          => true,
+			'section'       => true,
+			'page'          => true,
+			'product'       => true,
+		];
+
+		$pod_field_names = [];
+
+		$mapped_field_types = [
+			'text'        => 'text',
+			'textarea'    => 'paragraph',
+			'number'      => 'number',
+			'select'      => 'pick',
+			'checkbox'    => 'pick',
+			'radio'       => 'pick',
+			'multiselect' => 'pick',
+			'hidden'      => 'text',
+			'name'        => 'text',
+			'date'        => 'date',
+			'time'        => 'time',
+			'phone'       => 'phone',
+			'website'     => 'website',
+			'email'       => 'email',
+			'fileupload'  => 'file',
+			'consent'     => 'boolean',
+		];
+
+		$pick_format_types = [
+			'select'      => 'single',
+			'checkbox'    => 'multi',
+			'radio'       => 'single',
+			'multiselect' => 'multi',
+		];
+
+		$pick_formats = [
+			'select'      => 'dropdown',
+			'checkbox'    => 'checkbox',
+			'radio'       => 'radio',
+			'multiselect' => 'multiselect',
+		];
+
+		foreach ( $gf_fields as $gf_field ) {
+			if ( isset( $ignore_field_types[ $gf_field['type'] ] ) ) {
+				continue;
+			}
+
+			$pod_field = [
+				'label' => $gf_field['label'],
+				'name'  => $gf_field['inputName'],
+				'type'  => 'text',
+			];
+
+			if ( empty( $pod_field['name'] ) ) {
+				$pod_field['name'] = pods_clean_name( $gf_field['label'] );
+			}
+
+			$gf_field_type = $gf_field['type'];
+
+			// Handle custom fields.
+			if ( 'post_custom_field' === $gf_field_type ) {
+				$pod_field['name'] = $gf_field['postCustomFieldName'];
+
+				// Override the field type we are using.
+				if ( ! empty( $gf_field['inputType'] ) ) {
+					$gf_field_type = $gf_field['inputType'];
+				}
+			}
+
+			if ( isset( $mapped_field_types[ $gf_field_type ] ) ) {
+				$pod_field['type'] = $mapped_field_types[ $gf_field_type ];
+			}
+
+			$inputs = [];
+
+			$gf_inputs = $gf_field['inputs'] ?? [];
+
+			// Custom handling based on field type.
+			switch ( $gf_field_type ) {
+				case 'textarea':
+					if ( ! empty( $gf_field['useRichTextEditor'] ) ) {
+						$pod_field['type'] = 'wysiwyg';
+					}
+
+					break;
+				case 'number':
+					// @todo Handle currency settings.
+					// @todo Handle format settings (comma vs dot).
+
+					break;
+				case 'name':
+				case 'address':
+					foreach ( $gf_inputs as $gf_field_input ) {
+						if ( ! empty( $gf_field_input['isHidden'] ) ) {
+							continue;
+						}
+
+						$pod_input = $pod_field;
+
+						$pod_input['label'] = $pod_input['label'] . ' (' . $gf_field_input['label'] . ')';
+						$pod_input['name']  = $gf_field_input['name'] ?? '';
+
+						if ( empty( $pod_input['name'] ) ) {
+							$pod_input['name'] = $pod_field['name'] . '_' . pods_clean_name( $pod_input['label'] );
+						}
+
+						$inputs[ $gf_field_input['id'] ] = $pod_input;
+					}
+
+					break;
+				case 'list':
+					if ( is_array( $gf_field['choices'] ) && 1 < count( $gf_field['choices'] ) ) {
+						// If there are multiple columns, use a code field.
+						$pod_field['type'] = 'code';
+					} else {
+						// Single column list fields are repeatable text fields.
+						$pod_field['repeatable'] = 1;
+					}
+
+					break;
+				case 'select':
+				case 'checkbox':
+				case 'radio':
+				case 'multiselect':
+					$options = [];
+
+					foreach ( $gf_field['choices'] as $choice ) {
+						$choice['value'] = $choice['value'] ?? $choice['text'];
+
+						// Skip non-values.
+						if ( '' === $choice['value'] ) {
+							continue;
+						}
+
+						$options[] =  $choice['value'] . '|' . $choice['text'];
+					}
+
+					$pod_field['pick_object']      = 'custom-simple';
+					$pod_field['pick_custom']      = implode( "\n", $options );
+					$pod_field['pick_format_type'] = $pick_format_types[ $gf_field_type ] ?? 'single';
+
+					$pod_field[ 'pick_format_' . $pod_field['pick_format_type'] ] = $pick_formats[ $gf_field_type ] ?? 'list';
+
+					break;
+				default:
+					break;
+			}
+
+			if ( empty( $inputs ) ) {
+				if ( 'consent' === $gf_field_type ) {
+					// Consent field should select the first input.
+					$inputs[ $gf_field['id'] . '.1' ] = $pod_field;
+				} else {
+					$inputs[ $gf_field['id'] ] = $pod_field;
+				}
+			}
+
+			foreach ( $inputs as $gf_field_id => $input ) {
+				// Handle unique field name.
+				$original_field_name = $input['name'];
+
+				$counter = 1;
+
+				if ( isset( $pod_field_names[ $input['name'] ] ) ) {
+					$counter ++;
+
+					$input['name'] = $original_field_name . $counter;
+				}
+
+				// Save the field.
+				$save_params['fields'][ $input['name'] ] = $input;
+
+				// Map the field.
+				$existing_mapping['pod_fields'][ $input['name'] ] = $gf_field_id;
+			}
+
+			// Mark the whole field as mapped now.
+			$existing_mapping['mapped_field_ids'][ $gf_field['id'] ] = true;
+		}
+
+		$save_params = array_filter( $save_params );
+
+		if ( $save_params ) {
+			$save_params['id']        = $pod_id;
+			$save_params['name']      = $pod_name;
+			$save_params['groups']    = [
+				[
+					'label'  => __( 'More Fields', 'pods-gravity-forms' ),
+					'name'   => 'more_fields',
+					'fields' => $save_params['fields'],
+				],
+			];
+
+			unset( $save_params['fields'] );
+
+			$pods_api->save_pod( $save_params );
+		}
+
+		$detected_mapping = $this->maybe_detect_feed_mapping( $gf_form, $pod_name, $existing_mapping );
+
+		return [
+			'pod_name' => $pod_name,
+			'mapping'  => $detected_mapping,
+		];
+	}
+
+	/**
+	 * Handle maybe creating the Form Feed.
+	 *
+	 * @param array  $gf_form  The Gravity Form data.
+	 * @param string $pod_name The Pod name.
+	 */
+	public function auto_create_feed( $gf_form, $pod_name, $mapping ) {
+		$feed = [
+			// Core feed info.
+			'feedName'                                => __( 'Pods GF Auto-Generated Feed', 'pods-gravity-forms' ),
+			// Pod name.
+			'pod'                                     => $pod_name,
+			// Default advanced options.
+			'update_pod_item'                         => '0',
+			'enable_markdown'                         => '0',
+			'enable_current_post'                     => '0',
+			'enable_prepopulate'                      => '0',
+			'delete_entry'                            => '0',
+			// Conditional logic defaults.
+			'feed_condition_conditional_logic_object' => [],
+			'feed_condition_conditional_logic'        => '0',
+			// Set defaults for object fields.
+			'wp_object_fields_post_title'             => '',
+			'wp_object_fields_post_content'           => '',
+			'wp_object_fields_post_excerpt'           => '',
+			'wp_object_fields_post_author'            => '',
+			'wp_object_fields_post_date'              => '',
+			'wp_object_fields_post_name'              => '',
+			'wp_object_fields_post_parent'            => '',
+			'wp_object_fields_comments'               => '',
+			'wp_object_fields__thumbnail_id'          => '',
+		];
+
+		if ( ! empty( $mapping['custom_fields'] ) ) {
+			$feed['custom_fields'] = $mapping['custom_fields'];
+		}
+
+		if ( ! empty( $mapping['object_fields'] ) ) {
+			foreach ( $mapping['object_fields'] as $field_name => $gf_field_id ) {
+				$feed[ 'wp_object_fields_' . $field_name ] = $gf_field_id;
+			}
+		}
+
+		if ( ! empty( $mapping['pod_fields'] ) ) {
+			foreach ( $mapping['pod_fields'] as $field_name => $gf_field_id ) {
+				$feed[ 'pod_fields_' . $field_name ] = $gf_field_id;
+			}
+		}
+
+		return $this->insert_feed( $gf_form['id'], 1, $feed );
+	}
+
+	/**
+	 * Handle maybe creating the Pod and Form Feed.
+	 *
+	 * @param array  $gf_form      The Gravity Form data.
+	 * @param string $pod_type     The Pod type.
+	 * @param string $storage_type The Pod storage type.
+	 */
+	public function maybe_auto_create_pod_and_feed( $gf_form, $pod_type, $storage_type ) {
+		if ( 1 !== (int) pods_v( 'pods_auto_create' ) ) {
+			return;
+		}
+
+		$pod_info = $this->auto_create_pod( $gf_form, $pod_type, $storage_type );
+
+		$pod_name = $pod_info['pod_name'];
+		$mapping  = $pod_info['mapping'];
+
+		$feed_id  = $this->auto_create_feed( $gf_form, $pod_name, $mapping );
+
+		if ( ! $feed_id ) {
+			pods_ui_error( __( 'There was a problem auto-creating your feed.', 'pods-gravity-forms' ) );
+
+			return;
+		}
+
+		pods_redirect( pods_query_arg( [
+			'fid' => $feed_id,
+			'pods_auto_create' => null,
+		] ) );
+	}
+
+	/**
 	 * {@inheritDoc}
 	 *
 	 * @since 2.0.0
@@ -191,7 +754,56 @@ class Feed_AddOn extends GFFeedAddOn {
 	 * @return array The list of feed setting fields.
 	 */
 	public function feed_settings_fields() {
-		$feed_field_name = [
+		$form_id = (int) pods_v( 'id' );
+		$feed_id = (int) pods_v( 'fid' );
+
+		$gf_form = GFAPI::get_form( $form_id );
+
+		$settings = [];
+
+		if ( 1 === (int) pods_v( 'skcdebug' ) ) {
+			pods_debug( $this->get_feed( $feed_id ) );
+			pods_debug( $gf_form );
+			die();
+		}
+
+		if ( 0 === $feed_id ) {
+			$feeds = [];//$this->get_feeds( $form_id );
+
+			if ( empty( $feeds ) ) {
+				$this->maybe_auto_create_pod_and_feed( $gf_form, 'post_type', 'meta' );
+
+				$settings['pod_mapping_create'] = [
+					'title'  => __( 'Automatically create your configuration', 'pods-gravity-forms' ),
+					'fields' => [],
+				];
+
+				$settings['pod_mapping_create']['fields'][] = [
+					'type' => 'html',
+					'name' => 'testingHtml',
+					'html' => sprintf(
+						'
+							<p><strong>%1$s</strong> %2$s</p>
+							<p><a href="%3$s" class="button">%4$s &raquo;</a></p>
+						',
+						__( 'NEW!', 'pods-gravity-forms' ),
+						__( 'Now you can automatically create a new Pod and Form Feed mapping for this form.', 'pods-gravity-forms' ),
+						esc_url( pods_query_arg( [ 'pods_auto_create' => 1 ] ) ),
+						__( 'Auto-create a new Pod and Form Feed as a Custom Post Type', 'pods-gravity-forms' )
+					),
+				];
+			}
+		}
+
+		///////////////////
+		// Pod feed mapping
+		///////////////////
+		$settings['pod_mapping'] = [
+			'title'  => __( 'Pod Feed Mapping', 'pods-gravity-forms' ),
+			'fields' => [],
+		];
+
+		$settings['pod_mapping']['fields'][] = [
 			'label'   => __( 'Name', 'pods-gravity-forms' ),
 			'type'    => 'text',
 			'name'    => 'feedName',
@@ -200,11 +812,6 @@ class Feed_AddOn extends GFFeedAddOn {
 		];
 
 		$gf_fields = [];
-
-		$form_id = (int) pods_v( 'id' );
-		$feed_id = (int) pods_v( 'fid' );
-
-		$gf_form = GFAPI::get_form( $form_id );
 
 		if ( ! empty( $gf_form ) && ! empty( $gf_form['fields'] ) ) {
 			$gf_fields = $gf_form['fields'];
@@ -226,7 +833,7 @@ class Feed_AddOn extends GFFeedAddOn {
 			];
 		}
 
-		$feed_field_pod = [
+		$settings['pod_mapping']['fields'][] = [
 			'label'    => __( 'Pod', 'pods-gravity-forms' ),
 			'type'     => 'select',
 			'name'     => 'pod',
@@ -253,7 +860,11 @@ class Feed_AddOn extends GFFeedAddOn {
 		$pod_fields = [];
 		$pod_type   = '';
 
+		$detected_mapping = [];
+
 		if ( ! empty( $selected_pod ) ) {
+			$detected_mapping = $this->maybe_detect_feed_mapping( $gf_form, $selected_pod );
+
 			$pod_object = $pods_api->load_pod( [ 'name' => $selected_pod ] );
 
 			if ( ! empty( $pod_object ) ) {
@@ -344,19 +955,6 @@ class Feed_AddOn extends GFFeedAddOn {
 			'type'       => 'field_map',
 			'dependency' => 'pod',
 			'field_map'  => array_values( $wp_object_fields ),
-		];
-
-		$settings = [];
-
-		///////////////////
-		// Pod feed mapping
-		///////////////////
-		$settings['pod_mapping'] = [
-			'title'  => __( 'Pod Feed Mapping', 'pods-gravity-forms' ),
-			'fields' => [
-				$feed_field_name,
-				$feed_field_pod,
-			],
 		];
 
 		$args_for_formatting = [
@@ -529,8 +1127,6 @@ class Feed_AddOn extends GFFeedAddOn {
 			],
 		];
 
-		$addon_slug = $this->get_slug();
-
 		add_filter( "gform_field_map_choices", [ $this, 'add_field_map_choices' ] );
 
 		$settings['advanced']['fields'][] = [
@@ -539,6 +1135,11 @@ class Feed_AddOn extends GFFeedAddOn {
 			'checkbox_label' => __( 'Enable', 'pods-gravity-forms' ),
 			'type'           => 'feed_condition',
 		];
+
+		// Clear up the list of fields.
+		foreach ( $settings as $section_name => $section ) {
+			$settings[ $section_name ]['fields'] = array_filter( $section['fields'] );
+		}
 
 		return $settings;
 	}
@@ -1244,6 +1845,8 @@ class Feed_AddOn extends GFFeedAddOn {
 			}
 
 			if ( ! empty( $dynamic_selects ) ) {
+				pods_gf();
+
 				$form = Pods_GF::gf_dynamic_select( $form, false, $dynamic_selects );
 			}
 		}
