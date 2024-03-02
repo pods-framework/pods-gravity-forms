@@ -905,6 +905,7 @@ class Pods_GF {
 
 		if ( ! has_filter( 'gform_submit_button_' . $form_id, array( 'Pods_GF', 'gf_secondary_submit_button' ) ) ) {
 			add_filter( 'gform_submit_button_' . $form_id, array( 'Pods_GF', 'gf_secondary_submit_button' ), 10, 2 );
+			add_filter( 'gform_get_form_filter_' . $form_id, array( 'Pods_GF', 'gf_secondary_submit_form' ), 10, 2 );
 		}
 
 		if ( ! wp_script_is( 'pods-gf', 'registered' ) ) {
@@ -929,7 +930,138 @@ class Pods_GF {
 	 */
 	public static function gf_secondary_submit_button( $button_input, $form ) {
 
-		$secondary_submits = pods_v( $form['id'], self::$secondary_submits, array(), true );
+		$form_id = $form['id'];
+
+		$secondary_submits = pods_v( $form_id, self::$secondary_submits, array(), true );
+
+		if ( empty( $secondary_submits ) ) {
+			return $button_input;
+		}
+
+		if ( isset( $secondary_submits['action'] ) ) {
+			$secondary_submits = array( $secondary_submits );
+		}
+
+		$secondary_submits = array_reverse( $secondary_submits );
+
+		wp_enqueue_script( 'pods-gf' );
+		wp_enqueue_style( 'pods-gf' );
+
+		$defaults = array(
+			'imageUrl'      => null,
+			'text'          => 'Alt Submit',
+			'action'        => 'alt',
+			'value'         => 1,
+			'value_from_ui' => '',
+			'cancel'        => false,
+		);
+
+		foreach ( $secondary_submits as $secondary_submit ) {
+			$secondary_submit = array_merge( $defaults, $secondary_submit );
+
+			if ( ! empty( $secondary_submit['value_from_ui'] ) && class_exists( 'Pods_GF_UI' ) && ! empty( Pods_GF_UI::$pods_ui ) ) {
+				if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ), true ) ) {
+					// Setup data
+					Pods_GF_UI::$pods_ui->get_data();
+				}
+
+				if ( 'prev_id' == $secondary_submit['value_from_ui'] ) {
+					$secondary_submit['value'] = Pods_GF_UI::$pods_ui->pod->prev_id();
+				}
+				elseif ( 'next_id' == $secondary_submit['value_from_ui'] ) {
+					$secondary_submit['value'] = Pods_GF_UI::$pods_ui->pod->next_id();
+				}
+
+				if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ), true ) ) {
+					// No ID, hide button
+					if ( empty( $secondary_submit['value'] ) ) {
+						continue;
+					}
+				}
+			}
+
+			$secondary_action = sanitize_title( $secondary_submit['action'] );
+
+			$onclick = '
+				if(window[\'gf_submitting_' . esc_attr( $form_id ) . '\']){return false;}
+				window[\'gf_submitting_' . esc_attr( $form_id ) . '\']=true;
+			';
+
+			if ( $secondary_submit['cancel'] ) {
+				$onclick .= '
+					jQuery(\'#pods_gf_ui_action_' . esc_attr( $secondary_action ) . '\').val( this.value );
+					jQuery(\'#pods_gf_secondary_' . esc_attr( $form_id ) . '\').trigger(\'submit\',[true]);
+				';
+			} else {
+				$button_input .= '
+					<input
+						id="pods_gf_ui_action_' . esc_attr( $secondary_action ) . '"
+						name="pods_gf_ui_action_' . esc_attr( $secondary_action ) . '"
+						value=""
+						type="hidden"
+					/>
+				';
+
+				$onclick = '
+					jQuery(\'#pods_gf_ui_action_' . esc_attr( $secondary_action ) . '\').val( this.value );
+					jQuery(\'#gform_' . esc_attr( $form_id ) . '\').submit();
+				';
+			}
+
+			$onclick = preg_replace( '/\s+/', ' ', $onclick );
+
+			if ( empty( $secondary_submit['imageUrl'] ) ) {
+				if ( null !== $secondary_submit['value'] && $secondary_submit['text'] !== $secondary_submit['value'] ) {
+					$button_input .= ' <button class="button gform_button pods-gf-secondary-submit pods-gf-secondary-submit-' . esc_attr( $secondary_action ) . '"'
+						. ' value="' . esc_attr( $secondary_submit['value'] ) . '"'
+						. ' onclick="' . esc_attr( $onclick ) . '"'
+						. '>' . esc_html( $secondary_submit['text'] ) . '</button>';
+				}
+				else {
+					$button_input .= ' <input type="button" class="button gform_button pods-gf-secondary-submit pods-gf-secondary-submit-' . esc_attr( $secondary_action ) . '"'
+						. ' value="' . esc_attr( $secondary_submit['text'] ) . '"'
+						. ' onclick="' . esc_attr( $onclick ) . '" />';
+				}
+			}
+			else {
+				$button_input .= ' <input type="image" class="pods-gf-secondary-submit pods-gf-secondary-submit-' . esc_attr( $secondary_action ) . '"'
+					. ' src="' . esc_attr( $secondary_submit['imageUrl'] ) . '"'
+					. ' value="' . esc_attr( $secondary_submit['text'] ) . '"'
+					. ' onclick="' . esc_attr( $onclick ) . '" />';
+			}
+		}
+
+		return $button_input;
+
+	}
+
+	/**
+	 * Add Secondary Submit button form.
+	 *
+	 * Warning: Gravity Forms Duplicate Prevention plugin's JS *will* break this!
+	 *
+	 * @param string $form_string Form HTML
+	 * @param array  $form        GF Form array
+	 *
+	 * @return string Form HTML
+	 */
+	public static function gf_secondary_submit_form( $form_string, $form ) {
+
+		$form_id = $form['id'];
+
+		$secondary_submits = pods_v( $form_id, self::$secondary_submits, array(), true );
+
+		$anchor = GFFormDisplay::get_anchor( $form, false );
+		$action = remove_query_arg( 'gf_token' ) . $anchor['id'];
+
+		$secondary_submit_form = '
+			<form
+				method="post"
+				enctype="multipart/form-data"
+				id="pods_gf_secondary_' . esc_attr( $form_id ) . '"
+				action="'. esc_attr( $action ) . '"
+			>
+		';
 
 		if ( ! empty( $secondary_submits ) ) {
 			if ( isset( $secondary_submits['action'] ) ) {
@@ -946,14 +1078,19 @@ class Pods_GF {
 				'text'          => 'Alt Submit',
 				'action'        => 'alt',
 				'value'         => 1,
-				'value_from_ui' => ''
+				'value_from_ui' => '',
+				'cancel'        => false,
 			);
 
 			foreach ( $secondary_submits as $secondary_submit ) {
 				$secondary_submit = array_merge( $defaults, $secondary_submit );
 
+				if ( ! $secondary_submit['cancel'] ) {
+					continue;
+				}
+
 				if ( ! empty( $secondary_submit['value_from_ui'] ) && class_exists( 'Pods_GF_UI' ) && ! empty( Pods_GF_UI::$pods_ui ) ) {
-					if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ) ) ) {
+					if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ), true ) ) {
 						// Setup data
 						Pods_GF_UI::$pods_ui->get_data();
 					}
@@ -965,7 +1102,7 @@ class Pods_GF {
 						$secondary_submit['value'] = Pods_GF_UI::$pods_ui->pod->next_id();
 					}
 
-					if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ) ) ) {
+					if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ), true ) ) {
 						// No ID, hide button
 						if ( empty( $secondary_submit['value'] ) ) {
 							continue;
@@ -973,32 +1110,24 @@ class Pods_GF {
 					}
 				}
 
-				if ( empty( $secondary_submit['imageUrl'] ) ) {
-					if ( null !== $secondary_submit['value'] && $secondary_submit['text'] !== $secondary_submit['value'] ) {
-						$button_input .= ' <button type="submit" class="button gform_button pods-gf-secondary-submit pods-gf-secondary-submit-' . sanitize_title( $secondary_submit['action'] ) . '"'
-							. ' name="pods_gf_ui_action_' . sanitize_title( $secondary_submit['action'] ) . '"'
-							. ' value="' . esc_attr( $secondary_submit['value'] ) . '"'
-							. ' onclick="if(window[\'gf_submitting\']){return false;} window[\'gf_submitting\']=true;"'
-							. '>' . esc_html( $secondary_submit['text'] ) . '</button>';
-					}
-					else {
-						$button_input .= ' <input type="submit" class="button gform_button pods-gf-secondary-submit pods-gf-secondary-submit-' . sanitize_title( $secondary_submit['action'] ) . '"'
-							. ' name="pods_gf_ui_action_' . sanitize_title( $secondary_submit['action'] ) . '"'
-							. ' value="' . esc_attr( $secondary_submit['text'] ) . '"'
-							. ' onclick="if(window[\'gf_submitting\']){return false;} window[\'gf_submitting\']=true;" />';
-					}
-				}
-				else {
-					$button_input .= ' <input type="image" class="pods-gf-secondary-submit pods-gf-secondary-submit-' . sanitize_title( $secondary_submit['action'] ) . '"'
-						. ' name="pods_gf_ui_action_' . sanitize_title( $secondary_submit['action'] ) . '"'
-						. ' src="' . esc_attr( $secondary_submit['imageUrl'] ) . '"'
-						. ' value="' . esc_attr( $secondary_submit['text'] ) . '"'
-						. ' onclick="if(window[\'gf_submitting\']){return false;} window[\'gf_submitting\']=true;" />';
-				}
+				$secondary_action = sanitize_title( $secondary_submit['action'] );
+
+				$secondary_submit_form .= '
+					<input
+						id="pods_gf_ui_action_' . esc_attr( $secondary_action ) . '"
+						name="pods_gf_ui_action_' . esc_attr( $secondary_action ) . '"
+						value=""
+						type="hidden"
+					/>
+				';
 			}
 		}
 
-		return $button_input;
+		$secondary_submit_form .= '</form>';
+
+		$form_string .= $secondary_submit_form;
+
+		return $form_string;
 
 	}
 
