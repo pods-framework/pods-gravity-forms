@@ -965,7 +965,7 @@ class Pods_GF_UI {
 			return;
 		}
 ?>
-<div class="wrap pods-admin pods-ui">
+<div class="wrap pods-admin pods-ui pods-gf-ui-view-only">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
 	<h2>
 		<?php
