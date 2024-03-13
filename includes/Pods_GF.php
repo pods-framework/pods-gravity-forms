@@ -4429,7 +4429,7 @@ class Pods_GF {
 			return $entry;
 		}
 
-		remove_action( 'gform_post_submission_' . $form['id'], array( $this, '_gf_after_submission' ), 10 );
+		remove_action( 'gform_after_submission_' . $form['id'], array( $this, '_gf_after_submission' ), 10 );
 
 		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
 			return $entry;
