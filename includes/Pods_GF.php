@@ -2621,13 +2621,42 @@ class Pods_GF {
 				if ( is_array( $value_override ) && 'list' === $gf_field->type ) {
 					$choices = $gf_field->choices;
 
-					$value_override_chunked = array_chunk( $value_override, count( $choices ) );
+					$total_choices = count( $choices );
 
-					foreach ( $value_override_chunked as $k => $v ) {
-						$value_override_chunked[ $k ] = implode( '|', $v );
+					// Check if the values are chunked already.
+					if ( isset( $value_override[0] ) && is_array( $value_override[0] ) && $total_choices === count( $value_override[0] ) ) {
+						foreach ( $value_override as $vo_key => $value_override_row ) {
+							// Replace pipes because GF has no workaround here.
+							// @todo If GF changes this, adjust our usage.
+							$value_override_row = array_map( static function ( $value ) {
+								return preg_replace( '/ {2,}/', ' ', str_replace( '|', ' ', $value ) );
+							}, $value_override_row );
+
+							$value_override[ $vo_key ] = implode( '|', $value_override_row );
+						}
+
+						// Replace pipes because GF has no workaround here.
+						// @todo If GF changes this, adjust our usage.
+						$value_override = array_map( static function ( $value ) {
+							return preg_replace( '/ {2,}/', ' ', str_replace( ',', ' ', $value ) );
+						}, $value_override );
+
+						$value_override = implode( ',', $value_override );
+					} else {
+						$value_override_chunked = array_chunk( $value_override, $total_choices );
+
+						foreach ( $value_override_chunked as $k => $v ) {
+							$value_override_chunked[ $k ] = implode( '|', $v );
+						}
+
+						// Replace commas because GF has no workaround here.
+						// @todo If GF changes this, adjust our usage.
+						$value_override_chunked = array_map( static function ( $value ) {
+							return preg_replace( '/ {2,}/', ' ', str_replace( ',', ' ', $value ) );
+						}, $value_override_chunked );
+
+						$value_override = implode( ',', $value_override_chunked );
 					}
-
-					$value_override = implode( ',', $value_override_chunked );
 				}
 
 				$_GET[ 'pods_gf_field_' . $field ] = pods_slash( $value_override );
@@ -2639,8 +2668,39 @@ class Pods_GF {
 			$post_value_override = apply_filters( 'pods_gf_field_value', $post_value_override, $value_override, $field, $field_options, $form, $prepopulate, $pod );
 
 			if ( null !== $post_value_override ) {
-				if ( is_array( $post_value_override ) && 'list' === $gf_field->type ) {
-					$post_value_override = maybe_serialize( $post_value_override );
+				if ( 'list' === $gf_field->type ) {
+					if ( is_string( $post_value_override ) ) {
+						// Replace the commas with placeholders.
+						$post_value_override = str_replace( '\,', '__PODS_GF_COMMA__', $post_value_override );
+						$post_value_override = explode( ',', $post_value_override );
+
+						foreach ( $post_value_override as $pvo_key => $post_value_override_row ) {
+							// Restore the placeholders with commas.
+							$post_value_override_row = str_replace( '__PODS_GF_COMMA__', ',', $post_value_override_row );
+
+							// Replace the pipes with placeholders.
+							$post_value_override_row = str_replace( '\|', '__PODS_GF_PIPE__', $post_value_override_row );
+
+							// Expand the row.
+							$post_value_override_row = explode( '|', $post_value_override_row );
+
+							// Restore the placeholders with pipes.
+							$post_value_override_row = array_map( static function ( $value ) {
+								return str_replace( '__PODS_GF_PIPE__', '|', $value );
+							}, $post_value_override_row );
+
+							$post_value_override[ $pvo_key ] = $post_value_override_row;
+						}
+					}
+
+					if ( is_array( $post_value_override ) ) {
+						if ( isset( $post_value_override[0] ) && is_array( $post_value_override[0] ) ) {
+							$post_value_override = array_merge( ...$post_value_override );
+						}
+
+						// @todo Figure out if the value needs to be serialized
+						//$post_value_override = maybe_serialize( $post_value_override );
+					}
 				}
 
 				$_POST[ 'input_' . $field ] = pods_slash( $post_value_override );
