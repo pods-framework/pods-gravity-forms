@@ -1,9 +1,9 @@
 === Pods Gravity Forms Add-On ===
 Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
-Donate link: https://pods.io/friends-of-pods/
+Donate link: https://friends.pods.io/
 Tags: pods, gravity forms, form mapping
 Requires at least: 4.6
-Tested up to: 6.0
+Tested up to: 6.4
 Requires PHP: 5.4
 Stable tag: 1.4.6-a-1
 License: GPLv2 or later
@@ -114,6 +114,13 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 9. Form entries page showing Pod ID
 
 == Changelog ==
+
+= 1.4.6 - March TBD, 2024 =
+
+* Tested against WP 6.4
+* Fixed: Prepopulating field values works more consistently now when passing the prepopulated filter pre-chunked arrays of values.
+
+ALSO: Pods 2.0 is in development and it brings complete compatibility with the latest Gravity Forms releases. We could use your support to help it get over the finish line this year. Please consider [donating to the Pods project](https://friends.pods.io/) to help us get there more quickly.
 
 = 1.4.5 - July 22nd, 2022 =
 
