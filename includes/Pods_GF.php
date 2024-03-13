@@ -2395,7 +2395,7 @@ class Pods_GF {
 						foreach ( $gf_field->choices as $k => $choice ) {
 							$gf_field->choices[ $k ]['isSelected'] = false;
 
-							if ( ( ! is_array( $value_override ) && $choice['value'] == $value_override ) || ( is_array( $value_override ) && in_array( $choice['value'], $value_override ) ) ) {
+							if ( ( ! is_array( $value_override ) && $choice['value'] == $value_override ) || ( is_array( $value_override ) && in_array( $choice['value'], $value_override, false ) ) ) {
 								$gf_field->choices[ $k ]['isSelected'] = true;
 
 								break;
@@ -2559,7 +2559,7 @@ class Pods_GF {
 								if ( 'boolean' === $pod_field_type && 1 === (int) $values && ! empty( $choice['value'] ) ) {
 									$is_selected = true;
 								} elseif ( ( ! is_array( $values ) && (string) $choice['value'] === (string) $values )
-									|| ( is_array( $values ) && in_array( $choice['value'], $values ) ) ) {
+									|| ( is_array( $values ) && in_array( $choice['value'], $values, false ) ) ) {
 									$is_selected = true;
 								}
 
@@ -3127,7 +3127,7 @@ class Pods_GF {
 						$choice_number ++;
 					}
 
-					if ( in_array( $choice['value'], $value ) || ( empty( $value ) && $choice['isSelected'] ) ) {
+					if ( in_array( $choice['value'], $value, false ) || ( empty( $value ) && $choice['isSelected'] ) ) {
 						$values[$choice_number] = $choice['value'];
 						$labels[]               = $choice['text'];
 					}
