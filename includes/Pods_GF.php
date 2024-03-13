@@ -3096,7 +3096,7 @@ class Pods_GF {
 			return $input_html;
 		}
 
-		$last_page = self::$actioned[$form_id][__FUNCTION__];
+		$last_page = (int) self::$actioned[$form_id][__FUNCTION__];
 
 		$non_read_only = array(
 			'hidden',
@@ -3115,10 +3115,10 @@ class Pods_GF {
 
 		$page_header = '';
 
-		if ( isset( $field['pageNumber'] ) && 0 < $field['pageNumber'] && $last_page != $field['pageNumber'] ) {
-			self::$actioned[$form_id][__FUNCTION__] = $field['pageNumber'];
+		if ( isset( $field['pageNumber'] ) && 0 < (int) $field['pageNumber'] && $last_page !== (int) $field['pageNumber'] ) {
+			self::$actioned[$form_id][__FUNCTION__] = (int) $field['pageNumber'];
 
-			$page_header = '<h3 class="gf-page-title">' . $form['pagination']['pages'][( $field['pageNumber'] - 1 )] . '</h3>';
+			$page_header = '<h3 class="gf-page-title">' . $form['pagination']['pages'][( (int) $field['pageNumber'] - 1 )] . '</h3>';
 		}
 
 		if ( 'html' == $field_type ) {
