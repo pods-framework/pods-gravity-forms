@@ -3759,7 +3759,13 @@ class Pods_GF {
 				$value = sprintf( '%s:%s:00', $value[0], $value[1] );
 			}
 		} elseif ( in_array( $gf_field->type, array( 'list' ), true ) && is_array( $value ) && ! empty( $value ) ) {
-			$columns = array_keys( current( $value ) );
+			$first_row = current( $value );
+
+			$columns = [];
+
+			if ( is_array( $first_row ) ) {
+				$columns = array_keys( $first_row );
+			}
 
 			if ( $columns ) {
 				$related_obj = false;
