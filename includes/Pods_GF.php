@@ -3000,7 +3000,7 @@ class Pods_GF {
 					$field = $field_options['gf_field'];
 				}
 
-				if ( is_array( $read_only['exclude_fields'] ) && ! empty( $read_only['exclude_fields'] ) && in_array( (string) $field, $read_only['exclude_fields'] ) ) {
+				if ( isset( $read_only['exclude_fields'] ) && is_array( $read_only['exclude_fields'] ) && ! empty( $read_only['exclude_fields'] ) && in_array( (string) $field, $read_only['exclude_fields'] ) ) {
 					continue;
 				}
 
