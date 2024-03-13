@@ -2156,6 +2156,10 @@ class Pods_GF {
 					if ( $needs_empty ) {
 						if ( ! empty( $dynamic_select['select_text'] ) ) {
 							$empty_text = $dynamic_select['select_text'];
+
+							if ( 'select' !== $field_obj->type ) {
+								$empty_text = trim( $empty_text, '-' );
+							}
 						} else {
 							$empty_text = __( 'Select One', 'pods-gravity-forms' );
 
