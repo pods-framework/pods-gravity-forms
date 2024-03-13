@@ -990,7 +990,8 @@ class Pods_GF {
 			if ( $secondary_submit['cancel'] ) {
 				$onclick .= '
 					jQuery(\'#pods_gf_ui_action_' . esc_attr( $secondary_action ) . '\').val( this.value );
-					jQuery(\'#pods_gf_secondary_' . esc_attr( $form_id ) . '\').trigger(\'submit\',[true]);
+					jQuery(\'#pods_gf_secondary_' . esc_attr( $form_id ) . '\').submit();
+					return false;
 				';
 			} else {
 				$button_input .= '
@@ -1004,7 +1005,7 @@ class Pods_GF {
 
 				$onclick = '
 					jQuery(\'#pods_gf_ui_action_' . esc_attr( $secondary_action ) . '\').val( this.value );
-					jQuery(\'#gform_' . esc_attr( $form_id ) . '\').submit();
+					return true;
 				';
 			}
 
@@ -1118,6 +1119,11 @@ class Pods_GF {
 						name="pods_gf_ui_action_' . esc_attr( $secondary_action ) . '"
 						value=""
 						type="hidden"
+					/>
+					<input
+						type="submit"
+						value="' . esc_attr( $secondary_action ) . '"
+						style="display:none;"
 					/>
 				';
 			}
@@ -4481,7 +4487,8 @@ class Pods_GF {
 					'text'          => 'Alt Submit',
 					'action'        => 'alt',
 					'value'         => 1,
-					'value_from_ui' => ''
+					'value_from_ui' => '',
+					'cancel'        => false,
 				);
 
 				foreach ( $secondary_submits as $secondary_submit ) {
