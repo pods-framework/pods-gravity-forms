@@ -2158,39 +2158,49 @@ class Pods_GF {
 			// Additional handling for showing an empty choice for fields that are not required.
 			if ( empty( $field_obj->isRequired ) && empty( $field_obj->placeholder ) ) {
 				if ( 'radio' === $field_obj->type || ( 'entry' !== rgget( 'view' ) && 'select' === $field_obj->type ) ) {
-					$needs_empty = true;
+					/**
+					 * Allow filtering whether to show the empty option for a dynamic select field.
+					 *
+					 * @param bool     $show_empty_option Whether to show the empty option.
+					 * @param GF_Field $field_obj         The Gravity Forms field object.
+					 */
+					$show_empty_option = apply_filters( 'pods_gf_dynamic_select_show_empty_option', true, $field_obj );
 
-					// Check if we have an empty option already.
-					foreach ( $choices as $choice ) {
-						if ( '' === $choice['value'] ) {
-							$needs_empty = false;
+					if ( $show_empty_option ) {
+						$needs_empty = true;
 
-							break;
-						}
-					}
+						// Check if we have an empty option already.
+						foreach ( $choices as $choice ) {
+							if ( '' === $choice['value'] ) {
+								$needs_empty = false;
 
-					if ( $needs_empty ) {
-						if ( ! empty( $dynamic_select['select_text'] ) ) {
-							$empty_text = $dynamic_select['select_text'];
-
-							if ( 'select' !== $field_obj->type ) {
-								$empty_text = trim( $empty_text, '-' );
-							}
-						} else {
-							$empty_text = __( 'Select One', 'pods-gravity-forms' );
-
-							if ( 'select' === $field_obj->type ) {
-								$empty_text = sprintf( '-- %s --', $empty_text );
+								break;
 							}
 						}
 
-						$empty_choice = array(
-							'text'  => $empty_text,
-							'value' => '',
-						);
+						if ( $needs_empty ) {
+							if ( ! empty( $dynamic_select['select_text'] ) ) {
+								$empty_text = $dynamic_select['select_text'];
 
-						// Add empty choice to front of choices list.
-						array_unshift( $choices, $empty_choice );
+								if ( 'select' !== $field_obj->type ) {
+									$empty_text = trim( $empty_text, '-' );
+								}
+							} else {
+								$empty_text = __( 'Select One', 'pods-gravity-forms' );
+
+								if ( 'select' === $field_obj->type ) {
+									$empty_text = sprintf( '-- %s --', $empty_text );
+								}
+							}
+
+							$empty_choice = [
+								'text'  => $empty_text,
+								'value' => '',
+							];
+
+							// Add empty choice to front of choices list.
+							array_unshift( $choices, $empty_choice );
+						}
 					}
 				}
 			}
