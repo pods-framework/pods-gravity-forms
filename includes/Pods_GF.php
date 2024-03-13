@@ -2418,8 +2418,32 @@ class Pods_GF {
 					$pod_field_type = $pod->fields( $field_options['field'], 'type' );
 				}
 
-				if ( is_array( $pod ) && isset( $pod[ $field_options['field'] ] ) ) {
-					$value_override = $pod[ $field_options['field'] ];
+				if ( is_array( $pod ) ) {
+					if ( isset( $pod[ $field_options['field'] ] ) ) {
+						$value_override = $pod[ $field_options['field'] ];
+					} elseif ( 'checkbox' === $gf_field->type ) {
+						$checkbox_values = [];
+
+						$choice_counter = 0;
+
+						foreach ( $gf_field->choices as $choice ) {
+							$choice_counter ++;
+
+							if ( ! isset( $pod[ $gf_field->id . '.' . $choice_counter ] ) ) {
+								continue;
+							}
+
+							$checkbox_values[] = $pod[ $gf_field->id . '.' . $choice_counter ];
+						}
+
+						if ( ! empty( $checkbox_values ) ) {
+							if ( 1 === count( $checkbox_values ) ) {
+								$checkbox_values = reset( $checkbox_values );
+							}
+
+							$value_override = $checkbox_values;
+						}
+					}
 				}
 
 				if ( $pod_field_type ) {
