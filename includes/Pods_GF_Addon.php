@@ -232,6 +232,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'post_content_filtered',
 			'pinged',
 			'to_ping',
+            'comments',
 		);
 
 		$wp_object_fields = array();
@@ -347,7 +348,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 				// Add field names to labels
 				$field_map['label'] = sprintf(
-					'%s<br /><small>(%s)</small>',
+					'%s (%s)',
 					esc_html( $field_map['label'] ),
 					esc_html( $field_map['name'] )
 				);
