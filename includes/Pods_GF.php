@@ -1599,6 +1599,14 @@ class Pods_GF {
 				}
 			}
 
+			if ( 1 === (int) pods_v( 'pods_gf_debug' ) && pods_is_admin() ) {
+				echo '<pre>';
+				var_dump( [ 'form_id' => $form['id'] ] );
+				var_dump( compact( 'save_action', 'args', 'data' ) );
+				echo '</pre>';
+				die();
+			}
+
 			if ( ! empty( $this->pod->pod_data ) ) {
 				$id = call_user_func_array( array( $this->pod, $save_action ), $args );
 
@@ -1610,6 +1618,14 @@ class Pods_GF {
 			do_action( 'pods_gf_to_pods_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
 		}
 		else {
+			if ( 1 === (int) pods_v( 'pods_gf_debug' ) && pods_is_admin() ) {
+				echo '<pre>';
+				var_dump( [ 'form_id' => $form['id'] ] );
+				var_dump( compact( 'save_action', 'id', 'data' ) );
+				echo '</pre>';
+				die();
+			}
+
 			$id = apply_filters( 'pods_gf_to_pod_' . $form['id'] . '_' . $save_action, $id, $this->pod, $data, $this );
 
 			$this->id = $id = apply_filters( 'pods_gf_to_pod_' . $save_action, $id, $this->pod, $data, $this );
