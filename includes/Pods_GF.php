@@ -4318,7 +4318,7 @@ class Pods_GF {
 
 		// Markdown Syntax for HTML
 		if ( isset( $this->options['markdown'] ) && ! empty( $this->options['markdown'] ) ) {
-			$form = self::gf_markdown( $form, $ajax, $this->options['markdown'] );
+			$form = self::gf_markdown( $form, false, $this->options['markdown'] );
 		}
 
 		// Submit Button customization
