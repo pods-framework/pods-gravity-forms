@@ -5,6 +5,8 @@
  * @param string|Pods Pod name (or Pods object)
  * @param int $form_id GF Form ID
  * @param array $options Form options for integration
+ *
+ * @return null|Pods_GF The Pods GF instance or null if no pod/form ID/options are set.
  */
 function pods_gf( $pod = null, $form_id = null, $options = array() ) {
 
@@ -15,6 +17,7 @@ function pods_gf( $pod = null, $form_id = null, $options = array() ) {
 		return Pods_GF::get_instance( $pod, $form_id, $options );
 	}
 
+	return null;
 }
 
 /**

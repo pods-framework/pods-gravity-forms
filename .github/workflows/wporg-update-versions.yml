@@ -17,9 +17,6 @@ on:
       minimum_php_version:
         description: 'Minimum PHP version'
         required: false
-      minimum_mysql_version:
-        description: 'Minimum MySQL version'
-        required: false
   pull_request:
     paths:
       - 'package.json'
