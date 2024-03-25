@@ -2,10 +2,10 @@
 Contributors: sc0ttkclark, jimtrue, naomicbush, gravityplus
 Donate link: https://friends.pods.io/
 Tags: pods, gravity forms, form mapping
-Requires at least: 4.6
-Tested up to: 6.4
-Requires PHP: 5.4
-Stable tag: 1.4.6-a-1
+Requires at least: 6.0
+Tested up to: 6.5
+Requires PHP: 7.2
+Stable tag: 1.5.0-a-1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,7 +13,7 @@ Integrate with Gravity Forms to create a Pod item from a form submission.
 
 == Description ==
 
-Requires [Pods](https://wordpress.org/plugins/pods/) 2.4+, [Gravity Forms](http://www.gravityforms.com/) 1.9+.
+Requires [Pods](https://wordpress.org/plugins/pods/) 3.0+, [Gravity Forms](http://www.gravityforms.com/) 1.9+.
 
 Check out [pods.io](http://pods.io/) for our User Guide, Forums, and other resources to help you develop with Pods.
 
@@ -115,12 +115,12 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 
 == Changelog ==
 
-= 1.4.6 - March TBD, 2024 =
+= 1.5.0 - March 24th, 2024 =
 
-* Tested against WP 6.4
-* Fixed: Prepopulating field values works more consistently now when passing the prepopulated filter pre-chunked arrays of values.
+* New requirements that match Pods: WP 6.0+, PHP 7.2+, and Pods 3.0+ (@sc0ttkclark)
+* Fixed: Prepopulating field values works more consistently now when passing the prepopulated filter pre-chunked arrays of values. (@sc0ttkclark)
 
-ALSO: Pods 2.0 is in development and it brings complete compatibility with the latest Gravity Forms releases. We could use your support to help it get over the finish line this year. Please consider [donating to the Pods project](https://friends.pods.io/) to help us get there more quickly.
+ALSO: Pods GF 2.0 is in development and it brings complete compatibility with the latest Gravity Forms releases. We could use your support to help it get over the finish line this year. Please consider [donating to the Pods project](https://friends.pods.io/) to help us get there more quickly.
 
 = 1.4.5 - July 22nd, 2022 =
 
