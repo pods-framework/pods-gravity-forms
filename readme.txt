@@ -13,11 +13,9 @@ Integrate with Gravity Forms to create a Pod item from a form submission.
 
 == Description ==
 
-Requires [Pods](https://wordpress.org/plugins/pods/) 3.0+, [Gravity Forms](http://www.gravityforms.com/) 1.9+.
-
-Check out [pods.io](http://pods.io/) for our User Guide, Forums, and other resources to help you develop with Pods.
-
-Please report bugs or request featured on [GitHub](https://github.com/pods-framework/pods-gravity-forms/)
+* **Requires:** [Pods](https://wordpress.org/plugins/pods/) 3.0+, [Gravity Forms](http://www.gravityforms.com/) 1.9+
+* **Demo:** Want to try Pods GF out? Check out the [Gravity Forms Live Demo](https://www.gravityforms.com/gravity-forms-demo/) and install the Pods and Pods Gravity Forms plugins once you're there
+* **Bugs/Ideas:** Please report bugs or request features on [GitHub](https://github.com/pods-framework/pods-gravity-forms/)
 
 Special thanks to Rocketgenius for their sponsorship support and to Naomi C. Bush for her help in the initial add-on UI work.
 
@@ -117,10 +115,10 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 
 = 1.5.0 - March 24th, 2024 =
 
-* New requirements that match Pods: WP 6.0+, PHP 7.2+, and Pods 3.0+ (@sc0ttkclark)
+* New requirements that match Pods: WP 6.0+, PHP 7.2+, and Pods 3.0+ to prep for Pods Gravity Forms 2.0 (@sc0ttkclark)
 * Fixed: Prepopulating field values works more consistently now when passing the prepopulated filter pre-chunked arrays of values. (@sc0ttkclark)
 
-ALSO: Pods GF 2.0 is in development and it brings complete compatibility with the latest Gravity Forms releases. We could use your support to help it get over the finish line this year. Please consider [donating to the Pods project](https://friends.pods.io/) to help us get there more quickly.
+ALSO: Pods Gravity Forms 2.0 is in development and it brings complete compatibility with the latest Gravity Forms releases. We could use your support to help it get over the finish line this year. Please consider [donating to the Pods project](https://friends.pods.io/) to help us get there more quickly.
 
 = 1.4.5 - July 22nd, 2022 =
 
