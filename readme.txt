@@ -13,7 +13,7 @@ Integrate with Gravity Forms to create a Pod item from a form submission.
 
 == Description ==
 
-* **Requires:** [Pods](https://wordpress.org/plugins/pods/) 3.0+, [Gravity Forms](http://www.gravityforms.com/) 1.9+
+* **Requires:** [Pods](https://wordpress.org/plugins/pods/) 3.0+, [Gravity Forms](https://pods.io/gravityforms/) 1.9+
 * **Demo:** Want to try Pods GF out? Check out the [Gravity Forms Live Demo](https://www.gravityforms.com/gravity-forms-demo/) and install the Pods and Pods Gravity Forms plugins once you're there
 * **Bugs/Ideas:** Please report bugs or request features on [GitHub](https://github.com/pods-framework/pods-gravity-forms/)
 
@@ -113,12 +113,25 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 
 == Changelog ==
 
-= 1.5.0 - March 24th, 2024 =
+= 1.5.0 - March 27th, 2024 =
 
 * New requirements that match Pods: WP 6.0+, PHP 7.2+, and Pods 3.0+ to prep for Pods Gravity Forms 2.0 (@sc0ttkclark)
+* Added: Support value overrides for checkbox GF fields when prepopulating. (@sc0ttkclark)
+* Added: Allow for passing `?pods_gf_debug=1` to a form submit URL to debug the form submission mapping to Pods which outputs debug information and stops before the save runs). (@sc0ttkclark)
+* Added: New hook `pods_gf_dynamic_select_show_empty_option` lets you disable showing the "empty option" in dynamic fields being prepopulated. (@sc0ttkclark)
+* Added: New hook `pods_gf_addon_options_{$form_id}` that lets  you filter the options built for a feed for the `Pods_GF` object. (@sc0ttkclark)
+* Tweak: New `pods-gf-ui-view-only` class added to the view-only mode. (@sc0ttkclark)
+* Tweak: Expanded secondary submit handling with the ability to have cancel button. (@sc0ttkclark)
+* Fixed: Resolved various PHP notices. (@sc0ttkclark)
+* Fixed: Removed "comments" from the field mapping options in the feed. (@sc0ttkclark)
+* Fixed: Remove extra HTML in the feed labels. (@sc0ttkclark)
+* Fixed: For non-select GF field types, trim the dashes on the custom `select_text` option used. (@sc0ttkclark)
 * Fixed: Prepopulating field values works more consistently now when passing the prepopulated filter pre-chunked arrays of values. (@sc0ttkclark)
+* Fixed: View-only mode forced to use page zero. (@sc0ttkclark)
+* Fixed: Prevent duplicate submissions during feed processing. (@sc0ttkclark)
+* Fixed: Only allow working with active leads in `Pods_GF_UI`. (@sc0ttkclark)
 
-ALSO: Pods Gravity Forms 2.0 is in development and it brings complete compatibility with the latest Gravity Forms releases. We could use your support to help it get over the finish line this year. Please consider [donating to the Pods project](https://friends.pods.io/) to help us get there more quickly.
+ALSO: Pods Gravity Forms 2.0 is still in development and it brings complete compatibility with the latest Gravity Forms releases. We could use your support to help it get over the finish line this year. Please consider [donating to the Pods project](https://friends.pods.io/) to help us get there more quickly.
 
 = 1.4.5 - July 22nd, 2022 =
 
