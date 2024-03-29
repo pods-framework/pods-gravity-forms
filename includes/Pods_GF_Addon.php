@@ -802,7 +802,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	            <input type="checkbox" id="pods_populate_related_items_value" onclick="SetFieldProperty('pods_populate_related_items', this.checked);" />
 	            <label for="pods_populate_related_items_value" class="inline">
 		            <?php _e( 'Populate Related Items (requires a feed configured)', 'pods-gravity-forms' ); ?>
-	                <?php gform_tooltip( 'form_populate_related_items_value' ) ?>
+	                <?php gform_tooltip( 'form_pods_populate_related_items_value' ) ?>
 	            </label>
 	        </li>
 	        <?php
@@ -837,7 +837,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 */
 	public function populate_related_items_tooltip( $tooltips ) {
 
-	   $tooltips['form_populate_related_items_value'] = sprintf( '<h6>%s</h6> %s', __( 'Populate Related Items from Pods', 'pods-gravity-forms' ), __( 'Check this box to populate the related items from Pods instead of keeping the list up-to-date manually.' ) );
+	   $tooltips['form_pods_populate_related_items_value'] = sprintf( '<h6>%s</h6> %s', __( 'Populate Related Items from Pods', 'pods-gravity-forms' ), __( 'Check this box to populate the related items from Pods instead of keeping the list up-to-date manually.' ) );
 
 	   return $tooltips;
 
@@ -1082,7 +1082,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			 */
 			foreach ( $form['fields'] as $gf_field ) {
 				if ( empty( $gf_field->pods_populate_related_items ) ) {
-					//continue;
+                    continue;
 				}
 
 				$pod_field = null;
