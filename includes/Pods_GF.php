@@ -2949,11 +2949,11 @@ class Pods_GF {
 			self::$actioned[$form['id']] = array();
 		}
 
-		self::$actioned[$form['id']][] = __FUNCTION__;
-
-		if ( ! function_exists( 'Markdown' ) ) {
-			include_once PODS_GF_DIR . 'includes/Markdown.php';
+		if ( ! class_exists( 'Pods_Gravity_Forms__Prefixed__Parsedown' ) ) {
+			return $form;
 		}
+
+		self::$actioned[$form['id']][] = __FUNCTION__;
 
 		$sanitize_from_markdown = array(
 			'-',
@@ -2980,8 +2980,11 @@ class Pods_GF {
 					$content = str_replace( $merge_tag, $merge_tag_sanitized, $content );
 				}
 
+				$parsedown = new Pods_Gravity_Forms__Prefixed__Parsedown();
+				$parsedown->setSafeMode( true );
+
 				// Run Markdown
-				$content = Markdown( $content );
+				$content = $parsedown->text( $content );
 
 				// Unsanitize merge tags
 				foreach ( $merge_tags as $merge_tag_match ) {
