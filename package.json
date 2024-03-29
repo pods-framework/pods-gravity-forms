@@ -1,0 +1,19 @@
+{
+  "name": "pods-gravity-forms",
+  "version": "1.5.0",
+  "description": "PIntegration with Gravity Forms; Provides a UI for mapping a Form's submissions into a Pod.",
+  "author": "Pods Foundation, Inc",
+  "homepage": "https://pods.io/",
+  "bugs": "https://github.com/pods-framework/pods-gravity-forms/issues",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/pods-framework/pods-gravity-forms.git"
+  },
+  "support": "https://support.pods.io/",
+  "funding": {
+    "type": "individual",
+    "url": "https://friends.pods.io/"
+  },
+  "license": "GPL-2.0+",
+  "contributors": "https://github.com/pods-framework/pods-gravity-forms/graphs/contributors"
+}

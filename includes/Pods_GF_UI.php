@@ -490,7 +490,7 @@ class Pods_GF_UI {
 			if ( 0 < $id ) {
 				$lead = GFAPI::get_entry( $id );
 
-				if ( !empty( $lead ) && ! is_wp_error( $lead ) ) {
+				if ( !empty( $lead ) && ! is_wp_error( $lead ) && 'active' === $lead['status'] ) {
 					$this->pod = array(
 						$lead[ 'id' ] => $lead
 					);
@@ -522,7 +522,9 @@ class Pods_GF_UI {
 				$total_found = count( $this->pod );
 			}
 			else {
-				$search_criteria = apply_filters( 'pods_gf_ui_search_criteria', array() );
+				$search_criteria = apply_filters( 'pods_gf_ui_search_criteria', array(
+					'status' => 'active',
+				) );
 				$sorting = apply_filters( 'pods_gf_ui_sorting', null );
 				$paging = array(
 					'offset' => 0,
@@ -965,7 +967,7 @@ class Pods_GF_UI {
 			return;
 		}
 ?>
-<div class="wrap pods-admin pods-ui">
+<div class="wrap pods-admin pods-ui pods-gf-ui-view-only">
 	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
 	<h2>
 		<?php

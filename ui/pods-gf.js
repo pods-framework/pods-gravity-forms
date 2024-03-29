@@ -101,4 +101,9 @@ jQuery( function() {
 			}
 		} );
 	}
+
+	// Set target page number to zero if we are in a view-only form.
+	if ( jQuery( '.pods-ui.pods-gf-ui-view-only' )[ 0 ] && 1 < jQuery( '.gform_page' ).length ) {
+		jQuery( '.pods-ui.pods-gf-ui-view-only' ).find( 'input[id^="gform_target_page_number_"]' ).val( 0 );
+	}
 } );
