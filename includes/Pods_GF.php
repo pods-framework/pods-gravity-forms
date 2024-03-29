@@ -905,6 +905,7 @@ class Pods_GF {
 
 		if ( ! has_filter( 'gform_submit_button_' . $form_id, array( 'Pods_GF', 'gf_secondary_submit_button' ) ) ) {
 			add_filter( 'gform_submit_button_' . $form_id, array( 'Pods_GF', 'gf_secondary_submit_button' ), 10, 2 );
+			add_filter( 'gform_get_form_filter_' . $form_id, array( 'Pods_GF', 'gf_secondary_submit_form' ), 10, 2 );
 		}
 
 		if ( ! wp_script_is( 'pods-gf', 'registered' ) ) {
@@ -929,7 +930,139 @@ class Pods_GF {
 	 */
 	public static function gf_secondary_submit_button( $button_input, $form ) {
 
-		$secondary_submits = pods_v( $form['id'], self::$secondary_submits, array(), true );
+		$form_id = $form['id'];
+
+		$secondary_submits = pods_v( $form_id, self::$secondary_submits, array(), true );
+
+		if ( empty( $secondary_submits ) ) {
+			return $button_input;
+		}
+
+		if ( isset( $secondary_submits['action'] ) ) {
+			$secondary_submits = array( $secondary_submits );
+		}
+
+		$secondary_submits = array_reverse( $secondary_submits );
+
+		wp_enqueue_script( 'pods-gf' );
+		wp_enqueue_style( 'pods-gf' );
+
+		$defaults = array(
+			'imageUrl'      => null,
+			'text'          => 'Alt Submit',
+			'action'        => 'alt',
+			'value'         => 1,
+			'value_from_ui' => '',
+			'cancel'        => false,
+		);
+
+		foreach ( $secondary_submits as $secondary_submit ) {
+			$secondary_submit = array_merge( $defaults, $secondary_submit );
+
+			if ( ! empty( $secondary_submit['value_from_ui'] ) && class_exists( 'Pods_GF_UI' ) && ! empty( Pods_GF_UI::$pods_ui ) ) {
+				if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ), true ) ) {
+					// Setup data
+					Pods_GF_UI::$pods_ui->get_data();
+				}
+
+				if ( 'prev_id' == $secondary_submit['value_from_ui'] ) {
+					$secondary_submit['value'] = Pods_GF_UI::$pods_ui->pod->prev_id();
+				}
+				elseif ( 'next_id' == $secondary_submit['value_from_ui'] ) {
+					$secondary_submit['value'] = Pods_GF_UI::$pods_ui->pod->next_id();
+				}
+
+				if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ), true ) ) {
+					// No ID, hide button
+					if ( empty( $secondary_submit['value'] ) ) {
+						continue;
+					}
+				}
+			}
+
+			$secondary_action = sanitize_title( $secondary_submit['action'] );
+
+			$onclick = '
+				if(window[\'gf_submitting_' . esc_attr( $form_id ) . '\']){return false;}
+				window[\'gf_submitting_' . esc_attr( $form_id ) . '\']=true;
+			';
+
+			if ( $secondary_submit['cancel'] ) {
+				$onclick .= '
+					jQuery(\'#pods_gf_ui_action_' . esc_attr( $secondary_action ) . '\').val( this.value );
+					jQuery(\'#pods_gf_secondary_' . esc_attr( $form_id ) . '\').submit();
+					return false;
+				';
+			} else {
+				$button_input .= '
+					<input
+						id="pods_gf_ui_action_' . esc_attr( $secondary_action ) . '"
+						name="pods_gf_ui_action_' . esc_attr( $secondary_action ) . '"
+						value=""
+						type="hidden"
+					/>
+				';
+
+				$onclick = '
+					jQuery(\'#pods_gf_ui_action_' . esc_attr( $secondary_action ) . '\').val( this.value );
+					return true;
+				';
+			}
+
+			$onclick = preg_replace( '/\s+/', ' ', $onclick );
+
+			if ( empty( $secondary_submit['imageUrl'] ) ) {
+				if ( null !== $secondary_submit['value'] && $secondary_submit['text'] !== $secondary_submit['value'] ) {
+					$button_input .= ' <button class="button gform_button pods-gf-secondary-submit pods-gf-secondary-submit-' . esc_attr( $secondary_action ) . '"'
+						. ' value="' . esc_attr( $secondary_submit['value'] ) . '"'
+						. ' onclick="' . esc_attr( $onclick ) . '"'
+						. '>' . esc_html( $secondary_submit['text'] ) . '</button>';
+				}
+				else {
+					$button_input .= ' <input type="button" class="button gform_button pods-gf-secondary-submit pods-gf-secondary-submit-' . esc_attr( $secondary_action ) . '"'
+						. ' value="' . esc_attr( $secondary_submit['text'] ) . '"'
+						. ' onclick="' . esc_attr( $onclick ) . '" />';
+				}
+			}
+			else {
+				$button_input .= ' <input type="image" class="pods-gf-secondary-submit pods-gf-secondary-submit-' . esc_attr( $secondary_action ) . '"'
+					. ' src="' . esc_attr( $secondary_submit['imageUrl'] ) . '"'
+					. ' value="' . esc_attr( $secondary_submit['text'] ) . '"'
+					. ' onclick="' . esc_attr( $onclick ) . '" />';
+			}
+		}
+
+		return $button_input;
+
+	}
+
+	/**
+	 * Add Secondary Submit button form.
+	 *
+	 * Warning: Gravity Forms Duplicate Prevention plugin's JS *will* break this!
+	 *
+	 * @param string $form_string Form HTML
+	 * @param array  $form        GF Form array
+	 *
+	 * @return string Form HTML
+	 */
+	public static function gf_secondary_submit_form( $form_string, $form ) {
+
+		$form_id = $form['id'];
+
+		$secondary_submits = pods_v( $form_id, self::$secondary_submits, array(), true );
+
+		$anchor = GFFormDisplay::get_anchor( $form, false );
+		$action = remove_query_arg( 'gf_token' ) . $anchor['id'];
+
+		$secondary_submit_form = '
+			<form
+				method="post"
+				enctype="multipart/form-data"
+				id="pods_gf_secondary_' . esc_attr( $form_id ) . '"
+				action="'. esc_attr( $action ) . '"
+			>
+		';
 
 		if ( ! empty( $secondary_submits ) ) {
 			if ( isset( $secondary_submits['action'] ) ) {
@@ -946,14 +1079,19 @@ class Pods_GF {
 				'text'          => 'Alt Submit',
 				'action'        => 'alt',
 				'value'         => 1,
-				'value_from_ui' => ''
+				'value_from_ui' => '',
+				'cancel'        => false,
 			);
 
 			foreach ( $secondary_submits as $secondary_submit ) {
 				$secondary_submit = array_merge( $defaults, $secondary_submit );
 
+				if ( ! $secondary_submit['cancel'] ) {
+					continue;
+				}
+
 				if ( ! empty( $secondary_submit['value_from_ui'] ) && class_exists( 'Pods_GF_UI' ) && ! empty( Pods_GF_UI::$pods_ui ) ) {
-					if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ) ) ) {
+					if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ), true ) ) {
 						// Setup data
 						Pods_GF_UI::$pods_ui->get_data();
 					}
@@ -965,7 +1103,7 @@ class Pods_GF {
 						$secondary_submit['value'] = Pods_GF_UI::$pods_ui->pod->next_id();
 					}
 
-					if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ) ) ) {
+					if ( in_array( $secondary_submit['value_from_ui'], array( 'next_id', 'prev_id' ), true ) ) {
 						// No ID, hide button
 						if ( empty( $secondary_submit['value'] ) ) {
 							continue;
@@ -973,32 +1111,29 @@ class Pods_GF {
 					}
 				}
 
-				if ( empty( $secondary_submit['imageUrl'] ) ) {
-					if ( null !== $secondary_submit['value'] && $secondary_submit['text'] !== $secondary_submit['value'] ) {
-						$button_input .= ' <button type="submit" class="button gform_button pods-gf-secondary-submit pods-gf-secondary-submit-' . sanitize_title( $secondary_submit['action'] ) . '"'
-							. ' name="pods_gf_ui_action_' . sanitize_title( $secondary_submit['action'] ) . '"'
-							. ' value="' . esc_attr( $secondary_submit['value'] ) . '"'
-							. ' onclick="if(window[\'gf_submitting\']){return false;} window[\'gf_submitting\']=true;"'
-							. '>' . esc_html( $secondary_submit['text'] ) . '</button>';
-					}
-					else {
-						$button_input .= ' <input type="submit" class="button gform_button pods-gf-secondary-submit pods-gf-secondary-submit-' . sanitize_title( $secondary_submit['action'] ) . '"'
-							. ' name="pods_gf_ui_action_' . sanitize_title( $secondary_submit['action'] ) . '"'
-							. ' value="' . esc_attr( $secondary_submit['text'] ) . '"'
-							. ' onclick="if(window[\'gf_submitting\']){return false;} window[\'gf_submitting\']=true;" />';
-					}
-				}
-				else {
-					$button_input .= ' <input type="image" class="pods-gf-secondary-submit pods-gf-secondary-submit-' . sanitize_title( $secondary_submit['action'] ) . '"'
-						. ' name="pods_gf_ui_action_' . sanitize_title( $secondary_submit['action'] ) . '"'
-						. ' src="' . esc_attr( $secondary_submit['imageUrl'] ) . '"'
-						. ' value="' . esc_attr( $secondary_submit['text'] ) . '"'
-						. ' onclick="if(window[\'gf_submitting\']){return false;} window[\'gf_submitting\']=true;" />';
-				}
+				$secondary_action = sanitize_title( $secondary_submit['action'] );
+
+				$secondary_submit_form .= '
+					<input
+						id="pods_gf_ui_action_' . esc_attr( $secondary_action ) . '"
+						name="pods_gf_ui_action_' . esc_attr( $secondary_action ) . '"
+						value=""
+						type="hidden"
+					/>
+					<input
+						type="submit"
+						value="' . esc_attr( $secondary_action ) . '"
+						style="display:none;"
+					/>
+				';
 			}
 		}
 
-		return $button_input;
+		$secondary_submit_form .= '</form>';
+
+		$form_string .= $secondary_submit_form;
+
+		return $form_string;
 
 	}
 
@@ -1464,6 +1599,14 @@ class Pods_GF {
 				}
 			}
 
+			if ( 1 === (int) pods_v( 'pods_gf_debug' ) && pods_is_admin() ) {
+				echo '<pre>';
+				var_dump( [ 'form_id' => $form['id'] ] );
+				var_dump( compact( 'save_action', 'args', 'data' ) );
+				echo '</pre>';
+				die();
+			}
+
 			if ( ! empty( $this->pod->pod_data ) ) {
 				$id = call_user_func_array( array( $this->pod, $save_action ), $args );
 
@@ -1475,6 +1618,14 @@ class Pods_GF {
 			do_action( 'pods_gf_to_pods_' . $this->pod->pod, $this->pod, $args, $save_action, $data, $id, $this );
 		}
 		else {
+			if ( 1 === (int) pods_v( 'pods_gf_debug' ) && pods_is_admin() ) {
+				echo '<pre>';
+				var_dump( [ 'form_id' => $form['id'] ] );
+				var_dump( compact( 'save_action', 'id', 'data' ) );
+				echo '</pre>';
+				die();
+			}
+
 			$id = apply_filters( 'pods_gf_to_pod_' . $form['id'] . '_' . $save_action, $id, $this->pod, $data, $this );
 
 			$this->id = $id = apply_filters( 'pods_gf_to_pod_' . $save_action, $id, $this->pod, $data, $this );
@@ -2007,35 +2158,49 @@ class Pods_GF {
 			// Additional handling for showing an empty choice for fields that are not required.
 			if ( empty( $field_obj->isRequired ) && empty( $field_obj->placeholder ) ) {
 				if ( 'radio' === $field_obj->type || ( 'entry' !== rgget( 'view' ) && 'select' === $field_obj->type ) ) {
-					$needs_empty = true;
+					/**
+					 * Allow filtering whether to show the empty option for a dynamic select field.
+					 *
+					 * @param bool     $show_empty_option Whether to show the empty option.
+					 * @param GF_Field $field_obj         The Gravity Forms field object.
+					 */
+					$show_empty_option = apply_filters( 'pods_gf_dynamic_select_show_empty_option', true, $field_obj );
 
-					// Check if we have an empty option already.
-					foreach ( $choices as $choice ) {
-						if ( '' === $choice['value'] ) {
-							$needs_empty = false;
+					if ( $show_empty_option ) {
+						$needs_empty = true;
 
-							break;
-						}
-					}
+						// Check if we have an empty option already.
+						foreach ( $choices as $choice ) {
+							if ( '' === $choice['value'] ) {
+								$needs_empty = false;
 
-					if ( $needs_empty ) {
-						if ( ! empty( $dynamic_select['select_text'] ) ) {
-							$empty_text = $dynamic_select['select_text'];
-						} else {
-							$empty_text = __( 'Select One', 'pods-gravity-forms' );
-
-							if ( 'select' === $field_obj->type ) {
-								$empty_text = sprintf( '-- %s --', $empty_text );
+								break;
 							}
 						}
 
-						$empty_choice = array(
-							'text'  => $empty_text,
-							'value' => '',
-						);
+						if ( $needs_empty ) {
+							if ( ! empty( $dynamic_select['select_text'] ) ) {
+								$empty_text = $dynamic_select['select_text'];
 
-						// Add empty choice to front of choices list.
-						array_unshift( $choices, $empty_choice );
+								if ( 'select' !== $field_obj->type ) {
+									$empty_text = trim( $empty_text, '-' );
+								}
+							} else {
+								$empty_text = __( 'Select One', 'pods-gravity-forms' );
+
+								if ( 'select' === $field_obj->type ) {
+									$empty_text = sprintf( '-- %s --', $empty_text );
+								}
+							}
+
+							$empty_choice = [
+								'text'  => $empty_text,
+								'value' => '',
+							];
+
+							// Add empty choice to front of choices list.
+							array_unshift( $choices, $empty_choice );
+						}
 					}
 				}
 			}
@@ -2260,7 +2425,7 @@ class Pods_GF {
 						foreach ( $gf_field->choices as $k => $choice ) {
 							$gf_field->choices[ $k ]['isSelected'] = false;
 
-							if ( ( ! is_array( $value_override ) && $choice['value'] == $value_override ) || ( is_array( $value_override ) && in_array( $choice['value'], $value_override ) ) ) {
+							if ( ( ! is_array( $value_override ) && $choice['value'] == $value_override ) || ( is_array( $value_override ) && in_array( $choice['value'], $value_override, false ) ) ) {
 								$gf_field->choices[ $k ]['isSelected'] = true;
 
 								break;
@@ -2283,8 +2448,32 @@ class Pods_GF {
 					$pod_field_type = $pod->fields( $field_options['field'], 'type' );
 				}
 
-				if ( is_array( $pod ) && isset( $pod[ $field_options['field'] ] ) ) {
-					$value_override = $pod[ $field_options['field'] ];
+				if ( is_array( $pod ) ) {
+					if ( isset( $pod[ $field_options['field'] ] ) ) {
+						$value_override = $pod[ $field_options['field'] ];
+					} elseif ( 'checkbox' === $gf_field->type ) {
+						$checkbox_values = [];
+
+						$choice_counter = 0;
+
+						foreach ( $gf_field->choices as $choice ) {
+							$choice_counter ++;
+
+							if ( ! isset( $pod[ $gf_field->id . '.' . $choice_counter ] ) ) {
+								continue;
+							}
+
+							$checkbox_values[] = $pod[ $gf_field->id . '.' . $choice_counter ];
+						}
+
+						if ( ! empty( $checkbox_values ) ) {
+							if ( 1 === count( $checkbox_values ) ) {
+								$checkbox_values = reset( $checkbox_values );
+							}
+
+							$value_override = $checkbox_values;
+						}
+					}
 				}
 
 				if ( $pod_field_type ) {
@@ -2424,7 +2613,7 @@ class Pods_GF {
 								if ( 'boolean' === $pod_field_type && 1 === (int) $values && ! empty( $choice['value'] ) ) {
 									$is_selected = true;
 								} elseif ( ( ! is_array( $values ) && (string) $choice['value'] === (string) $values )
-									|| ( is_array( $values ) && in_array( $choice['value'], $values ) ) ) {
+									|| ( is_array( $values ) && in_array( $choice['value'], $values, false ) ) ) {
 									$is_selected = true;
 								}
 
@@ -2462,13 +2651,42 @@ class Pods_GF {
 				if ( is_array( $value_override ) && 'list' === $gf_field->type ) {
 					$choices = $gf_field->choices;
 
-					$value_override_chunked = array_chunk( $value_override, count( $choices ) );
+					$total_choices = count( $choices );
 
-					foreach ( $value_override_chunked as $k => $v ) {
-						$value_override_chunked[ $k ] = implode( '|', $v );
+					// Check if the values are chunked already.
+					if ( isset( $value_override[0] ) && is_array( $value_override[0] ) && $total_choices === count( $value_override[0] ) ) {
+						foreach ( $value_override as $vo_key => $value_override_row ) {
+							// Replace pipes because GF has no workaround here.
+							// @todo If GF changes this, adjust our usage.
+							$value_override_row = array_map( static function ( $value ) {
+								return preg_replace( '/ {2,}/', ' ', str_replace( '|', ' ', $value ) );
+							}, $value_override_row );
+
+							$value_override[ $vo_key ] = implode( '|', $value_override_row );
+						}
+
+						// Replace pipes because GF has no workaround here.
+						// @todo If GF changes this, adjust our usage.
+						$value_override = array_map( static function ( $value ) {
+							return preg_replace( '/ {2,}/', ' ', str_replace( ',', ' ', $value ) );
+						}, $value_override );
+
+						$value_override = implode( ',', $value_override );
+					} else {
+						$value_override_chunked = array_chunk( $value_override, $total_choices );
+
+						foreach ( $value_override_chunked as $k => $v ) {
+							$value_override_chunked[ $k ] = implode( '|', $v );
+						}
+
+						// Replace commas because GF has no workaround here.
+						// @todo If GF changes this, adjust our usage.
+						$value_override_chunked = array_map( static function ( $value ) {
+							return preg_replace( '/ {2,}/', ' ', str_replace( ',', ' ', $value ) );
+						}, $value_override_chunked );
+
+						$value_override = implode( ',', $value_override_chunked );
 					}
-
-					$value_override = implode( ',', $value_override_chunked );
 				}
 
 				$_GET[ 'pods_gf_field_' . $field ] = pods_slash( $value_override );
@@ -2480,8 +2698,39 @@ class Pods_GF {
 			$post_value_override = apply_filters( 'pods_gf_field_value', $post_value_override, $value_override, $field, $field_options, $form, $prepopulate, $pod );
 
 			if ( null !== $post_value_override ) {
-				if ( is_array( $post_value_override ) && 'list' === $gf_field->type ) {
-					$post_value_override = maybe_serialize( $post_value_override );
+				if ( 'list' === $gf_field->type ) {
+					if ( is_string( $post_value_override ) ) {
+						// Replace the commas with placeholders.
+						$post_value_override = str_replace( '\,', '__PODS_GF_COMMA__', $post_value_override );
+						$post_value_override = explode( ',', $post_value_override );
+
+						foreach ( $post_value_override as $pvo_key => $post_value_override_row ) {
+							// Restore the placeholders with commas.
+							$post_value_override_row = str_replace( '__PODS_GF_COMMA__', ',', $post_value_override_row );
+
+							// Replace the pipes with placeholders.
+							$post_value_override_row = str_replace( '\|', '__PODS_GF_PIPE__', $post_value_override_row );
+
+							// Expand the row.
+							$post_value_override_row = explode( '|', $post_value_override_row );
+
+							// Restore the placeholders with pipes.
+							$post_value_override_row = array_map( static function ( $value ) {
+								return str_replace( '__PODS_GF_PIPE__', '|', $value );
+							}, $post_value_override_row );
+
+							$post_value_override[ $pvo_key ] = $post_value_override_row;
+						}
+					}
+
+					if ( is_array( $post_value_override ) ) {
+						if ( isset( $post_value_override[0] ) && is_array( $post_value_override[0] ) ) {
+							$post_value_override = array_merge( ...$post_value_override );
+						}
+
+						// @todo Figure out if the value needs to be serialized
+						//$post_value_override = maybe_serialize( $post_value_override );
+					}
 				}
 
 				$_POST[ 'input_' . $field ] = pods_slash( $post_value_override );
@@ -2700,11 +2949,11 @@ class Pods_GF {
 			self::$actioned[$form['id']] = array();
 		}
 
-		self::$actioned[$form['id']][] = __FUNCTION__;
-
-		if ( ! function_exists( 'Markdown' ) ) {
-			include_once PODS_GF_DIR . 'includes/Markdown.php';
+		if ( ! class_exists( 'Pods_Gravity_Forms__Prefixed__Parsedown' ) ) {
+			return $form;
 		}
+
+		self::$actioned[$form['id']][] = __FUNCTION__;
 
 		$sanitize_from_markdown = array(
 			'-',
@@ -2731,8 +2980,11 @@ class Pods_GF {
 					$content = str_replace( $merge_tag, $merge_tag_sanitized, $content );
 				}
 
+				$parsedown = new Pods_Gravity_Forms__Prefixed__Parsedown();
+				$parsedown->setSafeMode( true );
+
 				// Run Markdown
-				$content = Markdown( $content );
+				$content = $parsedown->text( $content );
 
 				// Unsanitize merge tags
 				foreach ( $merge_tags as $merge_tag_match ) {
@@ -2841,7 +3093,7 @@ class Pods_GF {
 					$field = $field_options['gf_field'];
 				}
 
-				if ( is_array( $read_only['exclude_fields'] ) && ! empty( $read_only['exclude_fields'] ) && in_array( (string) $field, $read_only['exclude_fields'] ) ) {
+				if ( isset( $read_only['exclude_fields'] ) && is_array( $read_only['exclude_fields'] ) && ! empty( $read_only['exclude_fields'] ) && in_array( (string) $field, $read_only['exclude_fields'] ) ) {
 					continue;
 				}
 
@@ -2937,7 +3189,7 @@ class Pods_GF {
 			return $input_html;
 		}
 
-		$last_page = self::$actioned[$form_id][__FUNCTION__];
+		$last_page = (int) self::$actioned[$form_id][__FUNCTION__];
 
 		$non_read_only = array(
 			'hidden',
@@ -2956,10 +3208,10 @@ class Pods_GF {
 
 		$page_header = '';
 
-		if ( isset( $field['pageNumber'] ) && 0 < $field['pageNumber'] && $last_page != $field['pageNumber'] ) {
-			self::$actioned[$form_id][__FUNCTION__] = $field['pageNumber'];
+		if ( isset( $field['pageNumber'] ) && 0 < (int) $field['pageNumber'] && $last_page !== (int) $field['pageNumber'] ) {
+			self::$actioned[$form_id][__FUNCTION__] = (int) $field['pageNumber'];
 
-			$page_header = '<h3 class="gf-page-title">' . $form['pagination']['pages'][( $field['pageNumber'] - 1 )] . '</h3>';
+			$page_header = '<h3 class="gf-page-title">' . $form['pagination']['pages'][( (int) $field['pageNumber'] - 1 )] . '</h3>';
 		}
 
 		if ( 'html' == $field_type ) {
@@ -2992,7 +3244,7 @@ class Pods_GF {
 						$choice_number ++;
 					}
 
-					if ( in_array( $choice['value'], $value ) || ( empty( $value ) && $choice['isSelected'] ) ) {
+					if ( in_array( $choice['value'], $value, false ) || ( empty( $value ) && $choice['isSelected'] ) ) {
 						$values[$choice_number] = $choice['value'];
 						$labels[]               = $choice['text'];
 					}
@@ -3536,7 +3788,13 @@ class Pods_GF {
 				$value = sprintf( '%s:%s:00', $value[0], $value[1] );
 			}
 		} elseif ( in_array( $gf_field->type, array( 'list' ), true ) && is_array( $value ) && ! empty( $value ) ) {
-			$columns = array_keys( current( $value ) );
+			$first_row = current( $value );
+
+			$columns = [];
+
+			if ( is_array( $first_row ) ) {
+				$columns = array_keys( $first_row );
+			}
 
 			if ( $columns ) {
 				$related_obj = false;
@@ -4159,7 +4417,7 @@ class Pods_GF {
 
 		// Markdown Syntax for HTML
 		if ( isset( $this->options['markdown'] ) && ! empty( $this->options['markdown'] ) ) {
-			$form = self::gf_markdown( $form, $ajax, $this->options['markdown'] );
+			$form = self::gf_markdown( $form, false, $this->options['markdown'] );
 		}
 
 		// Submit Button customization
@@ -4294,7 +4552,7 @@ class Pods_GF {
 			return $entry;
 		}
 
-		remove_action( 'gform_post_submission_' . $form['id'], array( $this, '_gf_after_submission' ), 10 );
+		remove_action( 'gform_after_submission_' . $form['id'], array( $this, '_gf_after_submission' ) );
 
 		if ( isset( self::$actioned[$form['id']] ) && in_array( __FUNCTION__, self::$actioned[$form['id']] ) ) {
 			return $entry;
@@ -4352,7 +4610,8 @@ class Pods_GF {
 					'text'          => 'Alt Submit',
 					'action'        => 'alt',
 					'value'         => 1,
-					'value_from_ui' => ''
+					'value_from_ui' => '',
+					'cancel'        => false,
 				);
 
 				foreach ( $secondary_submits as $secondary_submit ) {

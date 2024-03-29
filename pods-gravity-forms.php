@@ -2,14 +2,15 @@
 /*
 Plugin Name: Pods Gravity Forms Add-On
 Plugin URI: https://pods.io/
+Requires Plugins: pods
 Description: Integration with Gravity Forms (https://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.4.5
+Version: 1.5.0
 Author: Pods Framework Team
 Author URI: https://pods.io/about/
 Text Domain: pods-gravity-forms
 GitHub Plugin URI: https://github.com/pods-framework/pods-gravity-forms
 
-Copyright 2013-2021  Pods Foundation, Inc  (email : contact@podsfoundation.org)
+Copyright 2013-2024  Pods Foundation, Inc  (email : contact@podsfoundation.org)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,7 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * @package Pods\Gravity Forms
  */
 
-define( 'PODS_GF_VERSION', '1.4.5' );
+define( 'PODS_GF_VERSION', '1.5.0' );
 define( 'PODS_GF_FILE', __FILE__ );
 define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
 define( 'PODS_GF_URL', plugin_dir_url( PODS_GF_FILE ) );
@@ -52,6 +53,8 @@ function pods_gf_include_gf_addon() {
 	if ( ! defined( 'PODS_VERSION' ) || ! class_exists( 'GFForms' ) ) {
 		return;
 	}
+
+	require_once PODS_GF_DIR . 'vendor-prefixed/autoload.php';
 
 	// Include GF Feed Addon code
 	if ( ! class_exists( 'GFFeedAddOn' ) ) {

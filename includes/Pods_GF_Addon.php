@@ -232,6 +232,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			'post_content_filtered',
 			'pinged',
 			'to_ping',
+            'comments',
 		);
 
 		$wp_object_fields = array();
@@ -347,7 +348,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 				// Add field names to labels
 				$field_map['label'] = sprintf(
-					'%s<br /><small>(%s)</small>',
+					'%s (%s)',
 					esc_html( $field_map['label'] ),
 					esc_html( $field_map['name'] )
 				);
@@ -801,7 +802,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	            <input type="checkbox" id="pods_populate_related_items_value" onclick="SetFieldProperty('pods_populate_related_items', this.checked);" />
 	            <label for="pods_populate_related_items_value" class="inline">
 		            <?php _e( 'Populate Related Items (requires a feed configured)', 'pods-gravity-forms' ); ?>
-	                <?php gform_tooltip( 'form_populate_related_items_value' ) ?>
+	                <?php gform_tooltip( 'form_pods_populate_related_items_value' ) ?>
 	            </label>
 	        </li>
 	        <?php
@@ -836,7 +837,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 	 */
 	public function populate_related_items_tooltip( $tooltips ) {
 
-	   $tooltips['form_populate_related_items_value'] = sprintf( '<h6>%s</h6> %s', __( 'Populate Related Items from Pods', 'pods-gravity-forms' ), __( 'Check this box to populate the related items from Pods instead of keeping the list up-to-date manually.' ) );
+	   $tooltips['form_pods_populate_related_items_value'] = sprintf( '<h6>%s</h6> %s', __( 'Populate Related Items from Pods', 'pods-gravity-forms' ), __( 'Check this box to populate the related items from Pods instead of keeping the list up-to-date manually.' ) );
 
 	   return $tooltips;
 
@@ -900,6 +901,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		try {
 			$pods_gf->options['entry'] = $entry;
+
+			// Ensure other custom Pods GF submission handling does not duplicate.
+			remove_action( 'gform_after_submission_' . $form['id'], [ $pods_gf, '_gf_after_submission' ] );
 
 			$id = $pods_gf->_gf_to_pods_handler( $form, $entry );
 
@@ -1078,7 +1082,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			 */
 			foreach ( $form['fields'] as $gf_field ) {
 				if ( empty( $gf_field->pods_populate_related_items ) ) {
-					//continue;
+                    continue;
 				}
 
 				$pod_field = null;
@@ -1298,6 +1302,18 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		 * @param Pods   $pod      Pods object
 		 */
 		$options = apply_filters( 'pods_gf_addon_options', $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
+
+		/**
+		 * Allow filtering of Pods GF options to set custom settings apart from Pods GF add-on options based on form ID.
+		 *
+		 * @param array  $options  Pods GF options.
+		 * @param string $pod_name Pod name.
+		 * @param int    $form_id  GF Form ID.
+		 * @param array  $feed     GF Form feed array.
+		 * @param array  $form     GF Form array.
+		 * @param Pods   $pod      Pods object.
+		 */
+		$options = apply_filters( 'pods_gf_addon_options_' . $form['id'], $options, $feed['meta']['pod'], $form['id'], $feed, $form, $pod );
 
 		$this->pods_gf[ $feed['id'] ] = pods_gf( $pod, $form['id'], $options );
 

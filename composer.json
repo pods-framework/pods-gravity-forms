@@ -9,7 +9,7 @@
     "gravity-forms"
   ],
   "homepage": "https://github.com/pods-framework/pods-gravity-forms",
-  "license": "GPL-2.0+",
+  "license": "GPL-2.0-or-later",
   "authors": [
     {
       "name": "Pods Framework Team",
@@ -31,6 +31,7 @@
   ],
   "support": {
     "issues": "https://github.com/pods-framework/pods-gravity-forms/issues",
+    "forum": "https://wordpress.org/support/plugin/pods-gravity-forms",
     "source": "https://github.com/pods-framework/pods-gravity-forms"
   },
   "autoload": {
@@ -40,11 +41,40 @@
     }
   },
   "require": {
-    "composer/installers": "~1.0",
-    "php": ">=5.4"
+    "composer/installers": "2.2.*",
+    "erusev/parsedown": "^1.7.4",
+    "php": ">=7.2"
   },
   "require-dev": {
-    "lucatume/wp-browser": "^3.0",
-    "vlucas/phpdotenv": "^4.2"
+    "brianhenryie/strauss": "*"
+  },
+  "scripts": {
+    "prefix-namespaces": [
+      "strauss"
+    ],
+    "post-install-cmd": [
+      "@prefix-namespaces"
+    ],
+    "post-update-cmd": [
+      "@prefix-namespaces"
+    ]
+  },
+  "extra": {
+    "installer-name": "pods-gravity-forms",
+    "strauss": {
+      "target_directory": "vendor-prefixed",
+      "namespace_prefix": "Pods_Gravity_Forms\\Prefixed\\",
+      "classmap_prefix": "Pods_Gravity_Forms__Prefixed__",
+      "constant_prefix": "PODS_GRAVITY_FORMS_PREFIXED_",
+      "function_prefix": "pods_gravity_forms_prefixed_",
+      "packages": [
+        "erusev/parsedown"
+      ]
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true
+    }
   }
 }
