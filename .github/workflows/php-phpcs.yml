@@ -1,0 +1,11 @@
+name: 'PHP CodeSniffer'
+on:
+  pull_request:
+    paths:
+      - 'includes/**.php'
+      - '*.php'
+      - 'composer.json'
+      - '.github/workflows/php-phpcs.yml'
+jobs:
+  phpcs:
+    uses: pods-framework/.github/workflows/php-phpcs.yml@main
