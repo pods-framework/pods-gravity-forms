@@ -1,0 +1,11 @@
+name: 'PHP Compatibility'
+on:
+  pull_request:
+    paths:
+      - 'includes/**.php'
+      - '*.php'
+      - 'composer.json'
+      - '.github/workflows/php-compatibility.yml'
+jobs:
+  phpcs-compatibility:
+    uses: pods-framework/.github/workflows/php-compatibility.yml@main
