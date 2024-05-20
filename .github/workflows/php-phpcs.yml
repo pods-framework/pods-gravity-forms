@@ -8,4 +8,4 @@ on:
       - '.github/workflows/php-phpcs.yml'
 jobs:
   phpcs:
-    uses: pods-framework/.github/workflows/php-phpcs.yml@main
+    uses: pods-framework/.github/.github/workflows/php-phpcs.yml@main
