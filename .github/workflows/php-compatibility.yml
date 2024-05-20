@@ -8,4 +8,4 @@ on:
       - '.github/workflows/php-compatibility.yml'
 jobs:
   phpcs-compatibility:
-    uses: pods-framework/.github/workflows/php-compatibility.yml@main
+    uses: pods-framework/.github/.github/workflows/php-compatibility.yml@main
