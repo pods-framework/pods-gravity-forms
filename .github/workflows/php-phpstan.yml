@@ -8,4 +8,4 @@ on:
       - '.github/workflows/php-phpstan.yml'
 jobs:
   phpstan:
-    uses: pods-framework/.github/workflows/php-phpstan.yml@main
+    uses: pods-framework/.github/.github/workflows/php-phpstan.yml@main
