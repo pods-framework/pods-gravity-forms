@@ -41,7 +41,7 @@
     }
   },
   "require": {
-    "composer/installers": "2.2.*",
+    "composer/installers": "2.3.*",
     "erusev/parsedown": "^1.7.4",
     "php": ">=7.2"
   },
