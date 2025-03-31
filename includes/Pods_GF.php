@@ -3211,7 +3211,7 @@ class Pods_GF {
 		if ( isset( $field['pageNumber'] ) && 0 < (int) $field['pageNumber'] && $last_page !== (int) $field['pageNumber'] ) {
 			self::$actioned[$form_id][__FUNCTION__] = (int) $field['pageNumber'];
 
-			$page_header = '<h3 class="gf-page-title">' . $form['pagination']['pages'][( (int) $field['pageNumber'] - 1 )] . '</h3>';
+			$page_header = '<h3 class="gf-page-title">' . wp_kses_post( $form['pagination']['pages'][( (int) $field['pageNumber'] - 1 )] ) . '</h3>';
 		}
 
 		if ( 'html' == $field_type ) {
@@ -3697,7 +3697,7 @@ class Pods_GF {
 						$value = $value_check;
 					}
 				} elseif ( 'us_state' === $pick_object ) {
-					$value = $gf_field->get_us_state_code( $value );
+					$value_check = $gf_field->get_us_state_code( $value );
 
 					if ( $value_check ) {
 						$value = $value_check;
