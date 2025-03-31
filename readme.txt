@@ -113,7 +113,7 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 
 == Changelog ==
 
-= 1.5.1 - March 29th, 2024 =
+= 1.5.1 - March 30th, 2025 =
 
 * Fixed: Resolved issue with auto-delete option when using Pods feeds. (@sc0ttkclark)
 * Tested against WP 6.8. (@sc0ttkclark)
