@@ -1,6 +1,6 @@
 {
   "name": "pods-gravity-forms",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "PIntegration with Gravity Forms; Provides a UI for mapping a Form's submissions into a Pod.",
   "author": "Pods Foundation, Inc",
   "homepage": "https://pods.io/",

@@ -905,7 +905,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 			// Ensure other custom Pods GF submission handling does not duplicate.
 			remove_action( 'gform_after_submission_' . $form['id'], [ $pods_gf, '_gf_after_submission' ] );
 
-			$id = $pods_gf->_gf_to_pods_handler( $form, $entry );
+			$pods_gf->_gf_after_submission( $entry, $form );
+
+			$id = $pods_gf->options['pod_item_id'];
 
 			// Set post_id if we have it.
 			if ( 'post_type' === $pods_gf->pod->pod_data['type'] ) {
@@ -1197,9 +1199,9 @@ class Pods_GF_Addon extends GFFeedAddOn {
 		$options = array(
 			// array ( 'gf_field_id' => 'pod_field_name' )
 			'fields'              => $fields,
-			'update_pod_item'     => (int) pods_v( 'update_pod_item', $feed['meta'], 0 ),
-			'markdown'            => (int) pods_v( 'enable_markdown', $feed['meta'], 0 ),
-			'auto_delete'         => (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
+			'update_pod_item'     => 1 === (int) pods_v( 'update_pod_item', $feed['meta'], 0 ),
+			'markdown'            => 1 === (int) pods_v( 'enable_markdown', $feed['meta'], 0 ),
+			'auto_delete'         => 1 === (int) pods_v( 'delete_entry', $feed['meta'], 0 ),
 			'gf_to_pods_priority' => 'submission',
 		);
 

@@ -4,13 +4,13 @@ Plugin Name: Pods Gravity Forms Add-On
 Plugin URI: https://pods.io/
 Requires Plugins: pods
 Description: Integration with Gravity Forms (https://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.5.0
+Version: 1.5.1
 Author: Pods Framework Team
 Author URI: https://pods.io/about/
 Text Domain: pods-gravity-forms
 GitHub Plugin URI: https://github.com/pods-framework/pods-gravity-forms
 
-Copyright 2013-2024  Pods Foundation, Inc  (email : contact@podsfoundation.org)
+Copyright 2013-2025  Pods Foundation, Inc  (email : contact@podsfoundation.org)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * @package Pods\Gravity Forms
  */
 
-define( 'PODS_GF_VERSION', '1.5.0' );
+define( 'PODS_GF_VERSION', '1.5.1' );
 define( 'PODS_GF_FILE', __FILE__ );
 define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
 define( 'PODS_GF_URL', plugin_dir_url( PODS_GF_FILE ) );
@@ -80,7 +80,7 @@ add_action( 'plugins_loaded', 'pods_gf_include_gf_addon' );
  */
 function pods_gf_init() {
 
-	if ( ! function_exists( 'pods' ) || ! class_exists( 'GFCommon' ) ) {
+	if ( ! function_exists( 'pods' ) || ! class_exists( 'GFCommon' ) || has_action( 'wp', 'pods_gf_ui_init' ) ) {
 		return false;
 	}
 
@@ -97,6 +97,8 @@ function pods_gf_init() {
 		add_action( 'wp_ajax_pods_gf_save_for_later', 'pods_gf_save_for_later_ajax' );
 		add_action( 'wp_ajax_nopriv_pods_gf_save_for_later', 'pods_gf_save_for_later_ajax' );
 	}
+
+	return true;
 
 }
 
@@ -126,12 +128,12 @@ function pods_gf_admin_nag() {
  */
 function pods_gf_add_related_objects() {
 
-	PodsField_Pick::$related_objects['gf-forms'] = array(
+	PodsField_Pick::$related_objects['gf-forms'] = [
 		'label'         => __( 'Forms', 'pods' ),
 		'group'         => __( 'Gravity Forms', 'pods' ),
 		'simple'        => true,
 		'data_callback' => 'pods_gf_add_related_objects_forms',
-	);
+	];
 
 }
 
@@ -152,7 +154,7 @@ add_action( 'pods_form_ui_field_pick_related_objects_other', 'pods_gf_add_relate
  */
 function pods_gf_add_related_objects_forms( $name = null, $value = null, $options = null, $pod = null, $id = null ) {
 
-	$data = array();
+	$data = [];
 
 	// Get all forms.
 	$forms = RGFormsModel::get_forms( null, 'title' );
@@ -176,7 +178,7 @@ function pods_gf_add_related_objects_forms( $name = null, $value = null, $option
  */
 function pods_gravity_forms_freemius() {
 	try {
-		fs_dynamic_init( array(
+		fs_dynamic_init( [
 			'id'               => '5754',
 			'slug'             => 'pods-gravity-forms',
 			'type'             => 'plugin',
@@ -184,13 +186,13 @@ function pods_gravity_forms_freemius() {
 			'is_premium'       => false,
 			'has_paid_plans'   => false,
 			'is_org_compliant' => true,
-			'parent'           => array(
+			'parent'           => [
 				'id'         => '5347',
 				'slug'       => 'pods',
 				'public_key' => 'pk_737105490825babae220297e18920',
 				'name'       => 'Pods',
-			),
-			'menu'             => array(
+			],
+			'menu'             => [
 				'slug'        => 'pods-settings',
 				'contact'     => false,
 				'support'     => false,
@@ -198,13 +200,14 @@ function pods_gravity_forms_freemius() {
 				'account'     => true,
 				'pricing'     => false,
 				'addons'      => true,
-				'parent'      => array(
+				'parent'      => [
 					'slug' => 'pods',
-				),
-			),
-		) );
+				],
+			],
+		] );
 	} catch ( \Exception $exception ) {
 		return;
 	}
 }
+
 add_action( 'pods_freemius_init', 'pods_gravity_forms_freemius' );
