@@ -4281,7 +4281,7 @@ class Pods_GF {
 			return $validation_result;
 		}
 
-		if ( empty( $this->options['gf_to_pods_priority'] ) || 'validation' == $this->options['gf_to_pods_priority'] ) {
+		if ( empty( $this->options['gf_to_pods_priority'] ) || 'validation' === $this->options['gf_to_pods_priority'] ) {
 			try {
 				$this->_gf_to_pods_handler( $form );
 			}
@@ -4574,7 +4574,7 @@ class Pods_GF {
 		}
 
 		// Alternative gf_to_pods handling
-		if ( ! empty( $this->options['gf_to_pods_priority'] ) && 'submission' == $this->options['gf_to_pods_priority'] ) {
+		if ( ! empty( $this->options['gf_to_pods_priority'] ) && 'submission' === $this->options['gf_to_pods_priority'] ) {
 			try {
 				$this->options['entry'] = $entry;
 
