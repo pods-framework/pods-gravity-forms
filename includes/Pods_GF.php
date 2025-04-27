@@ -1803,7 +1803,7 @@ class Pods_GF {
 			$value = apply_filters( 'pods_gf_to_pods_value', $value, $field, $field_options, $form, $gf_field, $data, $options );
 
 			// If a file is not set, check if we are editing an item.
-			if ( null === $value && in_array( $gf_field->type, array( 'fileupload', 'post_image' ), true ) ) {
+			if ( null === $value && in_array( $gf_field->get_input_type(), array( 'fileupload', 'post_image' ), true ) ) {
 				// If we are editing an item, don't attempt to save.
 				if ( is_object( $pod ) && $pod->id ) {
 					continue;
@@ -3637,7 +3637,7 @@ class Pods_GF {
 			$value = maybe_unserialize( $value );
 		}
 
-		if ( in_array( $gf_field->type, array( 'post_category', 'post_title', 'post_content', 'post_excerpt', 'post_tags', 'post_custom_field', 'post_image' ) ) ) {
+		if ( in_array( $gf_field->get_input_type(), array( 'post_category', 'post_title', 'post_content', 'post_excerpt', 'post_tags', 'post_custom_field', 'post_image' ) ) ) {
 			// Block new post being created in GF
 			add_filter( 'gform_disable_post_creation_' . $form['id'], '__return_true' );
 		}
@@ -3884,7 +3884,7 @@ class Pods_GF {
 			} else {
 				$value = null;
 			}
-		} elseif ( $handle_files && in_array( $gf_field->type, array( 'fileupload', 'post_image' ), true ) ) {
+		} elseif ( $handle_files && in_array( $gf_field->get_input_type(), array( 'fileupload', 'post_image' ), true ) ) {
 			$value = null;
 
 			$attachments = array();
@@ -4212,7 +4212,7 @@ class Pods_GF {
 				$gf_value = self::get_gf_field_value( $value, $gf_params );
 
 				// If a file is not set, check if we are editing an item.
-				if ( null === $gf_value && in_array( $field->type, array( 'fileupload', 'post_image' ), true ) ) {
+				if ( null === $gf_value && in_array( $field->get_input_type(), array( 'fileupload', 'post_image' ), true ) ) {
 					// If we are editing an item, return normal result, don't attempt to save.
 					if ( is_object( $this->pod ) && $this->pod->id ) {
 						return $validation_result;
