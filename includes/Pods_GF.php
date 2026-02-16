@@ -3444,9 +3444,13 @@ class Pods_GF {
 	 * @return string Form HTML
 	 */
 	public function _gf_get_form_filter( $form_string, $form ) {
-		if ( isset( self::$actioned[ $form['id'] ] ) && in_array( __FUNCTION__, self::$actioned[ $form['id'] ], true ) ) {
+		if ( ! isset( $form['id'] ) ) {
 			return $form_string;
-		} elseif ( ! isset( self::$actioned[ $form['id'] ] ) ) {
+		} elseif ( isset( self::$actioned[ $form['id'] ] ) && in_array( __FUNCTION__, self::$actioned[ $form['id'] ], true ) ) {
+			return $form_string;
+		}
+
+		if ( ! isset( self::$actioned[ $form['id'] ] ) ) {
 			self::$actioned[ $form['id'] ] = array();
 		}
 
