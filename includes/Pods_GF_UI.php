@@ -465,12 +465,20 @@ class Pods_GF_UI {
 				);
 			}
 
-			if ( ! empty( $options['content'] ) ) {
-				$this->ui[ 'actions_custom' ][ $action ]['content'] = $options['content'];
+			$other_options_to_map = [
+				'restrict_callback',
+				'show_in_header',
+				'content',
+			];
+
+			foreach ( $other_options_to_map as $other_option ) {
+				if ( isset( $options[ $other_option ] ) ) {
+					$this->ui[ 'actions_custom' ][ $action ][ $other_option ] = $options[ $other_option ];
+				}
 			}
 
 			if ( !empty( $options[ 'action_data' ] ) ) {
-				$this->ui[ 'actions_custom' ][ $action ] = array_merge( $this->ui[ 'actions_custom' ][ $action ], (array) pods_v( 'action_data', $options, null, true ) );
+				$this->ui[ 'actions_custom' ][ $action ] = array_merge( $this->ui[ 'actions_custom' ][ $action ], (array) pods_v( 'action_data', $options, [], true ) );
 			}
 
 			if ( !empty( $options[ 'action_link' ] ) ) {
@@ -845,7 +853,11 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+		do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_pre', $this->pod, $obj, $this );
+
+		if ( isset( $this->actions[ $this->action ]['prepend'] ) && is_callable( $this->actions[ $this->action ]['prepend'] ) ) {
+			$this->actions[ $this->action ]['prepend']( $this->pod, $obj, $this );
+		}
 
 		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
 			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
@@ -859,10 +871,10 @@ class Pods_GF_UI {
 			$this->pod->form();
 		}
 		else {
-			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $obj, $this );
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_form', $this->pod, $obj, $this );
 		}
 
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
+		do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_post', $this->pod, $obj, $this );
 	?>
 </div>
 <?php
@@ -921,7 +933,11 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+		do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_pre', $this->pod, $obj, $this );
+
+		if ( isset( $this->actions[ $this->action ]['prepend'] ) && is_callable( $this->actions[ $this->action ]['prepend'] ) ) {
+			$this->actions[ $this->action ]['prepend']( $this->pod, $obj, $this );
+		}
 
 		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
 			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
@@ -932,10 +948,10 @@ class Pods_GF_UI {
 			$this->pod->form();
 		}
 		else {
-			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $duplicate, $obj, $this );
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_form', $this->pod, $duplicate, $obj, $this );
 		}
 
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
+		do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_post', $this->pod, $obj, $this );
 	?>
 </div>
 <?php
@@ -987,7 +1003,11 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+		do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_pre', $this->pod, $obj, $this );
+
+		if ( isset( $this->actions[ $this->action ]['prepend'] ) && is_callable( $this->actions[ $this->action ]['prepend'] ) ) {
+			$this->actions[ $this->action ]['prepend']( $this->pod, $obj, $this );
+		}
 
 		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
 			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
@@ -998,10 +1018,10 @@ class Pods_GF_UI {
 			echo $this->pod->view( $fields );
 		}
 		else {
-			do_action( 'pods_gf_ui' . __FUNCTION__, $this->pod, $obj, $this );
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ), $this->pod, $obj, $this );
 		}
 
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
+		do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_post', $this->pod, $obj, $this );
 	?>
 </div>
 <?php
@@ -1036,7 +1056,7 @@ class Pods_GF_UI {
 			$obj->total_found = count( $obj->data );
 		}
 		else {
-			do_action( 'pods_gf_ui' . __FUNCTION__, $this->id, $this->pod, $obj, $this );
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ), $this->id, $this->pod, $obj, $this );
 		}
 
 		$obj->message( sprintf( __( '%s deleted successfully.', 'pods-gravity-forms' ), $obj->item ) );
@@ -1078,7 +1098,11 @@ class Pods_GF_UI {
 	</h2>
 
 	<?php
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+		do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_pre', $this->pod, $obj, $this );
+
+		if ( isset( $this->actions[ $this->action ]['prepend'] ) && is_callable( $this->actions[ $this->action ]['prepend'] ) ) {
+			$this->actions[ $this->action ]['prepend']( $this->pod, $obj, $this );
+		}
 
 		if ( ! empty( $this->actions[ $this->action ]['content'] ) ) {
 			/**
@@ -1101,10 +1125,10 @@ class Pods_GF_UI {
 		} elseif ( is_object( $this->pod ) ) {
 			$this->pod->form();
 		} else {
-			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $obj, $this );
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_form', $this->pod, $obj, $this );
 		}
 
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
+		do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_post', $this->pod, $obj, $this );
 	?>
 </div>
 <?php
