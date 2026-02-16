@@ -1161,11 +1161,23 @@ class Pods_GF_Addon extends GFFeedAddOn {
 
 		$feeds = $this->get_feeds( $form['id'] );
 
-		$entry = GFFormsModel::get_current_lead();
+		$entry = null;
 
 		if ( ! empty( $feeds ) ) {
 			foreach ( $feeds as $feed ) {
-				if ( 1 !== (int) $feed['is_active'] || ! $this->is_feed_condition_met( $feed, $form, $entry ) ) {
+				if ( 1 !== (int) $feed['is_active'] ) {
+					continue;
+				}
+
+				// Maybe set up entry if we have an active feed to check conditions on.
+				if ( ! $entry ) {
+					// Set uploaded files first before getting current lead.
+					GFFormsModel::set_uploaded_files($form['id']);
+
+					$entry = GFFormsModel::get_current_lead( $form );
+				}
+
+				if  ( ! $this->is_feed_condition_met( $feed, $form, $entry ) ) {
 					continue;
 				}
 
