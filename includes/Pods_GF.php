@@ -825,7 +825,7 @@ class Pods_GF {
 	 * @param int         $id      Pod item ID
 	 * @param array       $fields  Field mapping to prepopulate from
 	 */
-	public static function prepopulate( $form_id, $pod, $id, $fields ) {
+	public static function prepopulate( $form_id, $pod = null, $id = null, $fields = null ) {
 		self::$prepopulate = array(
 			'form'   => $form_id,
 
@@ -2839,6 +2839,10 @@ class Pods_GF {
 							$gf_to_pods_permalink = self::$gf_to_pods_id[ $form['id'] . '_permalink' ];
 						}
 
+						$confirmation['url'] = str_replace( '{@id}', pods_v( 'id' ), $confirmation['url'] );
+						$confirmation['url'] = str_replace( '{@action}', pods_v( 'action' ), $confirmation['url'] );
+						$confirmation['url'] = str_replace( '{@id2}', pods_v( 'id2' ), $confirmation['url'] );
+						$confirmation['url'] = str_replace( '{@action2}', pods_v( 'action2' ), $confirmation['url'] );
 						$confirmation['url'] = str_replace( '{@gf_to_pods_id}', $gf_to_pods_id, $confirmation['url'] );
 						$confirmation['url'] = str_replace( '{@gf_to_pods_permalink}', $gf_to_pods_permalink, $confirmation['url'] );
 
@@ -2981,7 +2985,10 @@ class Pods_GF {
 				}
 
 				$parsedown = new Pods_Gravity_Forms__Prefixed__Parsedown();
-				$parsedown->setSafeMode( true );
+
+				$markdownSafeMode = apply_filters( 'pods_gf_markdown_safe_mode', true, $form );
+
+				$parsedown->setSafeMode( $markdownSafeMode );
 
 				// Run Markdown
 				$content = $parsedown->text( $content );
@@ -4656,27 +4663,42 @@ class Pods_GF {
 				}
 
 				if ( $url ) {
-					$gf_to_pods_id = 0;
-					$gf_to_pods_permalink = '';
-
-					if ( ! empty( self::$gf_to_pods_id[ $form['id'] ] ) ) {
-						$gf_to_pods_id = self::$gf_to_pods_id[ $form['id'] ];
-					}
-
-					if ( ! empty( self::$gf_to_pods_id[ $form['id'] . '_permalink' ] ) ) {
-						$gf_to_pods_permalink = self::$gf_to_pods_id[ $form['id'] . '_permalink' ];
-					}
-
-					$url = str_replace( '{@gf_to_pods_id}', $gf_to_pods_id, $url );
-					$url = str_replace( '{@gf_to_pods_permalink}', $gf_to_pods_permalink, $url );
-
-					pods_redirect( $url );
+					pods_redirect( $this->_gf_confirmation_url_replace_tags( $url, $entry, $form ) );
 				}
 			}
 		}
 
 		return $entry;
 
+	}
+
+	public function _gf_confirmation_url_replace_tags( $confirmation_url, $entry, $form ) {
+		$gf_to_pods_id = 0;
+		$gf_to_pods_permalink = '';
+
+		if ( ! empty( self::$gf_to_pods_id[ $form['id'] ] ) ) {
+			$gf_to_pods_id = self::$gf_to_pods_id[ $form['id'] ];
+		}
+
+		if ( ! empty( self::$gf_to_pods_id[ $form['id'] . '_permalink' ] ) ) {
+			$gf_to_pods_permalink = self::$gf_to_pods_id[ $form['id'] . '_permalink' ];
+		}
+
+		return str_replace(
+			[
+				'{entry_id}',
+				'{form_id}',
+				'{@gf_to_pods_id}',
+				'{@gf_to_pods_permalink}',
+			],
+			[
+				$entry['id'],
+				$form['id'],
+				$gf_to_pods_id,
+				$gf_to_pods_permalink,
+			],
+			$confirmation_url
+		);
 	}
 
 	/**
