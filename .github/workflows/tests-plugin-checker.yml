@@ -1,0 +1,19 @@
+name: 'Plugin Checker'
+on:
+  pull_request:
+    paths:
+      - 'includes/**.php'
+      - '*.php'
+      - '.github/workflows/tests-plugin-checker.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Run plugin check
+        uses: wordpress/plugin-check-action@v1
+        with:
+          ignore-warnings: 'true'

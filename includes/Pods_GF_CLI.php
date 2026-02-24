@@ -1,9 +1,14 @@
 <?php
 
+// Don't load directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	die( '-1' );
+}
+
 /**
  * Implements Pods GF command for WP-CLI
  */
-class Pods_GF_CLI extends \WP_CLI_Command {
+class Pods_GF_CLI extends WP_CLI_Command {
 
 	/**
 	 * Sync form entries to a Pod.
@@ -83,14 +88,14 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 
 		$total_entries = 0;
 
-		$search_criteria = array(
+		$search_criteria = [
 			'status' => 'active',
-		);
+		];
 
-		$paging = array(
+		$paging = [
 			'offset'    => 0,
 			'page_size' => 50,
-		);
+		];
 
 		$entries = \GFAPI::get_entries( $form_id, $search_criteria, null, $paging, $total_entries );
 
@@ -110,7 +115,7 @@ class Pods_GF_CLI extends \WP_CLI_Command {
 
 				$progress_bar->tick();
 
-				$entries_counter++;
+				$entries_counter ++;
 			}
 
 			$paging['offset'] = $entries_counter;

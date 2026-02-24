@@ -46,8 +46,26 @@
     "php": ">=7.2"
   },
   "require-dev": {
-    "brianhenryie/strauss": "*"
+    "automattic/vipwpcs": "^3.0.0",
+    "brianhenryie/strauss": "*",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.1",
+    "gravity/gravityforms": "^2.9",
+    "phpcompatibility/phpcompatibility-wp": "*",
+    "phpstan/extension-installer": "^1.4",
+    "phpstan/phpstan": "^1.12",
+    "phpstan/phpstan-deprecation-rules": "^1.2",
+    "pods-framework/pods": "dev-main",
+    "stellarwp/coding-standards": "dev-main",
+    "symfony/console": "^v5.4.47",
+    "symfony/process": "^v5.4.51",
+    "symfony/finder": "^v5.4.45",
+    "szepeviktor/phpstan-wordpress": "*",
+    "webmozart/assert": "^1.12",
+    "wp-cli/wp-cli": "2.*",
+    "wp-coding-standards/wpcs": "^3.1"
   },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
   "scripts": {
     "prefix-namespaces": [
       "strauss"
@@ -61,8 +79,11 @@
   },
   "extra": {
     "installer-name": "pods-gravity-forms",
+    "installer-paths": {
+      "vendor/wordpress-plugin/{$name}/": ["type:wordpress-plugin"]
+    },
     "strauss": {
-      "target_directory": "vendor-prefixed",
+      "target_directory": "vendor/vendor-prefixed",
       "namespace_prefix": "Pods_Gravity_Forms\\Prefixed\\",
       "classmap_prefix": "Pods_Gravity_Forms__Prefixed__",
       "constant_prefix": "PODS_GRAVITY_FORMS_PREFIXED_",
@@ -74,7 +95,14 @@
   },
   "config": {
     "allow-plugins": {
-      "composer/installers": true
+      "composer/installers": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "phpstan/extension-installer": true
     }
-  }
+  },
+  "repositories": [{
+    "name": "gravity",
+    "type": "composer",
+    "url": "https://composer.gravity.io"
+  }]
 }

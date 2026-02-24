@@ -1,4 +1,10 @@
 <?php
+
+// Don't load directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	die( '-1' );
+}
+
 /**
  * Class Pods_GF_UI
  */
@@ -27,18 +33,18 @@ class Pods_GF_UI {
 	/**
 	 * @var array UI options for PodsUI
 	 */
-	public $ui = array(
-		'label' => array(),
-		'header' => array(),
-		'actions_custom' => array(),
-		'actions_disabled' => array(
-			'reorder',
-			'duplicate',
-			'export'
-		),
-		'fields' => array(),
-		'restrict' => array()
-	);
+	public $ui = [
+			'label'            => [],
+			'header'           => [],
+			'actions_custom'   => [],
+			'actions_disabled' => [
+					'reorder',
+					'duplicate',
+					'export',
+			],
+			'fields'           => [],
+			'restrict'         => [],
+	];
 
 	/**
 	 * @var string Current action
@@ -48,7 +54,7 @@ class Pods_GF_UI {
 	/**
 	 * @var array Available actions
 	 */
-	public $actions = array(
+	public $actions = [
 		/*
 			'action_name' => array(
 				'label' => 'Label used in action link',
@@ -201,62 +207,62 @@ class Pods_GF_UI {
 			),
 		 */
 
-		'manage' => array( // table ui manage
-			'form' => 0,
-			'fields' => array(),
-			'callback' => null,
-			'access_callback' => null,
-			'disabled' => false,
-			'prepopulate' => true
-		),
-		'add' => array( // form
-			'form' => 0,
-			'fields' => array(),
-			'dynamic_select' => array(),
-			'callback' => null,
-			'access_callback' => null,
-			'disabled' => false,
-			'prepopulate' => true
-		),
-		'edit' => array( // alternate form or original form (pre-populate data)
-			'form' => 0,
-			'fields' => array(),
-			'dynamic_select' => array(),
-			'callback' => null,
-			'access_callback' => null,
-			'edit' => true,
-			'disabled' => false,
-			'redirect_after' => true,
-			'prepopulate' => true
-		),
-		'status' => array( // switching status, can define field name (default 'status')
-			'label' => 'Change Status',
-			'form' => 0,
-			'field' => 'status',
-			'data' => array(), // what stati to use (dynamically build, based on pod/field)
-			'fields' => array(),
-			'dynamic_select' => array(),
-			'callback' => null,
-			'access_callback' => null,
-			'edit' => true,
-			'disabled' => true
-		),
-		'view' => array( // view details
-			'label' => 'View Details',
-			'fields' => array(),
-			'callback' => null,
-			'access_callback' => null,
-			'disabled' => true,
-			'read_only' => true,
-			'prepopulate' => true
-		),
-		'delete' => array(
-			'callback' => null,
-			'access_callback' => null,
-			'disabled' => true,
-			'keep_files' => false
-		)
-	);
+			'manage' => [ // table ui manage
+					'form'            => 0,
+					'fields'          => [],
+					'callback'        => null,
+					'access_callback' => null,
+					'disabled'        => false,
+					'prepopulate'     => true,
+			],
+			'add'    => [ // form
+					'form'            => 0,
+					'fields'          => [],
+					'dynamic_select'  => [],
+					'callback'        => null,
+					'access_callback' => null,
+					'disabled'        => false,
+					'prepopulate'     => true,
+			],
+			'edit'   => [ // alternate form or original form (pre-populate data)
+					'form'            => 0,
+					'fields'          => [],
+					'dynamic_select'  => [],
+					'callback'        => null,
+					'access_callback' => null,
+					'edit'            => true,
+					'disabled'        => false,
+					'redirect_after'  => true,
+					'prepopulate'     => true,
+			],
+			'status' => [ // switching status, can define field name (default 'status')
+					'label'           => 'Change Status',
+					'form'            => 0,
+					'field'           => 'status',
+					'data'            => [], // what stati to use (dynamically build, based on pod/field)
+					'fields'          => [],
+					'dynamic_select'  => [],
+					'callback'        => null,
+					'access_callback' => null,
+					'edit'            => true,
+					'disabled'        => true,
+			],
+			'view'   => [ // view details
+					'label'           => 'View Details',
+					'fields'          => [],
+					'callback'        => null,
+					'access_callback' => null,
+					'disabled'        => true,
+					'read_only'       => true,
+					'prepopulate'     => true,
+			],
+			'delete' => [
+					'callback'        => null,
+					'access_callback' => null,
+					'disabled'        => true,
+					'keep_files'      => false,
+			],
+	];
 
 	/**
 	 * @var string|null Access denied reason text
@@ -266,24 +272,24 @@ class Pods_GF_UI {
 	/**
 	 * @var array Workflow constraints for actions
 	 */
-	public $workflow_constraints = array(
-		'add' => array(
-			'limit' => -1, // simple limit
-			'limit_status' => array( // enhanced limit with params
-				'type' => 'limit',
-				'compare' => '<',
-				'value' => -1,
-				'params' => array(
+	public $workflow_constraints = [
+			'add' => [
+					'limit'        => - 1, // simple limit
+					'limit_status' => [ // enhanced limit with params
+							'type'    => 'limit',
+							'compare' => '<',
+							'value'   => - 1,
+							'params'  => [
 
-				),
-			)
-		)
-	);
+							],
+					],
+			],
+	];
 
 	/**
 	 * @var array Notification configs
 	 */
-	public $notifications = array(
+	public $notifications = [
 		/*
 			'action_name' => array(
 				// User IDs, E-mails, or Roles
@@ -298,7 +304,7 @@ class Pods_GF_UI {
 				'template-name-or-id4' => 'administrator', // Simple role mapping
 			),
 		 */
-	);
+	];
 
 	/**
 	 * Setup Pods_GF_UI object
@@ -309,19 +315,17 @@ class Pods_GF_UI {
 
 		$this->init_ui();
 
-		if ( is_array( $options ) && !empty( $options ) ) {
+		if ( is_array( $options ) && ! empty( $options ) ) {
 			foreach ( $options as $option => $value ) {
 				if ( isset( $this->{$option} ) && is_array( $this->{$option} ) && is_array( $value ) ) {
 					foreach ( $value as $k => $v ) {
 						if ( isset( $this->{$option}[ $k ] ) && 'ui' != $option ) {
 							$this->{$option}[ $k ] = array_merge( $this->{$option}[ $k ], $v );
-						}
-						else {
+						} else {
 							$this->{$option}[ $k ] = $v;
 						}
 					}
-				}
-				else {
+				} else {
 					$this->{$option} = $value;
 				}
 			}
@@ -332,7 +336,7 @@ class Pods_GF_UI {
 		foreach ( $this->actions as $action => $action_data ) {
 			$form_id = (int) pods_v( 'form', $action_data );
 
-			if ( !pods_v( 'disabled', $action_data ) && 0 < $form_id && $this->action == $action ) {
+			if ( ! pods_v( 'disabled', $action_data ) && 0 < $form_id && $this->action == $action ) {
 				$pod = pods_v( 'pod', $action_data, $this->pod );
 
 				$pods_gf = pods_gf( $pod, $form_id, $action_data );
@@ -351,21 +355,21 @@ class Pods_GF_UI {
 	private function init_ui() {
 
 		foreach ( $this->actions as $action => $options ) {
-			if ( !$this->access( $action ) ) {
-				$this->actions[ $action ][ 'disabled' ] = true;
+			if ( ! $this->access( $action ) ) {
+				$this->actions[ $action ]['disabled'] = true;
 
-				$this->ui[ 'actions_disabled' ][ $action ] = $action;
+				$this->ui['actions_disabled'][ $action ] = $action;
 			}
 
-			if ( isset( $this->actions[ $action ][ 'form_id' ] ) ) {
-				$this->actions[ $action ][ 'form' ] = $this->actions[ $action ][ 'form_id' ];
+			if ( isset( $this->actions[ $action ]['form_id'] ) ) {
+				$this->actions[ $action ]['form'] = $this->actions[ $action ]['form_id'];
 			}
 		}
 
-		$this->actions[ 'add' ][ 'callback' ] = array( $this, '_action_add' );
-		$this->actions[ 'edit' ][ 'callback' ] = array( $this, '_action_edit' );
-		$this->actions[ 'view' ][ 'callback' ] = array( $this, '_action_view' );
-		$this->actions[ 'delete' ][ 'callback' ] = array( $this, '_action_delete' );
+		$this->actions['add']['callback']    = [ $this, '_action_add' ];
+		$this->actions['edit']['callback']   = [ $this, '_action_edit' ];
+		$this->actions['view']['callback']   = [ $this, '_action_view' ];
+		$this->actions['delete']['callback'] = [ $this, '_action_delete' ];
 
 		$this->action = pods_v( 'action', 'get', $this->action, true );
 
@@ -376,24 +380,24 @@ class Pods_GF_UI {
 	 */
 	private function setup_ui() {
 
-		$defaults = array(
-			'heading'         => '',
-			'header'          => '',
-			'label'           => '',
-			'label_alt'       => '',
-			'form'            => 0,
-			'edit'            => false,
-			'fields'          => array(),
-			'dynamic_select'  => array(),
-			'callback'        => null,
-			'callback_copy'   => null,
-			'access_callback' => null,
-			'content'         => null,
-			'action_data'     => array(),
-			'disabled'        => false,
-			'prepopulate'     => true,
-			'save_for_later'  => array(),
-		);
+		$defaults = [
+				'heading'         => '',
+				'header'          => '',
+				'label'           => '',
+				'label_alt'       => '',
+				'form'            => 0,
+				'edit'            => false,
+				'fields'          => [],
+				'dynamic_select'  => [],
+				'callback'        => null,
+				'callback_copy'   => null,
+				'access_callback' => null,
+				'content'         => null,
+				'action_data'     => [],
+				'disabled'        => false,
+				'prepopulate'     => true,
+				'save_for_later'  => [],
+		];
 
 		$id = (int) pods_v( 'id' );
 
@@ -404,96 +408,99 @@ class Pods_GF_UI {
 		foreach ( $this->actions as $action => $options ) {
 			$this->actions[ $action ] = $options = array_merge( $defaults, $options );
 
-			if ( !empty( $options[ 'heading' ] ) && empty( $this->ui[ 'heading' ][ $action ] ) ) {
-				$this->ui[ 'heading' ][ $action ] = $options[ 'heading' ];
+			if ( ! empty( $options['heading'] ) && empty( $this->ui['heading'][ $action ] ) ) {
+				$this->ui['heading'][ $action ] = $options['heading'];
 			}
 
-			if ( !empty( $options[ 'header' ] ) && empty( $this->ui[ 'header' ][ $action ] ) ) {
-				$this->ui[ 'header' ][ $action ] = $options[ 'header' ];
+			if ( ! empty( $options['header'] ) && empty( $this->ui['header'][ $action ] ) ) {
+				$this->ui['header'][ $action ] = $options['header'];
 			}
 
-			if ( !empty( $options[ 'label' ] ) ) {
-				$this->ui[ 'label' ][ $action ] = $options[ 'label' ];
+			if ( ! empty( $options['label'] ) ) {
+				$this->ui['label'][ $action ] = $options['label'];
 
-				if ( empty( $this->ui[ 'heading' ][ $action ] ) ) {
-					$this->ui[ 'heading' ][ $action ] = $options[ 'label' ];
+				if ( empty( $this->ui['heading'][ $action ] ) ) {
+					$this->ui['heading'][ $action ] = $options['label'];
 				}
 
-				if ( empty( $this->ui[ 'header' ][ $action ] ) ) {
-					$this->ui[ 'header' ][ $action ] = $options[ 'label' ];
+				if ( empty( $this->ui['header'][ $action ] ) ) {
+					$this->ui['header'][ $action ] = $options['label'];
 				}
 
 				if ( 'add' == $action ) {
-					$this->ui[ 'label' ][ 'add_new' ] = $options[ 'label' ];
+					$this->ui['label']['add_new'] = $options['label'];
 				}
-			}
-			elseif ( 'add' == $action && !empty( $options[ 'label_alt' ] ) ) {
-				$this->ui[ 'label' ][ 'add_new' ] = $options[ 'label_alt' ];
+			} elseif ( 'add' == $action && ! empty( $options['label_alt'] ) ) {
+				$this->ui['label']['add_new'] = $options['label_alt'];
 			}
 
-			if ( !empty( $options[ 'callback' ] ) ) {
-				if ( in_array( $action, array( 'add', 'edit' ) ) ) {
-					$this->ui[ 'actions_custom' ][ $action ] = array(
-						'callback' => $options[ 'callback' ],
-					);
+			if ( ! empty( $options['callback'] ) ) {
+				if ( in_array( $action, [ 'add', 'edit' ] ) ) {
+					$this->ui['actions_custom'][ $action ] = [
+							'callback' => $options['callback'],
+					];
+				} else {
+					$this->ui['actions_custom'][ $action ] = [
+							'callback' => $options['callback'],
+					];
 				}
-				else {
-					$this->ui[ 'actions_custom' ][ $action ] = array(
-						'callback' => $options[ 'callback' ],
-					);
-				}
-			}
-			elseif ( !empty( $options[ 'callback_copy' ] ) ) {
-				if ( is_array( $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ] ) && isset( $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ][ 'callback' ] ) ) {
-					$this->ui[ 'actions_custom' ][ $action ] = array(
-						'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ][ 'callback' ],
-					);
-				}
-				else {
-					$this->ui[ 'actions_custom' ][ $action ] = array(
-						'callback' => $this->ui[ 'actions_custom' ][ $options[ 'callback_copy' ] ],
-					);
+			} elseif ( ! empty( $options['callback_copy'] ) ) {
+				if ( is_array( $this->ui['actions_custom'][ $options['callback_copy'] ] ) && isset( $this->ui['actions_custom'][ $options['callback_copy'] ]['callback'] ) ) {
+					$this->ui['actions_custom'][ $action ] = [
+							'callback' => $this->ui['actions_custom'][ $options['callback_copy'] ]['callback'],
+					];
+				} else {
+					$this->ui['actions_custom'][ $action ] = [
+							'callback' => $this->ui['actions_custom'][ $options['callback_copy'] ],
+					];
 				}
 			} elseif ( ( ! empty( $options['form'] ) || ! empty( $options['content'] ) ) && 'manage' !== $action ) {
-				$this->ui[ 'actions_custom' ][ $action ] = array(
-					'callback' => array( $this, '_action_custom' ),
-				);
-			}
-			else {
-				$this->ui['actions_custom'][ $action ] = array(
-					'label' => $action,
-				);
-			}
-
-			if ( ! empty( $options['content'] ) ) {
-				$this->ui[ 'actions_custom' ][ $action ]['content'] = $options['content'];
+				$this->ui['actions_custom'][ $action ] = [
+						'callback' => [ $this, '_action_custom' ],
+				];
+			} else {
+				$this->ui['actions_custom'][ $action ] = [
+						'label' => $action,
+				];
 			}
 
-			if ( !empty( $options[ 'action_data' ] ) ) {
-				$this->ui[ 'actions_custom' ][ $action ] = array_merge( $this->ui[ 'actions_custom' ][ $action ], (array) pods_v( 'action_data', $options, null, true ) );
+			$other_options_to_map = [
+					'restrict_callback',
+					'show_in_header',
+					'content',
+			];
+
+			foreach ( $other_options_to_map as $other_option ) {
+				if ( isset( $options[ $other_option ] ) ) {
+					$this->ui['actions_custom'][ $action ][ $other_option ] = $options[ $other_option ];
+				}
 			}
 
-			if ( !empty( $options[ 'action_link' ] ) ) {
-				$this->ui[ 'action_links' ][ $action ] = pods_v( 'action_link', $options, null, true );
+			if ( ! empty( $options['action_data'] ) ) {
+				$this->ui['actions_custom'][ $action ] = array_merge( $this->ui['actions_custom'][ $action ], (array) pods_v( 'action_data', $options, [], true ) );
 			}
 
-			if ( !empty( $options[ 'fields' ] ) ) {
-				$this->ui[ 'fields' ][ $action ] = $options[ 'fields' ];
+			if ( ! empty( $options['action_link'] ) ) {
+				$this->ui['action_links'][ $action ] = pods_v( 'action_link', $options, null, true );
+			}
+
+			if ( ! empty( $options['fields'] ) ) {
+				$this->ui['fields'][ $action ] = $options['fields'];
 			}
 		}
 
-		if ( 0 < $this->actions[ 'manage' ][ 'form' ] ) {
-			$this->pod = array();
+		if ( 0 < $this->actions['manage']['form'] ) {
+			$this->pod = [];
 
 			$total_found = 0;
 
 			if ( 0 < $id ) {
 				$lead = GFAPI::get_entry( $id );
 
-				if ( !empty( $lead ) && ! is_wp_error( $lead ) && 'active' === $lead['status'] ) {
-					$this->pod = array(
-						$lead[ 'id' ] => $lead
-					);
+				if ( ! empty( $lead ) && ! is_wp_error( $lead ) && 'active' === $lead['status'] ) {
+					$this->pod = [
+							$lead['id'] => $lead,
+					];
 
 					// @todo Replace the below code when GF adds functionality to get all lead meta
 					global $wpdb, $_gform_lead_meta;
@@ -504,44 +511,43 @@ class Pods_GF_UI {
 
 					$lead_id_column_name = $old_schema ? 'lead_id' : 'entry_id';
 
-					$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE {$lead_id_column_name} = %d", $lead[ 'id' ] ) );
+					$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE {$lead_id_column_name} = %d", $lead['id'] ) );
 
 					foreach ( $gf_meta as $gf_meta_value ) {
 						$meta_value = maybe_unserialize( $gf_meta_value->meta_value );
 
-						$cache_key = $lead[ 'id' ] . "_" . $gf_meta_value->meta_key;
+						$cache_key = $lead['id'] . "_" . $gf_meta_value->meta_key;
 
 						$_gform_lead_meta[ $cache_key ] = $meta_value;
 
-						$this->pod[ $lead[ 'id' ] ][ $gf_meta_value->meta_key ] = $meta_value;
+						$this->pod[ $lead['id'] ][ $gf_meta_value->meta_key ] = $meta_value;
 					}
 
 					$this->id = $id;
 				}
 
 				$total_found = count( $this->pod );
-			}
-			else {
-				$search_criteria = apply_filters( 'pods_gf_ui_search_criteria', array(
-					'status' => 'active',
-				) );
-				$sorting = apply_filters( 'pods_gf_ui_sorting', null );
-				$paging = array(
-					'offset' => 0,
-					'page_size' => 20
-				);
+			} else {
+				$search_criteria = apply_filters( 'pods_gf_ui_search_criteria', [
+						'status' => 'active',
+				] );
+				$sorting         = apply_filters( 'pods_gf_ui_sorting', null );
+				$paging          = [
+						'offset'    => 0,
+						'page_size' => 20,
+				];
 
-				$page = (int) pods_v( 'pg', 'get', 1, true );
-				$offset = ( ( $page - 1 ) * $paging[ 'page_size' ] );
+				$page   = (int) pods_v( 'pg', 'get', 1, true );
+				$offset = ( ( $page - 1 ) * $paging['page_size'] );
 
-				$paging[ 'offset' ] += $offset;
+				$paging['offset'] += $offset;
 
-				$leads = GFAPI::get_entries( $this->actions[ 'manage' ][ 'form' ], $search_criteria, $sorting, $paging, $total_found );
+				$leads = GFAPI::get_entries( $this->actions['manage']['form'], $search_criteria, $sorting, $paging, $total_found );
 
 				// @todo Hook into save for later data and display saved entries in the list like normal entries
 
 				foreach ( $leads as $lead ) {
-					$this->pod[ $lead[ 'id' ] ] = $lead;
+					$this->pod[ $lead['id'] ] = $lead;
 
 					// @todo Replace the below code when GF adds functionality to get all lead meta
 					global $wpdb, $_gform_lead_meta;
@@ -552,94 +558,92 @@ class Pods_GF_UI {
 
 					$lead_id_column_name = $old_schema ? 'lead_id' : 'entry_id';
 
-					$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE {$lead_id_column_name} = %d", $lead[ 'id' ] ) );
+					$gf_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$gf_meta_table} WHERE {$lead_id_column_name} = %d", $lead['id'] ) );
 
 					foreach ( $gf_meta as $gf_meta_value ) {
 						$meta_value = maybe_unserialize( $gf_meta_value->meta_value );
 
-						$cache_key = $lead[ 'id' ] . "_" . $gf_meta_value->meta_key;
+						$cache_key = $lead['id'] . "_" . $gf_meta_value->meta_key;
 
 						$_gform_lead_meta[ $cache_key ] = $meta_value;
 
-						$this->pod[ $lead[ 'id' ] ][ $gf_meta_value->meta_key ] = $meta_value;
+						$this->pod[ $lead['id'] ][ $gf_meta_value->meta_key ] = $meta_value;
 					}
 				}
 			}
 
 			$this->pod = apply_filters( 'pods_gf_ui_leads', $this->pod, $this->action, $this );
 
-			$default_ui = array(
-				'data' => $this->pod,
-				'total' => count( $this->pod ),
-				'total_found' => $total_found,
-				'searchable' => false,
-				'sortable' => false,
-				'pagination' => true
-			);
+			$default_ui = [
+					'data'        => $this->pod,
+					'total'       => count( $this->pod ),
+					'total_found' => $total_found,
+					'searchable'  => false,
+					'sortable'    => false,
+					'pagination'  => true,
+			];
 
-			if ( 0 < $this->id && !empty( $this->pod ) ) {
+			if ( 0 < $this->id && ! empty( $this->pod ) ) {
 				$this->pod = current( $this->pod );
 			}
 
-			if ( empty( $this->ui[ 'fields' ][ 'manage' ] ) ) {
-				$this->ui[ 'fields' ][ 'manage' ] = array(
-					'id' => array(
-						'label' => 'ID',
-						'type' => 'number'
-					),
-					'created_by' => array(
-						'label' => 'Submitter',
-						'type' => 'pick',
-						'pick_val' => 'user'
-					),
-					'date_created' => array(
-						'label' => 'Date Created',
-						'type' => 'datetime'
-					)
-				);
+			if ( empty( $this->ui['fields']['manage'] ) ) {
+				$this->ui['fields']['manage'] = [
+						'id'           => [
+								'label' => 'ID',
+								'type'  => 'number',
+						],
+						'created_by'   => [
+								'label'    => 'Submitter',
+								'type'     => 'pick',
+								'pick_val' => 'user',
+						],
+						'date_created' => [
+								'label' => 'Date Created',
+								'type'  => 'datetime',
+						],
+				];
 			}
 
 			$this->ui = array_merge( $default_ui, $this->ui );
 		}
 
 		if ( is_array( $this->pod ) ) {
-			$default_ui = array(
-				'data' => $this->pod,
-				'total' => count( $this->pod ),
-				'total_found' => count( $this->pod ),
-				'searchable' => false,
-				'sortable' => false,
-				'pagination' => false
-			);
+			$default_ui = [
+					'data'        => $this->pod,
+					'total'       => count( $this->pod ),
+					'total_found' => count( $this->pod ),
+					'searchable'  => false,
+					'sortable'    => false,
+					'pagination'  => false,
+			];
 
 			$this->ui = array_merge( $default_ui, $this->ui );
-		}
-		elseif ( !is_object( $this->pod ) && !empty( $this->pod ) ) {
+		} elseif ( ! is_object( $this->pod ) && ! empty( $this->pod ) ) {
 			$this->pod = pods( $this->pod, ( 0 < $id ? $id : null ) );
 			$this->id  = $this->pod->id();
 		}
 
 		if ( 0 < $this->id ) {
-			$_GET[ 'id' ] = $this->id;
+			$_GET['id'] = $this->id;
 		}
 
 		foreach ( $this->actions as $action => $options ) {
 			if ( false === pods_v( 'disabled', $this->actions[ $action ], false, true ) ) {
-				if ( in_array( $action, $this->ui[ 'actions_disabled' ] ) ) {
-					unset( $this->ui[ 'actions_disabled' ][ array_search( $action, $this->ui[ 'actions_disabled' ] ) ] );
+				if ( in_array( $action, $this->ui['actions_disabled'] ) ) {
+					unset( $this->ui['actions_disabled'][ array_search( $action, $this->ui['actions_disabled'] ) ] );
 				}
-			}
-			elseif ( !in_array( $action, $this->ui[ 'actions_disabled' ] ) ) {
-				$this->ui[ 'actions_disabled' ][] = $action;
+			} elseif ( ! in_array( $action, $this->ui['actions_disabled'] ) ) {
+				$this->ui['actions_disabled'][] = $action;
 			}
 		}
 
-		if ( !isset( $this->actions[ $this->action ] ) || !$this->access( $this->action ) ) {
+		if ( ! isset( $this->actions[ $this->action ] ) || ! $this->access( $this->action ) ) {
 			$this->action = 'manage';
 		}
 
-		$_GET[ 'action' ] = $this->action;
-		$this->ui[ 'action' ] = $this->action;
+		$_GET['action']     = $this->action;
+		$this->ui['action'] = $this->action;
 
 	}
 
@@ -650,24 +654,24 @@ class Pods_GF_UI {
 	 *
 	 * @return bool|mixed|PodsUI
 	 */
-	public function action( $args = array() ) {
+	public function action( $args = [] ) {
 
 		$ui = false;
 
-		if ( isset( $GLOBALS[ 'pods-gf-ui-off' ] ) && $GLOBALS[ 'pods-gf-ui-off' ] ) {
+		if ( isset( $GLOBALS['pods-gf-ui-off'] ) && $GLOBALS['pods-gf-ui-off'] ) {
 			return $ui;
 		}
 
-		$GLOBALS[ 'pods-gf-ui-off' ] = true;
+		$GLOBALS['pods-gf-ui-off'] = true;
 
 		$args = array_merge(
-			array(
-				'action' => $this->action
-			),
-			$args
+				[
+						'action' => $this->action,
+				],
+				$args
 		);
 
-		$action = $args[ 'action' ];
+		$action = $args['action'];
 
 		if ( isset( $this->actions[ $action ] ) ) {
 			// Pods object
@@ -679,13 +683,12 @@ class Pods_GF_UI {
 			// $this->pod = array( .... );
 			elseif ( is_array( $this->pod ) ) {
 				$ui = pods_ui( $this->ui );
-			}
-			else {
+			} else {
 				do_action( 'pods_gf_ui_action_' . $action, $this, $args );
 			}
 		}
 
-		$GLOBALS[ 'pods-gf-ui-off' ] = false;
+		$GLOBALS['pods-gf-ui-off'] = false;
 
 		return $ui;
 
@@ -699,7 +702,7 @@ class Pods_GF_UI {
 	 * @return bool|mixed|PodsUI
 	 * @see action
 	 */
-	public function ui( $args = array() ) {
+	public function ui( $args = [] ) {
 
 		return $this->action( $args );
 
@@ -717,29 +720,29 @@ class Pods_GF_UI {
 		$access = true;
 
 		// Action disabled
-		if ( true === pods_v( 'disabled', $this->actions[ $action ], false, true ) || in_array( $action, $this->ui[ 'actions_disabled' ] ) ) {
-			$access = false;
+		if ( true === pods_v( 'disabled', $this->actions[ $action ], false, true ) || in_array( $action, $this->ui['actions_disabled'] ) ) {
+			$access              = false;
 			$this->access_reason = 'Action disabled';
 		}
 
 		// Workflow constraints
 		if ( $access && isset( $this->workflow_constraints[ $action ] ) ) {
-			$constraints = array();
+			$constraints = [];
 
 			foreach ( $this->workflow_constraints[ $action ] as $constraint => $constraint_options ) {
 				$constraints[ $constraint ] = $constraint_options;
 
 				// Non-arrays are always limit
-				if ( !is_array( $constraint_options ) ) {
-					$constraints[ $constraint ] = array(
-						'type' => 'limit',
-						'compare' => '<',
-						'value' => (int) $constraint_options
-					);
+				if ( ! is_array( $constraint_options ) ) {
+					$constraints[ $constraint ] = [
+							'type'    => 'limit',
+							'compare' => '<',
+							'value'   => (int) $constraint_options,
+					];
 				}
 			}
 
-			if ( !empty( $constraints ) ) {
+			if ( ! empty( $constraints ) ) {
 				$access = $this->access_constraints( $constraints );
 			}
 		}
@@ -767,41 +770,41 @@ class Pods_GF_UI {
 
 		$access = true;
 
-		if ( is_array( $constraints ) && !empty( $constraints ) && is_object( $this->pod ) ) {
+		if ( is_array( $constraints ) && ! empty( $constraints ) && is_object( $this->pod ) ) {
 			$check = pods( $this->pod->pod );
 
 			foreach ( $constraints as $constraint ) {
 				$constraint = array_merge(
-					array(
-						'type' => 'limit',
-						'compare' => '<',
-						'value' => -1,
-						'params' => array()
-					),
-					$constraint
+						[
+								'type'    => 'limit',
+								'compare' => '<',
+								'value'   => - 1,
+								'params'  => [],
+						],
+						$constraint
 				);
 
 				// Limit constraints
-				if ( 'limit' == $constraint[ 'type' ] ) {
-					$constraint[ 'value' ] = (int) $constraint[ 'value' ];
+				if ( 'limit' == $constraint['type'] ) {
+					$constraint['value'] = (int) $constraint['value'];
 
 					// Invalid value
-					if ( $constraint[ 'value' ] < 0 ) {
+					if ( $constraint['value'] < 0 ) {
 						continue;
 					}
 
 					$params = array_merge(
-						array(
-							'limit' => 1 // doesn't matter what's returned, we look at total_found()
-						),
-						$constraint[ 'params' ]
+							[
+									'limit' => 1, // doesn't matter what's returned, we look at total_found()
+							],
+							$constraint['params']
 					);
 
 					$check->find( $params );
 
 					// version_compare is the poor developer's math comparison function
-					if ( !version_compare( (string) $check->total_found(), (string) $constraint[ 'value' ], $constraint[ 'compare' ] ) ) {
-						$access = false;
+					if ( ! version_compare( (string) $check->total_found(), (string) $constraint['value'], $constraint['compare'] ) ) {
+						$access              = false;
 						$this->access_reason = 'Limit constraint reached';
 					}
 				}
@@ -824,61 +827,78 @@ class Pods_GF_UI {
 		if ( $obj->restricted( $obj->action ) ) {
 			return;
 		}
-?>
-<div class="wrap pods-admin pods-ui">
-	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
-	<h2>
-		<?php
-			echo $obj->header[ 'add' ];
 
-			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
-				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
+		$icon_style_escaped = '';
+		if ( false !== $obj->icon ) {
+			$icon_style_escaped = ' style="background-position:0 0;background-size:100%;background-image:url(' . esc_url( $obj->icon ) . ');"';
+		}
+		?>
+		<div class="wrap pods-admin pods-ui">
+			<div id="icon-edit-pages"
+					class="icon32"<?php echo $icon_style_escaped; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+				<br />
+			</div>
+			<h2>
+				<?php
+				echo esc_html( $obj->header['add'] );
 
-				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
-					$link = $obj->action_links[ 'manage' ];
+				if ( ! in_array( 'manage', $obj->actions_disabled ) && ! in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
+					$link = pods_query_arg( [
+							'action' . $obj->num => 'manage',
+							'id' . $obj->num     => '',
+					], PodsUI::$allowed, $obj->exclusion() );
+
+					if ( ! empty( $obj->action_links['manage'] ) ) {
+						$link = $obj->action_links['manage'];
+					}
+
+					// translators: %s is the Manage action heading.
+					$link_text = sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading['manage'] );
+					?>
+					<a href="<?php echo esc_url( $link ); ?>"
+							class="add-new-h2">&laquo; <?php echo esc_html( $link_text ); ?></a>
+					<?php
 				}
-		?>
-			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading[ 'manage' ] ); ?></a>
-		<?php
+				?>
+			</h2>
+
+			<?php
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_pre', $this->pod, $obj, $this );
+
+			if ( isset( $this->actions[ $this->action ]['prepend'] ) && is_callable( $this->actions[ $this->action ]['prepend'] ) ) {
+				$this->actions[ $this->action ]['prepend']( $this->pod, $obj, $this );
 			}
-		?>
-	</h2>
 
-	<?php
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+			if ( isset( $this->actions[ $this->action ]['form'] ) && 0 < $this->actions[ $this->action ]['form'] ) {
+				gravity_form_enqueue_scripts( $this->actions[ $this->action ]['form'] );
 
-		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
+				wp_print_scripts();
+				wp_print_styles();
 
-			wp_print_scripts();
-			wp_print_styles();
+				gravity_form( $this->actions[ $this->action ]['form'], false, false );
+			} elseif ( is_object( $this->pod ) ) {
+				$this->pod->form();
+			} else {
+				do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_form', $this->pod, $obj, $this );
+			}
 
-			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
-		}
-		elseif ( is_object( $this->pod ) ) {
-			$this->pod->form();
-		}
-		else {
-			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $obj, $this );
-		}
-
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
-	?>
-</div>
-<?php
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_post', $this->pod, $obj, $this );
+			?>
+		</div>
+		<?php
 
 	}
 
 	/**
 	 * Embed Edit form
 	 *
-	 * @param bool $duplicate
+	 * @param bool   $duplicate
 	 * @param PodsUI $obj
 	 */
-	public function _action_edit( $duplicate, $obj = null  ) {
+	public function _action_edit( $duplicate, $obj = null ) {
 
 		if ( is_object( $duplicate ) ) {
-			$obj = $duplicate;
+			$obj       = $duplicate;
 			$duplicate = false;
 		}
 
@@ -887,58 +907,81 @@ class Pods_GF_UI {
 
 		self::$pods_ui =& $obj;
 
-        if ( empty( $obj->row ) ) {
-            $obj->get_row();
+		if ( empty( $obj->row ) ) {
+			$obj->get_row();
 		}
 
 		if ( empty( $obj->row ) ) {
+			// translators: %s is the item being edited, e.g. Entry.
 			$obj->message( sprintf( __( '%s not found.', 'pods-gravity-forms' ), $obj->item ) );
 
 			return;
 		}
 
 		if ( $obj->restricted( $obj->action, $obj->row ) ) {
-			return $obj->error( sprintf( __( '<strong>Error:</strong> You do not have access to this %s.', 'pods' ), $obj->item ) );
+			// translators: %s is the item being edited, e.g. Entry.
+			return $obj->error( sprintf( __( '<strong>Error:</strong> You do not have access to this %s.', 'pods-gravity-forms' ), $obj->item ) );
 		}
-?>
-<div class="wrap pods-admin pods-ui">
-	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
-	<h2>
-		<?php
-			echo $obj->do_template( $duplicate ? $obj->header[ 'duplicate' ] : $obj->header[ $obj->action ] );
 
-			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
-				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
-
-				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
-					$link = $obj->action_links[ 'manage' ];
+		$icon_style_escaped = '';
+		if ( false !== $obj->icon ) {
+			$icon_style_escaped = ' style="background-position:0 0;background-size:100%;background-image:url(' . esc_url( $obj->icon ) . ');"';
+		}
+		?>
+		<div class="wrap pods-admin pods-ui">
+			<div id="icon-edit-pages"
+					class="icon32"<?php echo $icon_style_escaped; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+				<br />
+			</div>
+			<h2>
+				<?php
+				if ( method_exists( $obj, 'output_template' ) ) {
+					$obj->output_template( $duplicate ? $obj->header['duplicate'] : $obj->header[ $obj->action ] );
+				} else {
+					echo $obj->do_template( $duplicate ? $obj->header['duplicate'] : $obj->header[ $obj->action ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				}
-		?>
-			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading[ 'manage' ] ); ?></a>
-		<?php
+
+				if ( ! in_array( 'manage', $obj->actions_disabled ) && ! in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
+					$link = pods_query_arg( [
+							'action' . $obj->num => 'manage',
+							'id' . $obj->num     => '',
+					], PodsUI::$allowed, $obj->exclusion() );
+
+					if ( ! empty( $obj->action_links['manage'] ) ) {
+						$link = $obj->action_links['manage'];
+					}
+
+					// translators: %s is the Manage action heading.
+					$link_text = sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading['manage'] );
+					?>
+					<a href="<?php echo esc_url( $link ); ?>"
+							class="add-new-h2">&laquo; <?php echo esc_html( $link_text ); ?></a>
+					<?php
+				}
+				?>
+			</h2>
+
+			<?php
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_pre', $this->pod, $obj, $this );
+
+			if ( isset( $this->actions[ $this->action ]['prepend'] ) && is_callable( $this->actions[ $this->action ]['prepend'] ) ) {
+				$this->actions[ $this->action ]['prepend']( $this->pod, $obj, $this );
 			}
-		?>
-	</h2>
 
-	<?php
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+			if ( isset( $this->actions[ $this->action ]['form'] ) && 0 < $this->actions[ $this->action ]['form'] ) {
+				gravity_form_enqueue_scripts( $this->actions[ $this->action ]['form'] );
 
-		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
+				gravity_form( $this->actions[ $this->action ]['form'], false, false );
+			} elseif ( is_object( $this->pod ) ) {
+				$this->pod->form();
+			} else {
+				do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_form', $this->pod, $duplicate, $obj, $this );
+			}
 
-			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
-		}
-		elseif ( is_object( $this->pod ) ) {
-			$this->pod->form();
-		}
-		else {
-			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $duplicate, $obj, $this );
-		}
-
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
-	?>
-</div>
-<?php
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_post', $this->pod, $obj, $this );
+			?>
+		</div>
+		<?php
 
 	}
 
@@ -953,11 +996,12 @@ class Pods_GF_UI {
 
 		$fields = pods_v( 'fields', $this->actions[ $this->action ] );
 
-        if ( empty( $obj->row ) ) {
-            $obj->get_row();
+		if ( empty( $obj->row ) ) {
+			$obj->get_row();
 		}
 
 		if ( empty( $obj->row ) ) {
+			// translators: %s is the item being viewed, e.g. Entry.
 			$obj->message( sprintf( __( '%s not found.', 'pods-gravity-forms' ), $obj->item ) );
 
 			return;
@@ -966,45 +1010,70 @@ class Pods_GF_UI {
 		if ( $obj->restricted( $obj->action, $obj->row ) ) {
 			return;
 		}
-?>
-<div class="wrap pods-admin pods-ui pods-gf-ui-view-only">
-	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
-	<h2>
-		<?php
-			echo $obj->do_template( $obj->header[ $obj->action ] );
 
-			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
-				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
-
-				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
-					$link = $obj->action_links[ 'manage' ];
+		$icon_style_escaped = '';
+		if ( false !== $obj->icon ) {
+			$icon_style_escaped = ' style="background-position:0 0;background-size:100%;background-image:url(' . esc_url( $obj->icon ) . ');"';
+		}
+		?>
+		<div class="wrap pods-admin pods-ui pods-gf-ui-view-only">
+			<div id="icon-edit-pages"
+					class="icon32"<?php echo $icon_style_escaped; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+				<br />
+			</div>
+			<h2>
+				<?php
+				if ( method_exists( $obj, 'output_template' ) ) {
+					$obj->output_template( $obj->header[ $obj->action ] );
+				} else {
+					echo $obj->do_template( $obj->header[ $obj->action ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				}
-		?>
-			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading[ 'manage' ] ); ?></a>
-		<?php
+
+				if ( ! in_array( 'manage', $obj->actions_disabled ) && ! in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
+					$link = pods_query_arg( [
+							'action' . $obj->num => 'manage',
+							'id' . $obj->num     => '',
+					], PodsUI::$allowed, $obj->exclusion() );
+
+					if ( ! empty( $obj->action_links['manage'] ) ) {
+						$link = $obj->action_links['manage'];
+					}
+
+					// translators: %s is the Manage action heading.
+					$link_text = sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading['manage'] );
+					?>
+					<a href="<?php echo esc_url( $link ); ?>"
+							class="add-new-h2">&laquo; <?php echo esc_html( $link_text ); ?></a>
+					<?php
+				}
+				?>
+			</h2>
+
+			<?php
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_pre', $this->pod, $obj, $this );
+
+			if ( isset( $this->actions[ $this->action ]['prepend'] ) && is_callable( $this->actions[ $this->action ]['prepend'] ) ) {
+				$this->actions[ $this->action ]['prepend']( $this->pod, $obj, $this );
 			}
-		?>
-	</h2>
 
-	<?php
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
+			if ( isset( $this->actions[ $this->action ]['form'] ) && 0 < $this->actions[ $this->action ]['form'] ) {
+				gravity_form_enqueue_scripts( $this->actions[ $this->action ]['form'] );
 
-		if ( isset( $this->actions[ $this->action ][ 'form' ] ) && 0 < $this->actions[ $this->action ][ 'form' ] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ][ 'form' ] );
+				gravity_form( $this->actions[ $this->action ]['form'], false, false );
+			} elseif ( is_object( $this->pod ) ) {
+				if ( method_exists( $this->pod, 'output_view' ) ) {
+					$this->pod->output_view( $fields );
+				} else {
+					echo $this->pod->view( $fields ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				}
+			} else {
+				do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ), $this->pod, $obj, $this );
+			}
 
-			gravity_form( $this->actions[ $this->action ][ 'form' ], false, false );
-		}
-		elseif ( is_object( $this->pod ) ) {
-			echo $this->pod->view( $fields );
-		}
-		else {
-			do_action( 'pods_gf_ui' . __FUNCTION__, $this->pod, $obj, $this );
-		}
-
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
-	?>
-</div>
-<?php
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_post', $this->pod, $obj, $this );
+			?>
+		</div>
+		<?php
 
 	}
 
@@ -1028,17 +1097,17 @@ class Pods_GF_UI {
 		if ( is_array( $this->pod ) ) {
 			pods_gf();
 
-			Pods_GF::gf_delete_entry( $id, $this->actions[ 'delete' ][ 'keep_files' ] );
+			Pods_GF::gf_delete_entry( $id, $this->actions['delete']['keep_files'] );
 
 			unset( $obj->data[ $id ] );
 
-			$obj->total = count( $obj->data );
+			$obj->total       = count( $obj->data );
 			$obj->total_found = count( $obj->data );
-		}
-		else {
-			do_action( 'pods_gf_ui' . __FUNCTION__, $this->id, $this->pod, $obj, $this );
+		} else {
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ), $this->id, $this->pod, $obj, $this );
 		}
 
+		// translators: %s is the item being deleted, e.g. Entry.
 		$obj->message( sprintf( __( '%s deleted successfully.', 'pods-gravity-forms' ), $obj->item ) );
 
 		return null;
@@ -1057,57 +1126,81 @@ class Pods_GF_UI {
 		if ( $obj->restricted( $obj->action, $obj->row ) ) {
 			return;
 		}
-?>
-<div class="wrap pods-admin pods-ui">
-	<div id="icon-edit-pages" class="icon32"<?php if ( false !== $obj->icon ) { ?> style="background-position:0 0;background-size:100%;background-image:url(<?php echo $obj->icon; ?>);"<?php } ?>><br /></div>
-	<h2>
-		<?php
-			echo $obj->header[ $this->action ];
 
-			if ( !in_array( 'manage', $obj->actions_disabled ) && !in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
-				$link = pods_var_update( array( 'action' . $obj->num => 'manage', 'id' . $obj->num => '' ), PodsUI::$allowed, $obj->exclusion() );
-
-				if ( !empty( $obj->action_links[ 'manage' ] ) ) {
-					$link = $obj->action_links[ 'manage' ];
-				}
-		?>
-			<a href="<?php echo $link; ?>" class="add-new-h2">&laquo; <?php echo sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading[ 'manage' ] ); ?></a>
-		<?php
-			}
-		?>
-	</h2>
-
-	<?php
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_pre', $this->pod, $obj, $this );
-
-		if ( ! empty( $this->actions[ $this->action ]['content'] ) ) {
-			/**
-			 * Filter content for page
-			 *
-			 * @param string     $content
-			 * @param Pods_GF_UI $pods_gf_ui
-			 */
-			$content = apply_filters( 'pods_gf_ui_content', $this->actions[ $this->action ]['content'], $this );
-			$content = apply_filters( 'the_content', $content, 0 );
-
-			echo $content;
-		} elseif ( isset( $this->actions[ $this->action ]['form'] ) && 0 < $this->actions[ $this->action ]['form'] ) {
-			gravity_form_enqueue_scripts( $this->actions[ $this->action ]['form'] );
-
-			wp_print_scripts();
-			wp_print_styles();
-
-			gravity_form( $this->actions[ $this->action ]['form'], false, false );
-		} elseif ( is_object( $this->pod ) ) {
-			$this->pod->form();
-		} else {
-			do_action( 'pods_gf_ui' . __FUNCTION__ . '_form', $this->pod, $obj, $this );
+		$icon_style_escaped = '';
+		if ( false !== $obj->icon ) {
+			$icon_style_escaped = ' style="background-position:0 0;background-size:100%;background-image:url(' . esc_url( $obj->icon ) . ');"';
 		}
+		?>
+		<div class="wrap pods-admin pods-ui">
+			<div id="icon-edit-pages"
+					class="icon32"<?php echo $icon_style_escaped; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+				<br />
+			</div>
+			<h2>
+				<?php
+				if ( method_exists( $obj, 'output_template' ) ) {
+					$obj->output_template( $obj->header[ $obj->action ] );
+				} else {
+					echo $obj->do_template( $obj->header[ $obj->action ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				}
 
-		do_action( 'pods_gf_ui' . __FUNCTION__ . '_post', $this->pod, $obj, $this );
-	?>
-</div>
-<?php
+				if ( ! in_array( 'manage', $obj->actions_disabled ) && ! in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
+					$link = pods_query_arg( [
+							'action' . $obj->num => 'manage',
+							'id' . $obj->num     => '',
+					], PodsUI::$allowed, $obj->exclusion() );
+
+					if ( ! empty( $obj->action_links['manage'] ) ) {
+						$link = $obj->action_links['manage'];
+					}
+
+					// translators: %s is the Manage action heading.
+					$link_text = sprintf( __( 'Back to %s', 'pods-gravity-forms' ), $obj->heading['manage'] );
+					?>
+					<a href="<?php echo esc_url( $link ); ?>"
+							class="add-new-h2">&laquo; <?php echo esc_html( $link_text ); ?></a>
+					<?php
+				}
+				?>
+			</h2>
+
+			<?php
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_pre', $this->pod, $obj, $this );
+
+			if ( isset( $this->actions[ $this->action ]['prepend'] ) && is_callable( $this->actions[ $this->action ]['prepend'] ) ) {
+				$this->actions[ $this->action ]['prepend']( $this->pod, $obj, $this );
+			}
+
+			if ( ! empty( $this->actions[ $this->action ]['content'] ) ) {
+				/**
+				 * Filter content for page
+				 *
+				 * @param string     $content
+				 * @param Pods_GF_UI $pods_gf_ui
+				 */
+				$content = apply_filters( 'pods_gf_ui_content', $this->actions[ $this->action ]['content'], $this );
+				$content = apply_filters( 'the_content', $content, 0 );
+
+				// This string will be custom provided via code and needs to output HTML with script support for Gravity Forms.
+				echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			} elseif ( isset( $this->actions[ $this->action ]['form'] ) && 0 < $this->actions[ $this->action ]['form'] ) {
+				gravity_form_enqueue_scripts( $this->actions[ $this->action ]['form'] );
+
+				wp_print_scripts();
+				wp_print_styles();
+
+				gravity_form( $this->actions[ $this->action ]['form'], false, false );
+			} elseif ( is_object( $this->pod ) ) {
+				$this->pod->form();
+			} else {
+				do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_form', $this->pod, $obj, $this );
+			}
+
+			do_action( 'pods_gf_ui_' . trim( __FUNCTION__, '_' ) . '_post', $this->pod, $obj, $this );
+			?>
+		</div>
+		<?php
 
 	}
 

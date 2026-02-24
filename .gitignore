@@ -1,12 +1,57 @@
-vendor/
-composer.lock
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
 
-# Codeception stuff
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Mac crap
+.DS_Store
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# Dropbox
+.dropbox
+.dropbox.attr
+
+# SASS
+/.sass-cache/
+
+# PhpStorm
+/.idea/
+
+# Eclipse
+*.pydevproject
+.project
+.metadata
+/build/
+/tmp/
+
+# NPM / Composer
+/composer.lock
+/node_modules/
+/vendor/*
+!/vendor/vendor-prefixed/
+npm-debug.log
+pnpm-lock.yaml
+
+# Source maps should just be built locally
+ui/js/pods-ui-ready.min.js.map
+
+# PHPCS
+phpcs-report-*.txt
+
+# Tests - local config files
 codeception.yml
-!tests/_data/dump.sql
-!tests/_data/test-data.sql
-tests/_output/*
-tests/*.suite.yml
-tests/*.pem
-tests/*.cert
-tests/*.key
+tests/codeception/*.suite.yml
+tests/codeception/_support/_generated
+.env.local
+
+# Tests - local output files
+tests/codeception/_output
+/coverage/

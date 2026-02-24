@@ -17,20 +17,15 @@ tests/_support/_generated/* linguist-generated=true
 /dev export-ignore
 /docs export-ignore
 /tests export-ignore
-
-# Ignore other files
-/.env.* export-ignore
-/codeception.* export-ignore
-/composer.* export-ignore
-/docs export-ignore
-/phpcs.xml export-ignore
-/README.md export-ignore
-/TESTS.md export-ignore
-/vendor export-ignore
+/ui/js/blocks/src export-ignore
+/ui/js/dfv/pods-dfv.min.js.map export-ignore
+/ui/js/dfv/src export-ignore
+/ui/styles/src export-ignore
 
 # Dot-files
 .babelrc export-ignore
 .distignore export-ignore
+.DS_Store
 .editorconfig export-ignore
 .env export-ignore
 .env.example export-ignore

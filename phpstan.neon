@@ -1,0 +1,11 @@
+parameters:
+  level: 0
+  paths:
+    - includes
+    - pods-gravity-forms.php
+  excludePaths:
+    - tests
+    - vendor/vendor-prefixed
+  scanDirectories:
+    - vendor/wordpress-plugin
+    - vendor/wp-cli
