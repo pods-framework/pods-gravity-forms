@@ -49,6 +49,7 @@
     "automattic/vipwpcs": "^3.0.0",
     "brianhenryie/strauss": "*",
     "dealerdirect/phpcodesniffer-composer-installer": "^1.1",
+    "gravity/gravityforms": "^2.9",
     "phpcompatibility/phpcompatibility-wp": "*",
     "phpstan/extension-installer": "^1.4",
     "phpstan/phpstan": "^1.12",
@@ -58,8 +59,7 @@
     "szepeviktor/phpstan-wordpress": "*",
     "webmozart/assert": "^1.12",
     "wp-cli/wp-cli": "2.*",
-    "wp-coding-standards/wpcs": "^3.1",
-    "gravity/gravityforms": "^2.9"
+    "wp-coding-standards/wpcs": "^3.1"
   },
   "minimum-stability": "stable",
   "prefer-stable": true,
