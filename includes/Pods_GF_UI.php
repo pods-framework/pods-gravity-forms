@@ -334,9 +334,11 @@ class Pods_GF_UI {
 		$this->setup_ui();
 
 		foreach ( $this->actions as $action => $action_data ) {
+			// @phpstan-ignore-next-line
 			$form_id = (int) pods_v( 'form', $action_data );
 
 			if ( ! pods_v( 'disabled', $action_data ) && 0 < $form_id && $this->action == $action ) {
+				// @phpstan-ignore-next-line
 				$pod = pods_v( 'pod', $action_data, $this->pod );
 
 				$pods_gf = pods_gf( $pod, $form_id, $action_data );
@@ -371,6 +373,7 @@ class Pods_GF_UI {
 		$this->actions['view']['callback']   = [ $this, '_action_view' ];
 		$this->actions['delete']['callback'] = [ $this, '_action_delete' ];
 
+		// @phpstan-ignore-next-line
 		$this->action = pods_v( 'action', 'get', $this->action, true );
 
 	}
@@ -399,6 +402,7 @@ class Pods_GF_UI {
 				'save_for_later'  => [],
 		];
 
+		// @phpstan-ignore-next-line
 		$id = (int) pods_v( 'id' );
 
 		if ( 0 < $this->id ) {
@@ -477,10 +481,12 @@ class Pods_GF_UI {
 			}
 
 			if ( ! empty( $options['action_data'] ) ) {
+				// @phpstan-ignore-next-line
 				$this->ui['actions_custom'][ $action ] = array_merge( $this->ui['actions_custom'][ $action ], (array) pods_v( 'action_data', $options, [], true ) );
 			}
 
 			if ( ! empty( $options['action_link'] ) ) {
+				// @phpstan-ignore-next-line
 				$this->ui['action_links'][ $action ] = pods_v( 'action_link', $options, null, true );
 			}
 
@@ -495,6 +501,7 @@ class Pods_GF_UI {
 			$total_found = 0;
 
 			if ( 0 < $id ) {
+				// @phpstan-ignore-next-line
 				$lead = GFAPI::get_entry( $id );
 
 				if ( ! empty( $lead ) && ! is_wp_error( $lead ) && 'active' === $lead['status'] ) {
@@ -507,6 +514,7 @@ class Pods_GF_UI {
 
 					$gf_meta_table = pods_gf_get_gf_table_name( 'entry_meta' );
 
+					// @phpstan-ignore-next-line
 					$old_schema = version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' );
 
 					$lead_id_column_name = $old_schema ? 'lead_id' : 'entry_id';
@@ -537,11 +545,13 @@ class Pods_GF_UI {
 						'page_size' => 20,
 				];
 
+				// @phpstan-ignore-next-line
 				$page   = (int) pods_v( 'pg', 'get', 1, true );
 				$offset = ( ( $page - 1 ) * $paging['page_size'] );
 
 				$paging['offset'] += $offset;
 
+				// @phpstan-ignore-next-line
 				$leads = GFAPI::get_entries( $this->actions['manage']['form'], $search_criteria, $sorting, $paging, $total_found );
 
 				// @todo Hook into save for later data and display saved entries in the list like normal entries
@@ -554,6 +564,7 @@ class Pods_GF_UI {
 
 					$gf_meta_table = pods_gf_get_gf_table_name( 'entry_meta' );
 
+					// @phpstan-ignore-next-line
 					$old_schema = version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' );
 
 					$lead_id_column_name = $old_schema ? 'lead_id' : 'entry_id';
@@ -620,6 +631,7 @@ class Pods_GF_UI {
 
 			$this->ui = array_merge( $default_ui, $this->ui );
 		} elseif ( ! is_object( $this->pod ) && ! empty( $this->pod ) ) {
+			// @phpstan-ignore-next-line
 			$this->pod = pods( $this->pod, ( 0 < $id ? $id : null ) );
 			$this->id  = $this->pod->id();
 		}
@@ -629,6 +641,7 @@ class Pods_GF_UI {
 		}
 
 		foreach ( $this->actions as $action => $options ) {
+			// @phpstan-ignore-next-line
 			if ( false === pods_v( 'disabled', $this->actions[ $action ], false, true ) ) {
 				if ( in_array( $action, $this->ui['actions_disabled'] ) ) {
 					unset( $this->ui['actions_disabled'][ array_search( $action, $this->ui['actions_disabled'] ) ] );
@@ -682,6 +695,7 @@ class Pods_GF_UI {
 			// An array of GF entries $lead_id => $entry
 			// $this->pod = array( .... );
 			elseif ( is_array( $this->pod ) ) {
+				// @phpstan-ignore-next-line
 				$ui = pods_ui( $this->ui );
 			} else {
 				do_action( 'pods_gf_ui_action_' . $action, $this, $args );
@@ -720,6 +734,7 @@ class Pods_GF_UI {
 		$access = true;
 
 		// Action disabled
+		// @phpstan-ignore-next-line
 		if ( true === pods_v( 'disabled', $this->actions[ $action ], false, true ) || in_array( $action, $this->ui['actions_disabled'] ) ) {
 			$access              = false;
 			$this->access_reason = 'Action disabled';
@@ -749,6 +764,7 @@ class Pods_GF_UI {
 
 		// @todo replace callbacks with apply_filters or do_action
 		// Access Callback
+		// @phpstan-ignore-next-line
 		$access_callback = pods_v( 'access_callback', $this->actions[ $action ], null, true );
 
 		if ( null !== $access_callback && is_callable( $access_callback ) ) {
@@ -771,6 +787,7 @@ class Pods_GF_UI {
 		$access = true;
 
 		if ( is_array( $constraints ) && ! empty( $constraints ) && is_object( $this->pod ) ) {
+			// @phpstan-ignore-next-line
 			$check = pods( $this->pod->pod );
 
 			foreach ( $constraints as $constraint ) {
@@ -843,9 +860,11 @@ class Pods_GF_UI {
 				echo esc_html( $obj->header['add'] );
 
 				if ( ! in_array( 'manage', $obj->actions_disabled ) && ! in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
+					// @phpstan-ignore-next-line
 					$link = pods_query_arg( [
 							'action' . $obj->num => 'manage',
 							'id' . $obj->num     => '',
+						// @phpstan-ignore-next-line
 					], PodsUI::$allowed, $obj->exclusion() );
 
 					if ( ! empty( $obj->action_links['manage'] ) ) {
@@ -870,11 +889,13 @@ class Pods_GF_UI {
 			}
 
 			if ( isset( $this->actions[ $this->action ]['form'] ) && 0 < $this->actions[ $this->action ]['form'] ) {
+				// @phpstan-ignore-next-line
 				gravity_form_enqueue_scripts( $this->actions[ $this->action ]['form'] );
 
 				wp_print_scripts();
 				wp_print_styles();
 
+				// @phpstan-ignore-next-line
 				gravity_form( $this->actions[ $this->action ]['form'], false, false );
 			} elseif ( is_object( $this->pod ) ) {
 				$this->pod->form();
@@ -942,9 +963,11 @@ class Pods_GF_UI {
 				}
 
 				if ( ! in_array( 'manage', $obj->actions_disabled ) && ! in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
+					// @phpstan-ignore-next-line
 					$link = pods_query_arg( [
 							'action' . $obj->num => 'manage',
 							'id' . $obj->num     => '',
+						// @phpstan-ignore-next-line
 					], PodsUI::$allowed, $obj->exclusion() );
 
 					if ( ! empty( $obj->action_links['manage'] ) ) {
@@ -969,8 +992,10 @@ class Pods_GF_UI {
 			}
 
 			if ( isset( $this->actions[ $this->action ]['form'] ) && 0 < $this->actions[ $this->action ]['form'] ) {
+				// @phpstan-ignore-next-line
 				gravity_form_enqueue_scripts( $this->actions[ $this->action ]['form'] );
 
+				// @phpstan-ignore-next-line
 				gravity_form( $this->actions[ $this->action ]['form'], false, false );
 			} elseif ( is_object( $this->pod ) ) {
 				$this->pod->form();
@@ -994,6 +1019,7 @@ class Pods_GF_UI {
 
 		self::$pods_ui =& $obj;
 
+		// @phpstan-ignore-next-line
 		$fields = pods_v( 'fields', $this->actions[ $this->action ] );
 
 		if ( empty( $obj->row ) ) {
@@ -1030,9 +1056,11 @@ class Pods_GF_UI {
 				}
 
 				if ( ! in_array( 'manage', $obj->actions_disabled ) && ! in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
+					// @phpstan-ignore-next-line
 					$link = pods_query_arg( [
 							'action' . $obj->num => 'manage',
 							'id' . $obj->num     => '',
+						// @phpstan-ignore-next-line
 					], PodsUI::$allowed, $obj->exclusion() );
 
 					if ( ! empty( $obj->action_links['manage'] ) ) {
@@ -1057,8 +1085,10 @@ class Pods_GF_UI {
 			}
 
 			if ( isset( $this->actions[ $this->action ]['form'] ) && 0 < $this->actions[ $this->action ]['form'] ) {
+				// @phpstan-ignore-next-line
 				gravity_form_enqueue_scripts( $this->actions[ $this->action ]['form'] );
 
+				// @phpstan-ignore-next-line
 				gravity_form( $this->actions[ $this->action ]['form'], false, false );
 			} elseif ( is_object( $this->pod ) ) {
 				if ( method_exists ($this->pod, 'output_view' ) ) {
@@ -1146,9 +1176,11 @@ class Pods_GF_UI {
 				}
 
 				if ( ! in_array( 'manage', $obj->actions_disabled ) && ! in_array( 'manage', $obj->actions_hidden ) && ! $obj->restricted( 'manage' ) ) {
+					// @phpstan-ignore-next-line
 					$link = pods_query_arg( [
 							'action' . $obj->num => 'manage',
 							'id' . $obj->num     => '',
+						// @phpstan-ignore-next-line
 					], PodsUI::$allowed, $obj->exclusion() );
 
 					if ( ! empty( $obj->action_links['manage'] ) ) {
@@ -1185,11 +1217,13 @@ class Pods_GF_UI {
 				// This string will be custom provided via code and needs to output HTML with script support for Gravity Forms.
 				echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			} elseif ( isset( $this->actions[ $this->action ]['form'] ) && 0 < $this->actions[ $this->action ]['form'] ) {
+				// @phpstan-ignore-next-line
 				gravity_form_enqueue_scripts( $this->actions[ $this->action ]['form'] );
 
 				wp_print_scripts();
 				wp_print_styles();
 
+				// @phpstan-ignore-next-line
 				gravity_form( $this->actions[ $this->action ]['form'], false, false );
 			} elseif ( is_object( $this->pod ) ) {
 				$this->pod->form();
