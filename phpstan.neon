@@ -1,0 +1,18 @@
+parameters:
+  level: 0
+  paths:
+    - classes
+    - includes
+    - components
+    - deprecated
+    - sql
+    - src
+    - ui/admin
+    - ui/fields
+    - ui/forms
+    - ui/front
+    - init.php
+  excludePaths:
+    - vendor/vendor-prefixed
+    - src/Pods/Integrations
+    - tests

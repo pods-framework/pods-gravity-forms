@@ -46,8 +46,19 @@
     "php": ">=7.2"
   },
   "require-dev": {
-    "brianhenryie/strauss": "*"
+    "automattic/vipwpcs": "^3.0.0",
+    "brianhenryie/strauss": "*",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.1",
+    "phpcompatibility/phpcompatibility-wp": "*",
+    "phpstan/extension-installer": "^1.4",
+    "phpstan/phpstan": "^1.12",
+    "phpstan/phpstan-deprecation-rules": "^1.2",
+    "stellarwp/coding-standards": "dev-main",
+    "szepeviktor/phpstan-wordpress": "*",
+    "wp-coding-standards/wpcs": "^3.1"
   },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
   "scripts": {
     "prefix-namespaces": [
       "strauss"
@@ -74,7 +85,9 @@
   },
   "config": {
     "allow-plugins": {
-      "composer/installers": true
+      "composer/installers": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "phpstan/extension-installer": true
     }
   }
 }

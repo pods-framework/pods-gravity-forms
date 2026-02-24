@@ -9,3 +9,4 @@ on:
 jobs:
   phpcs:
     uses: pods-framework/.github/.github/workflows/php-phpcs.yml@main
+    secrets: inherit

@@ -1120,7 +1120,7 @@ class Pods_GF_Addon extends GFFeedAddOn {
 					unset( $data[''] );
 				}
 
-				$select_text = pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options['options'], __( '-- Select One --', 'pods' ), true );
+				$select_text = pods_v( $pod_field_options['type'] . '_select_text', $pod_field_options['options'], __( '-- Select One --', 'pods-gravity-forms' ), true );
 
 				$options = array(
 					'options' => $data,

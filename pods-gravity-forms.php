@@ -1,37 +1,49 @@
 <?php
-/*
-Plugin Name: Pods Gravity Forms Add-On
-Plugin URI: https://pods.io/
-Requires Plugins: pods
-Description: Integration with Gravity Forms (https://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
-Version: 1.5.1
-Author: Pods Framework Team
-Author URI: https://pods.io/about/
-Text Domain: pods-gravity-forms
-GitHub Plugin URI: https://github.com/pods-framework/pods-gravity-forms
-
-Copyright 2013-2025  Pods Foundation, Inc  (email : contact@podsfoundation.org)
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 /**
- * @package Pods\Gravity Forms
+ * Pods Gravity Forms Add-On
+ *
+ * @package   Pods_Gravity_Forms
+ * @author    Pods Framework Team
+ * @copyright 2026 Pods Foundation, Inc
+ * @license   GPL v2 or later
+ *
+ * Plugin Name:       Pods Gravity Forms Add-On
+ * Plugin URI:        https://pods.io/
+ * Requires Plugins:  pods
+ * Description:       Integration with Gravity Forms (https://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
+ * Version:           1.6.0-a-1
+ * Author:            Pods Framework Team
+ * Author URI:        https://pods.io/about/
+ * Text Domain:       pods-gravity-forms
+ * License:           GPL v2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Requires at least: 6.3
+ * Requires PHP:      7.2
+ * GitHub Plugin URI: https://github.com/pods-framework/pods-gravity-forms
+ * Primary Branch:    main
  */
 
-define( 'PODS_GF_VERSION', '1.5.1' );
+/*
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see https://www.gnu.org/licenses/gpl-2.0.html.
+ */
+
+// Don't load directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	die( '-1' );
+}
+
+define( 'PODS_GF_VERSION', '1.6.0-a-1' );
 define( 'PODS_GF_FILE', __FILE__ );
 define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
 define( 'PODS_GF_URL', plugin_dir_url( PODS_GF_FILE ) );
@@ -129,8 +141,8 @@ function pods_gf_admin_nag() {
 function pods_gf_add_related_objects() {
 
 	PodsField_Pick::$related_objects['gf-forms'] = [
-		'label'         => __( 'Forms', 'pods' ),
-		'group'         => __( 'Gravity Forms', 'pods' ),
+		'label'         => __( 'Forms', 'pods-gravity-forms' ),
+		'group'         => __( 'Gravity Forms', 'pods-gravity-forms' ),
 		'simple'        => true,
 		'data_callback' => 'pods_gf_add_related_objects_forms',
 	];
@@ -173,41 +185,28 @@ function pods_gf_add_related_objects_forms( $name = null, $value = null, $option
 
 }
 
-/**
- * Register add-on with Pods Freemius connection.
- */
-function pods_gravity_forms_freemius() {
-	try {
-		fs_dynamic_init( [
-			'id'               => '5754',
-			'slug'             => 'pods-gravity-forms',
-			'type'             => 'plugin',
-			'public_key'       => 'pk_1aaaee6bf8963f2077405e84f2ac5',
-			'is_premium'       => false,
-			'has_paid_plans'   => false,
-			'is_org_compliant' => true,
-			'parent'           => [
-				'id'         => '5347',
-				'slug'       => 'pods',
-				'public_key' => 'pk_737105490825babae220297e18920',
-				'name'       => 'Pods',
-			],
-			'menu'             => [
-				'slug'        => 'pods-settings',
-				'contact'     => false,
-				'support'     => false,
-				'affiliation' => false,
-				'account'     => true,
-				'pricing'     => false,
-				'addons'      => true,
-				'parent'      => [
-					'slug' => 'pods',
-				],
-			],
-		] );
-	} catch ( \Exception $exception ) {
-		return;
-	}
-}
+add_filter( 'wp_plugin_check_ignore_files', static function ( $ignored_files ) {
+	$pods_dev_files = [
+		'.distignore',
+		'.gitattributes',
+		'.gitignore',
+		'.phpcs.compat.xml',
+		'.phpcs.xml',
+		'composer.json',
+		'phpcs.xml.dist',
+		'phpstan.neon',
+	];
 
-add_action( 'pods_freemius_init', 'pods_gravity_forms_freemius' );
+	return array_merge( $ignored_files, $pods_dev_files );
+} );
+
+add_filter( 'wp_plugin_check_ignore_directories', static function ( $ignored_dirs ) {
+	$pods_dev_dirs = [
+		'.git',
+		'.github',
+		'.wordpress-org',
+		'assets',
+	];
+
+	return array_merge( $ignored_dirs, $pods_dev_dirs );
+} );

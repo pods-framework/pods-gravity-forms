@@ -910,7 +910,7 @@ class Pods_GF_UI {
 		}
 
 		if ( $obj->restricted( $obj->action, $obj->row ) ) {
-			return $obj->error( sprintf( __( '<strong>Error:</strong> You do not have access to this %s.', 'pods' ), $obj->item ) );
+			return $obj->error( sprintf( __( '<strong>Error:</strong> You do not have access to this %s.', 'pods-gravity-forms' ), $obj->item ) );
 		}
 ?>
 <div class="wrap pods-admin pods-ui">
