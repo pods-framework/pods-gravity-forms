@@ -5,7 +5,7 @@ Tags: pods, gravity forms, form mapping
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.6.0-a-1
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -112,6 +112,20 @@ function my_column_row_override( $row, $columns, $form, $gf_field, $options, $re
 9. Form entries page showing Pod ID
 
 == Changelog ==
+
+= 1.6.0 - February 24th, 2026 =
+
+* Minimum requirements updated to WordPress 6.3+ to match current Pods minimum requirements.
+* Enhancement: Support handling prepend content in Pods_GF_UI. (@sc0ttkclark)
+* Enhancement: Support passing restrict_callback, show_in_header, and content fields in Pods_GF_UI for actions to pass into PodsUI. (@sc0ttkclark)
+* Enhancement: Support for replacing dynamic `{@id}`, `{@action}`, `{@id2}`, and `{@action2}` in Pods_GF confirmation URL handling, which is helpful when using Pods_GF_UI context. (@sc0ttkclark)
+* Enhancement: New Pods_GF::_gf_confirmation_url_replace_tags can be used to replace tags dynamically for a confirmation URL + entry + form. (@sc0ttkclark)
+* Enhancement: Make Markdown safe mode optional with new filter `pods_gf_markdown_safe_mode` (default on, just as before). (@sc0ttkclark)
+* Fixed: Pods_GF::prepopulate now has pod, id, and fields arguments as optional so that it can be more easily used in more contexts. (@sc0ttkclark)
+* Fixed: Prevent loading entry too soon to prevent Gravity Forms bug with uploaded files. This resolves issues with submitting a form with file fields that are required and them not coming through. (@sc0ttkclark)
+* Fixed: Resolved issues with Pods_GF::_gf_get_form_filter form ID usage. (@sc0ttkclark)
+* Extensive cleanup to resolve important WP Plugin Checker results, PHPCS, and PHPStan issues across the codebase. (@sc0ttkclark)
+* Tested against WP 7.0 and the latest version of Gravity Forms. (@sc0ttkclark)
 
 = 1.5.1 - March 30th, 2025 =
 

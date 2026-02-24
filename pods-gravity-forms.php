@@ -11,7 +11,7 @@
  * Plugin URI:        https://pods.io/
  * Requires Plugins:  pods
  * Description:       Integration with Gravity Forms (https://www.gravityforms.com/); Provides a UI for mapping a Form's submissions into a Pod
- * Version:           1.6.0-a-1
+ * Version:           1.6.0
  * Author:            Pods Framework Team
  * Author URI:        https://pods.io/about/
  * Text Domain:       pods-gravity-forms
@@ -43,7 +43,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( '-1' );
 }
 
-define( 'PODS_GF_VERSION', '1.6.0-a-1' );
+define( 'PODS_GF_VERSION', '1.6.0' );
 define( 'PODS_GF_FILE', __FILE__ );
 define( 'PODS_GF_DIR', plugin_dir_path( PODS_GF_FILE ) );
 define( 'PODS_GF_URL', plugin_dir_url( PODS_GF_FILE ) );
