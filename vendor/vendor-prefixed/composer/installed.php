@@ -4,7 +4,7 @@
     'name' => 'pods-framework/pods-gravity-forms',
     'pretty_version' => 'dev-main',
     'version' => 'dev-main',
-    'reference' => 'a7dfe119da87e32c6cb2ead78b1d4495d891816e',
+    'reference' => '1f5416f9c38c0a9db3ff0c8c05085c193268cd9a',
     'type' => 'wordpress-plugin',
     'install_path' => __DIR__ . '/../',
     'aliases' => 
