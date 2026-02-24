@@ -4,7 +4,7 @@
 
 namespace Pods_Gravity_Forms\Prefixed\Composer\Autoload;
 
-class ComposerStaticInit10f57177870f89c47ea3ed98b31cb3c1
+class ComposerStaticInitb5d59cc16277347e7d45bc7e24a92fb5
 {
     public static $prefixesPsr0 = array (
         'P' =>
@@ -24,8 +24,8 @@ class ComposerStaticInit10f57177870f89c47ea3ed98b31cb3c1
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixesPsr0 = ComposerStaticInit10f57177870f89c47ea3ed98b31cb3c1::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit10f57177870f89c47ea3ed98b31cb3c1::$classMap;
+            $loader->prefixesPsr0 = ComposerStaticInitb5d59cc16277347e7d45bc7e24a92fb5::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInitb5d59cc16277347e7d45bc7e24a92fb5::$classMap;
 
         }, null, ClassLoader::class);
     }

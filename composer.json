@@ -79,7 +79,7 @@
       "vendor/wordpress-plugin/{$name}/": ["type:wordpress-plugin"]
     },
     "strauss": {
-      "target_directory": "vendor-prefixed",
+      "target_directory": "vendor/vendor-prefixed",
       "namespace_prefix": "Pods_Gravity_Forms\\Prefixed\\",
       "classmap_prefix": "Pods_Gravity_Forms__Prefixed__",
       "constant_prefix": "PODS_GRAVITY_FORMS_PREFIXED_",

@@ -66,7 +66,7 @@ function pods_gf_include_gf_addon() {
 		return;
 	}
 
-	require_once PODS_GF_DIR . 'vendor-prefixed/autoload.php';
+	require_once PODS_GF_DIR . 'vendor/vendor-prefixed/autoload.php';
 
 	// Include GF Feed Addon code
 	if ( ! class_exists( 'GFFeedAddOn' ) ) {
