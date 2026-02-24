@@ -207,6 +207,7 @@ add_filter( 'wp_plugin_check_ignore_directories', static function ( $ignored_dir
 		'.github',
 		'.wordpress-org',
 		'assets',
+		'tests',
 	];
 
 	return array_merge( $ignored_dirs, $pods_dev_dirs );

@@ -337,6 +337,7 @@ class Pods_GF_UI {
 			// @phpstan-ignore-next-line
 			$form_id = (int) pods_v( 'form', $action_data );
 
+			// @phpstan-ignore-next-line
 			if ( ! pods_v( 'disabled', $action_data ) && 0 < $form_id && $this->action == $action ) {
 				// @phpstan-ignore-next-line
 				$pod = pods_v( 'pod', $action_data, $this->pod );
