@@ -108,8 +108,8 @@ class Pods_GF_CLI extends WP_CLI_Command {
 		$entries = \GFAPI::get_entries( $form_id, $search_criteria, null, $paging, $total_entries );
 
 		/** @var \cli\progress\Bar $progress_bar */
-		/* translators: Total entries number is used in this message. */ // @phpstan-ignore-next-line
-		$progress_bar = \WP_CLI\Utils\make_progress_bar( sprintf( esc_html_x( 'Syncing %s entries', 'Sync status message for WP-CLI feed sync using total entries count', 'pods-gravity-forms' ), number_format_i18n( $total_entries ) ), $total_entries );
+		/* translators: Total entries number is used in this message. */
+		$progress_bar = \WP_CLI\Utils\make_progress_bar( sprintf( esc_html_x( 'Syncing %s entries', 'Sync status message for WP-CLI feed sync using total entries count', 'pods-gravity-forms' ), number_format_i18n( $total_entries ) ), $total_entries ); // @phpstan-ignore-line
 
 		$entries_counter = 0;
 
@@ -134,8 +134,8 @@ class Pods_GF_CLI extends WP_CLI_Command {
 
 		$progress_bar->finish();
 
-		/* translators: Feed ID is used in this message. */ // @phpstan-ignore-next-line
-		\WP_CLI::success( sprintf( esc_html_x( 'Form entries synced to Pods using feed %d.', 'Success message for WP-CLI feed sync using Feed ID', 'pods-gravity-forms' ), $feed_id ) );
+		/* translators: Feed ID is used in this message. */
+		\WP_CLI::success( sprintf( esc_html_x( 'Form entries synced to Pods using feed %d.', 'Success message for WP-CLI feed sync using Feed ID', 'pods-gravity-forms' ), $feed_id ) ); // @phpstan-ignore-line
 
 	}
 
