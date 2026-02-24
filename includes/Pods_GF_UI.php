@@ -1061,7 +1061,7 @@ class Pods_GF_UI {
 
 				gravity_form( $this->actions[ $this->action ]['form'], false, false );
 			} elseif ( is_object( $this->pod ) ) {
-				if ( method_exists ($this->pod, 'output_view' ) ) {
+				if ( method_exists( $this->pod, 'output_view' ) ) {
 					$this->pod->output_view( $fields );
 				} else {
 					echo $this->pod->view( $fields ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
