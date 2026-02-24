@@ -185,11 +185,9 @@ function pods_gf_ui_detect_shortcode() {
 	if ( ! is_object( $pods_gf_ui ) && is_singular() ) {
 		global $post;
 
-		// @phpstan-ignore-next-line
 		$form_id = (int) pods_v( 'gform_submit', 'post' );
 
 		if ( 0 < $form_id && ! empty( $_POST[ 'is_submit_' . $form_id ] ) && preg_match( '/\[pods\-gf\-ui/i', $post->post_content ) ) {
-			// @phpstan-ignore-next-line
 			$form_info = GFFormsModel::get_form( $form_id );
 
 			if ( ! empty( $form_info ) && $form_info->is_active ) {
@@ -227,22 +225,18 @@ function pods_gf_save_for_later_ajax() {
 function pods_gf_get_gf_table_name( $table_type ) {
 
 	$table_name = '';
-	// @phpstan-ignore-next-line
 	$old_schema = version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' );
 
 	switch ( $table_type ) {
 		case 'entry':
-			// @phpstan-ignore-next-line
 			$table_name = $old_schema ? GFFormsModel::get_lead_table_name() : GFFormsModel::get_entry_table_name();
 
 			break;
 		case 'entry_details':
-			// @phpstan-ignore-next-line
 			$table_name = $old_schema ? GFFormsModel::get_lead_details_table_name() : GFFormsModel::get_entry_meta_table_name();
 
 			break;
 		case 'entry_meta':
-			// @phpstan-ignore-next-line
 			$table_name = $old_schema ? GFFormsModel::get_lead_meta_table_name() : GFFormsModel::get_entry_meta_table_name();
 
 			break;

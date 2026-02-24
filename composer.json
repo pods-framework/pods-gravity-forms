@@ -53,9 +53,12 @@
     "phpstan/extension-installer": "^1.4",
     "phpstan/phpstan": "^1.12",
     "phpstan/phpstan-deprecation-rules": "^1.2",
+    "pods-framework/pods": "dev-main",
     "stellarwp/coding-standards": "dev-main",
     "szepeviktor/phpstan-wordpress": "*",
-    "wp-coding-standards/wpcs": "^3.1"
+    "wp-cli/wp-cli": "2.*",
+    "wp-coding-standards/wpcs": "^3.1",
+    "gravity/gravityforms": "^2.9"
   },
   "minimum-stability": "stable",
   "prefer-stable": true,
@@ -72,6 +75,9 @@
   },
   "extra": {
     "installer-name": "pods-gravity-forms",
+    "installer-paths": {
+      "vendor/wordpress-plugin/{$name}/": ["type:wordpress-plugin"]
+    },
     "strauss": {
       "target_directory": "vendor-prefixed",
       "namespace_prefix": "Pods_Gravity_Forms\\Prefixed\\",
@@ -89,5 +95,10 @@
       "dealerdirect/phpcodesniffer-composer-installer": true,
       "phpstan/extension-installer": true
     }
-  }
+  },
+  "repositories": [{
+    "name": "gravity",
+    "type": "composer",
+    "url": "https://composer.gravity.io"
+  }]
 }

@@ -204,7 +204,7 @@ class Pods_GF {
 			self::save_for_later( $form_id, $options['save_for_later'] );
 		}
 
-		if ( ! pods_v( 'admin', $options, 0 ) && ( is_admin() && RGForms::is_gravity_page() ) ) {
+		if ( ! pods_v( 'admin', $options, 0 ) && ( is_admin() && GFForms::is_gravity_page() ) ) {
 			if ( ! has_action( 'gform_post_update_entry_' . $form_id, [ $this, '_gf_post_update_entry' ] ) ) {
 				add_action( 'gform_post_update_entry_' . $form_id, [ $this, '_gf_post_update_entry' ], 10, 2 );
 				add_action( 'gform_after_update_entry_' . $form_id, [ $this, '_gf_after_update_entry' ], 10, 3 );
@@ -669,7 +669,7 @@ class Pods_GF {
 
 		$form = ( ! empty( $form_id ) ? '_' . (int) $form_id : '' );
 
-		add_action( 'gform_post_submission' . $form, [ get_class(), 'gf_delete_entry' ], 20, 1 );
+		add_action( 'gform_post_submission' . $form, [ __CLASS__, 'gf_delete_entry_post_submission' ], 20 );
 
 	}
 
@@ -1292,13 +1292,13 @@ class Pods_GF {
 			} // Save $post for later
 			else {
 				// JSON encode to avoid serialization issues
-				$postdata = json_encode( $post );
+				$postdata = wp_json_encode( $post );
 
 				if ( is_user_logged_in() ) {
 					update_user_meta( get_current_user_id(), '_pods_gf_saved_form_' . $form_id . $addtl_id, $postdata );
 				}
 
-				pods_var_set( $postdata, '_pods_gf_saved_form_' . $form_id . $addtl_id, 'cookie' );
+				pods_v_set( $postdata, '_pods_gf_saved_form_' . $form_id . $addtl_id, 'cookie' );
 			}
 
 			pods_redirect( $redirect );
@@ -1340,7 +1340,7 @@ class Pods_GF {
 				delete_user_meta( $user_ID, '_pods_gf_saved_form_' . $form['id'] . $addtl_id );
 			}
 
-			pods_var_set( '', '_pods_gf_saved_form_' . $form['id'] . $addtl_id, 'cookie' );
+			pods_v_set( '', '_pods_gf_saved_form_' . $form['id'] . $addtl_id, 'cookie' );
 		}
 
 	}
@@ -1460,13 +1460,13 @@ class Pods_GF {
 
 			if ( ! empty( $postdata ) ) {
 				// JSON encode to avoid serialization issues
-				$postdata = json_encode( $postdata );
+				$postdata = wp_json_encode( $postdata );
 
 				if ( is_user_logged_in() ) {
 					update_user_meta( $user_ID, '_pods_gf_remember_' . $form['id'], $postdata );
 				}
 
-				pods_var_set( $postdata, '_pods_gf_remember_' . $form['id'], 'cookie' );
+				pods_v_set( $postdata, '_pods_gf_remember_' . $form['id'], 'cookie' );
 			}
 		}
 
@@ -1788,7 +1788,7 @@ class Pods_GF {
 				// @todo Support simple repeatable fields in Pods 2.9
 				if ( $gf_field && 'list' === $gf_field->type && is_array( $value ) ) {
 					if ( empty( $pod ) || empty( $gf_params['field_options']['type'] ) || 'pick' !== $gf_params['field_options']['type'] ) {
-						$value = json_encode( $value );
+						$value = wp_json_encode( $value );
 					}
 				}
 
@@ -1962,13 +1962,19 @@ class Pods_GF {
 	 * Delete a GF entry, because GF doesn't have an API to do this yet (the function itself is user-restricted)
 	 *
 	 * @param array $entry GF Entry array
+	 */
+	public static function gf_delete_entry_post_submission( $entry ) {
+		self::gf_delete_entry( $entry );
+	}
+
+	/**
+	 * Delete a GF entry, because GF doesn't have an API to do this yet (the function itself is user-restricted)
+	 *
+	 * @param array $entry GF Entry array
 	 *
 	 * @return bool If the entry was successfully deleted
 	 */
-	public static function gf_delete_entry( $entry ) {
-
-		global $wpdb;
-
+	public static function gf_delete_entry( $entry ): bool {
 		if ( ! is_array( $entry ) && 0 < (int) $entry ) {
 			$lead_id = (int) $entry;
 		} elseif ( is_array( $entry ) && isset( $entry['id'] ) && 0 < (int) $entry['id'] ) {
@@ -1980,7 +1986,6 @@ class Pods_GF {
 		GFAPI::delete_entry( $lead_id );
 
 		return true;
-
 	}
 
 	/**
@@ -3697,7 +3702,7 @@ class Pods_GF {
 			}
 		} elseif ( in_array( $gf_field->type, [ 'date' ], true ) ) {
 			$format = empty( $gf_field->dateFormat ) ? 'mdy' : esc_attr( $gf_field->dateFormat );
-			$value  = GFcommon::parse_date( $value, $format );
+			$value  = GFCommon::parse_date( $value, $format );
 
 			if ( ! empty( $value ) ) {
 				$value = array_map( 'absint', $value );

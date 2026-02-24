@@ -80,7 +80,6 @@ function pods_gf_include_gf_addon() {
 	if ( defined( 'WP_CLI' ) ) {
 		require_once PODS_GF_DIR . 'includes/Pods_GF_CLI.php';
 
-		// @phpstan-ignore-next-line
 		WP_CLI::add_command( 'pods-gf', 'Pods_GF_CLI' );
 	}
 
@@ -140,7 +139,6 @@ function pods_gf_admin_nag() {
  * @since 1.3
  */
 function pods_gf_add_related_objects() {
-	// @phpstan-ignore-next-line
 	PodsField_Pick::$related_objects['gf-forms'] = [
 		'label'         => __( 'Forms', 'pods-gravity-forms' ),
 		'group'         => __( 'Gravity Forms', 'pods-gravity-forms' ),
@@ -169,7 +167,6 @@ function pods_gf_add_related_objects_forms( $name = null, $value = null, $option
 	$data = [];
 
 	// Get all forms.
-	// @phpstan-ignore-next-line
 	$forms = RGFormsModel::get_forms( null, 'title' );
 
 	foreach ( $forms as $form ) {

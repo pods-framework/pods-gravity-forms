@@ -8,7 +8,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Implements Pods GF command for WP-CLI
  */
-// @phpstan-ignore-next-line
 class Pods_GF_CLI extends WP_CLI_Command {
 
 	/**
@@ -42,7 +41,6 @@ class Pods_GF_CLI extends WP_CLI_Command {
 		}
 
 		if ( empty( $form_id ) ) {
-			// @phpstan-ignore-next-line
 			\WP_CLI::error( esc_html__( 'Form ID is required.', 'pods-gravity-forms' ) );
 		}
 
@@ -53,11 +51,9 @@ class Pods_GF_CLI extends WP_CLI_Command {
 		}
 
 		// Get form.
-		// @phpstan-ignore-next-line
 		$form = \GFAPI::get_form( $form_id );
 
 		if ( empty( $form ) || is_wp_error( $form ) ) {
-			// @phpstan-ignore-next-line
 			\WP_CLI::error( esc_html__( 'Form not found.', 'pods-gravity-forms' ) );
 		}
 
@@ -68,11 +64,9 @@ class Pods_GF_CLI extends WP_CLI_Command {
 		}
 
 		// Get feed.
-		// @phpstan-ignore-next-line
 		$feeds = \GFAPI::get_feeds( $feed_id, $form_id, 'pods-gravity-forms', $active_only );
 
 		if ( empty( $feeds ) || is_wp_error( $feeds ) ) {
-			// @phpstan-ignore-next-line
 			\WP_CLI::error( esc_html__( 'Feed not found.', 'pods-gravity-forms' ) );
 		}
 
@@ -82,7 +76,6 @@ class Pods_GF_CLI extends WP_CLI_Command {
 		$feed_id = $feed['id'];
 
 		if ( empty( $feed_id ) ) {
-			// @phpstan-ignore-next-line
 			\WP_CLI::error( esc_html__( 'Invalid feed.', 'pods-gravity-forms' ) );
 		}
 
@@ -104,12 +97,11 @@ class Pods_GF_CLI extends WP_CLI_Command {
 			'page_size' => 50,
 		];
 
-		// @phpstan-ignore-next-line
 		$entries = \GFAPI::get_entries( $form_id, $search_criteria, null, $paging, $total_entries );
 
 		/** @var \cli\progress\Bar $progress_bar */
 		/* translators: Total entries number is used in this message. */
-		$progress_bar = \WP_CLI\Utils\make_progress_bar( sprintf( esc_html_x( 'Syncing %s entries', 'Sync status message for WP-CLI feed sync using total entries count', 'pods-gravity-forms' ), number_format_i18n( $total_entries ) ), $total_entries ); // @phpstan-ignore-line
+		$progress_bar = \WP_CLI\Utils\make_progress_bar( sprintf( esc_html_x( 'Syncing %s entries', 'Sync status message for WP-CLI feed sync using total entries count', 'pods-gravity-forms' ), number_format_i18n( $total_entries ) ), $total_entries );
 
 		$entries_counter = 0;
 
@@ -128,14 +120,13 @@ class Pods_GF_CLI extends WP_CLI_Command {
 
 			$paging['offset'] = $entries_counter;
 
-			// @phpstan-ignore-next-line
 			$entries = \GFAPI::get_entries( $form_id, $search_criteria, null, $paging );
 		} while ( $entries );
 
 		$progress_bar->finish();
 
 		/* translators: Feed ID is used in this message. */
-		\WP_CLI::success( sprintf( esc_html_x( 'Form entries synced to Pods using feed %d.', 'Success message for WP-CLI feed sync using Feed ID', 'pods-gravity-forms' ), $feed_id ) ); // @phpstan-ignore-line
+		\WP_CLI::success( sprintf( esc_html_x( 'Form entries synced to Pods using feed %d.', 'Success message for WP-CLI feed sync using Feed ID', 'pods-gravity-forms' ), $feed_id ) );
 
 	}
 

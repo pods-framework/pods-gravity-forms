@@ -1,4 +1,5 @@
 vendor/
+vendor-prefixed/erusev/parsedown/.github
 composer.lock
 
 # Codeception stuff
