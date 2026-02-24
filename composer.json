@@ -57,6 +57,7 @@
     "pods-framework/pods": "dev-main",
     "stellarwp/coding-standards": "dev-main",
     "symfony/console": "^v5.4.47",
+    "symfony/process": "^v5.4.51",
     "szepeviktor/phpstan-wordpress": "*",
     "webmozart/assert": "^1.12",
     "wp-cli/wp-cli": "2.*",
