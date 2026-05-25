@@ -1,4 +1,6 @@
 name: 'PHP Static Analysis'
+permissions:
+  contents: read
 on:
   pull_request:
     paths:
