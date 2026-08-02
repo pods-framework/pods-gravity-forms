@@ -700,7 +700,7 @@ class Pods_GF {
 			$options
 		);
 
-		$class = get_class();
+		$class = static::class;
 
 		if ( ! has_filter( 'gform_pre_render_' . $form_id, [ $class, 'gf_dynamic_select' ] ) ) {
 			add_filter( 'gform_pre_render_' . $form_id, [ $class, 'gf_dynamic_select' ], 10, 2 );
@@ -814,7 +814,7 @@ class Pods_GF {
 			'fields' => $fields,
 		];
 
-		$class = get_class();
+		$class = static::class;
 
 		if ( ! has_filter( 'gform_pre_render_' . $form_id, [ $class, 'gf_prepopulate' ] ) ) {
 			add_filter( 'gform_pre_render_' . $form_id, [ $class, 'gf_prepopulate' ], 10, 2 );
@@ -837,7 +837,7 @@ class Pods_GF {
 			$field_id = $field_id['id'];
 		}
 
-		$class = get_class();
+		$class = static::class;
 
 		if ( ! has_filter( 'pods_gf_field_value_' . $form_id . '_' . $field_id, [ $class, 'gf_prepopulate_value' ] ) ) {
 			add_filter( 'pods_gf_field_value_' . $form_id . '_' . $field_id, [
@@ -2985,7 +2985,7 @@ class Pods_GF {
 			'exclude_fields' => $exclude_fields,
 		];
 
-		$class = get_class();
+		$class = static::class;
 
 		if ( ! has_filter( 'gform_pre_render_' . $form_id, [ $class, 'gf_read_only' ] ) ) {
 			add_filter( 'gform_pre_render_' . $form_id, [ $class, 'gf_read_only' ], 10, 2 );
